@@ -149,6 +149,50 @@ body {
   box-shadow: 0 4px 12px rgba(22, 22, 26, 0.15);
 }
 
+/* 🔍 Nav 內嵌搜尋框 (Inline Nav Search) */
+.nav-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(22, 22, 26, 0.055);
+  border: 1px solid rgba(22, 22, 26, 0.12);
+  border-radius: 9999px;
+  padding: 0.28rem 0.9rem;
+  transition: background 250ms ease, border-color 250ms ease, width 300ms var(--ease-smooth);
+  width: 160px;
+}
+
+.nav-search-wrap:focus-within {
+  background: rgba(255,255,255,0.85);
+  border-color: var(--ink);
+  width: 220px;
+}
+
+.nav-search-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--gray-3);
+  flex-shrink: 0;
+  transition: color 200ms ease;
+}
+
+.nav-search-wrap:focus-within .nav-search-icon { color: var(--ink); }
+
+.nav-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+
+.nav-search-input::placeholder { color: var(--gray-3); }
+
+
 /* Mobile RWD Hamburger */
 .mobile-menu-btn {
   display: none;
@@ -587,12 +631,14 @@ svg#stage {
   .nav-container { padding: 0 1rem; }
   .nav-brand {
     font-size: 0.9rem;
-    max-width: 75%;
+    max-width: 60%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .nav-links { display: none; }
+  /* 手機版 nav 搜尋框隱藏，不佔用類防撠 */
+  .nav-search-wrap { display: none; }
   .mobile-menu-btn {
     display: flex;
     width: 44px; height: 44px;
@@ -654,46 +700,8 @@ svg#stage {
     border-radius: 6px;
   }
 
-  /* 3. 分類頁籤 Tabs 與搜尋框滿版排列 */
-  .mono-nav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.85rem;
-    margin-bottom: 1.75rem;
-  }
+  /* 分類頁簽和搜尋框區塊已移除 */
 
-  .tabs-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    width: 100%;
-  }
-
-  .tab-btn {
-    padding: 0.4rem 0.85rem;
-    font-size: 0.78rem;
-  }
-
-  .search-wrap {
-    width: 100%;
-  }
-
-  .search-input {
-    width: 100%;
-    font-size: 0.85rem;
-    padding: 0.55rem 1rem 0.55rem 2.4rem;
-  }
-
-  /* 4. 專案卡片網格單欄模式 */
-  .cards-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .mono-subcard {
-    padding: 1.25rem;
-    border-radius: 14px;
-  }
 }
 
 @media (max-width: 480px) {

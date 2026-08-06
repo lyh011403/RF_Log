@@ -114,44 +114,35 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. Mobile RWD Menu
     setupMobileMenu();
 
-    // 4. Category Tabs
-    renderCategories();
-
-    // 6. Build Tech Tree Nodes
-    const { nodes, nodeEls } = initInkWashTechTree();
-
-    // 7. Start Ink Engine Loop
-    startInkWashEngineLoop(nodes, nodeEls);
-
-    // 8. Render Grid Cards
-    renderAllRouteGrids();
-
-    function renderCategories() {
-        categoryTabsContainer.innerHTML = "";
-        CATEGORIES.forEach(cat => {
-            const btn = document.createElement("button");
-            btn.className = `tab-btn ${activeCategory === cat.id ? "active" : ""}`;
-            btn.textContent = cat.name;
-            btn.addEventListener("click", () => {
-                activeCategory = cat.id;
-                renderCategories();
-                renderAllRouteGrids();
-            });
-            categoryTabsContainer.appendChild(btn);
+    // 4. NAV 搜尋框即時過濾 (TAB 篩選已移除，改為全分類展示 + 搜尋框)
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            searchQuery = searchInput.value.trim();
+            renderAllRouteGrids();
         });
     }
+
+    // 5. Build Tech Tree Nodes
+    const { nodes, nodeEls } = initInkWashTechTree();
+
+    // 6. Start Ink Engine Loop
+    startInkWashEngineLoop(nodes, nodeEls);
+
+    // 7. Render Grid Cards
+    renderAllRouteGrids();
 
     function getFilteredRoutes() {
         return ROUTES_DATA.filter(route => {
-            const matchCat = activeCategory === "All" || route.category === activeCategory;
-            const matchSearch = !searchQuery || (
-                route.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                route.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                route.description.toLowerCase().includes(searchQuery.toLowerCase())
+            if (!searchQuery) return true;
+            const q = searchQuery.toLowerCase();
+            return (
+                route.title.toLowerCase().includes(q) ||
+                route.subtitle.toLowerCase().includes(q) ||
+                route.description.toLowerCase().includes(q)
             );
-            return matchCat && matchSearch;
         });
     }
+
 
     function setupOptimizedMouseGlow() {
         if (!mouseGlow) return;
