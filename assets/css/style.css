@@ -584,20 +584,23 @@ svg#stage {
 }
 
 @media (max-width: 900px) {
+  .nav-container { padding: 0 1rem; }
+  .nav-brand {
+    font-size: 0.92rem;
+    max-width: 78%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .nav-links { display: none; }
   .mobile-menu-btn {
     display: flex;
     width: 44px; height: 44px;
     align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
   .cards-grid { grid-template-columns: 1fr; gap: 1rem; }
-  #stage-wrap {
-    height: 62vh;
-    min-height: 420px;
-    max-height: 540px;
-    margin-bottom: 2rem;
-  }
-  .mono-header h1 { font-size: 1.6rem; }
+  .mono-header h1 { font-size: 1.5rem; }
   .mono-header .sub { font-size: 0.85rem; }
   .section-head-flex { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .mono-subcard { padding: 1.25rem; border-radius: 14px; }
@@ -607,12 +610,26 @@ svg#stage {
   .drawer-content { padding: 1.25rem 1.5rem; }
 }
 
-@media (max-width: 480px) {
-  #stage-wrap {
-    height: 58vh;
-    min-height: 380px;
+@media (max-width: 768px) {
+  .page-wrap { padding: 0 0.75rem; }
+  .stage-container {
+    padding: 0.6rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
   }
+  #stage-wrap {
+    height: 440px;
+    border-radius: 12px;
+  }
+  .stage-head { padding: 0.6rem 0.5rem 0.5rem 0.5rem; }
+  .stage-head h2 { font-size: 1.35rem; }
+  .stage-head .sub { font-size: 0.82rem; }
+}
+
+@media (max-width: 480px) {
+  #stage-wrap { height: 410px; }
   .mono-header { padding: 1rem 0; }
   .mono-badge { font-size: 0.65rem; }
   .meta-pill { font-size: 0.68rem; padding: 0.2rem 0.6rem; }
+  .nav-brand { font-size: 0.85rem; }
 }

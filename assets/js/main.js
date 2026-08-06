@@ -823,20 +823,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 lp.lvx *= 0.72; lp.lvy *= 0.72;
                 lp.lx += lp.lvx; lp.ly += lp.lvy;
-                // ✨ 水墨暈染進出場微動畫 (Ink Bleed / Dissolve Effect)
+                // ✨ 水墨暈染進出場微動畫：當未展開 !cs.treeOpen 時硬性隱藏標題 (opacity = 0)，防止標籤堆疊在黑球周圍
                 const fadeFactor = Math.max(0, 1 - n2.expandP * 1.8);
-                const dissolveOpacity = lp.visP * fadeFactor;
+                const dissolveOpacity = cs.treeOpen ? (lp.visP * fadeFactor) : 0;
                 const dissolveBlur = (1 - fadeFactor) * 12;
                 const dissolveScale = (1 + n2.hoverAmt * 0.12) * (1 + (1 - fadeFactor) * 0.18);
                 const dissolveSpacing = (0.04 + (1 - fadeFactor) * 0.25) + "em";
 
-                lp.el.style.left = lp.lx / W * 100 + "%";
-                lp.el.style.top = lp.ly / H * 100 + "%";
+                lp.el.style.left = (lp.lx / W * 100).toFixed(2) + "%";
+                lp.el.style.top = (lp.ly / H * 100).toFixed(2) + "%";
                 lp.el.style.transform = `translate(-50%, -50%) scale(${dissolveScale})`;
                 lp.el.style.opacity = dissolveOpacity;
                 lp.el.style.filter = dissolveBlur > 0.1 ? `blur(${dissolveBlur.toFixed(1)}px)` : "none";
                 lp.el.style.letterSpacing = dissolveSpacing;
-                lp.el.style.pointerEvents = dissolveOpacity > 0.3 ? "auto" : "none";
+                lp.el.style.pointerEvents = dissolveOpacity > 0.4 ? "auto" : "none";
 
                 // 🏷️ 全名標籤 Tooltip 懸停 Hover 智慧外側浮現 (精確置於使用者紅框區域)
                 n2.children.forEach((c2, ci2) => {
