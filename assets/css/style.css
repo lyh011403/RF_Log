@@ -576,10 +576,43 @@ svg#stage {
   color: var(--gray-3);
 }
 
-/* RWD Media Queries */
+/* 📱 RWD Mobile Optimizations & Touch Protection (impeccable & web_skill Audit) */
+#stage, #stage-wrap, .stage-container {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @media (max-width: 900px) {
   .nav-links { display: none; }
-  .mobile-menu-btn { display: flex; }
-  .cards-grid { grid-template-columns: 1fr; }
-  #stage-wrap { height: 500px; }
+  .mobile-menu-btn {
+    display: flex;
+    width: 44px; height: 44px;
+    align-items: center; justify-content: center;
+  }
+  .cards-grid { grid-template-columns: 1fr; gap: 1rem; }
+  #stage-wrap {
+    height: 62vh;
+    min-height: 420px;
+    max-height: 540px;
+    margin-bottom: 2rem;
+  }
+  .mono-header h1 { font-size: 1.6rem; }
+  .mono-header .sub { font-size: 0.85rem; }
+  .section-head-flex { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .mono-subcard { padding: 1.25rem; border-radius: 14px; }
+  .drawer { width: 100%; max-width: 100%; }
+  .drawer-header { padding: 1.25rem 1.5rem; }
+  .close-drawer { width: 44px; height: 44px; line-height: 44px; text-align: center; }
+  .drawer-content { padding: 1.25rem 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  #stage-wrap {
+    height: 58vh;
+    min-height: 380px;
+  }
+  .mono-header { padding: 1rem 0; }
+  .mono-badge { font-size: 0.65rem; }
+  .meta-pill { font-size: 0.68rem; padding: 0.2rem 0.6rem; }
 }
