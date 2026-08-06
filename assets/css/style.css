@@ -576,7 +576,7 @@ svg#stage {
   color: var(--gray-3);
 }
 
-/* 📱 RWD Mobile Optimizations & Touch Protection (impeccable & web_skill Audit) */
+/* 📱 Mobile-First RWD (web_skill & impeccable Audit) */
 #stage, #stage-wrap, .stage-container {
   touch-action: none;
   -webkit-touch-callout: none;
@@ -586,8 +586,8 @@ svg#stage {
 @media (max-width: 900px) {
   .nav-container { padding: 0 1rem; }
   .nav-brand {
-    font-size: 0.92rem;
-    max-width: 78%;
+    font-size: 0.9rem;
+    max-width: 75%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -599,11 +599,6 @@ svg#stage {
     align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .cards-grid { grid-template-columns: 1fr; gap: 1rem; }
-  .mono-header h1 { font-size: 1.5rem; }
-  .mono-header .sub { font-size: 0.85rem; }
-  .section-head-flex { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-  .mono-subcard { padding: 1.25rem; border-radius: 14px; }
   .drawer { width: 100%; max-width: 100%; }
   .drawer-header { padding: 1.25rem 1.5rem; }
   .close-drawer { width: 44px; height: 44px; line-height: 44px; text-align: center; }
@@ -611,25 +606,99 @@ svg#stage {
 }
 
 @media (max-width: 768px) {
-  .page-wrap { padding: 0 0.75rem; }
-  .stage-container {
-    padding: 0.6rem;
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
+  /* 1. 手機板使用時，直接隱藏關閉水墨導覽圖區塊 */
+  #sec-tree, .stage-container {
+    display: none !important;
   }
-  #stage-wrap {
-    height: 440px;
-    border-radius: 12px;
+
+  /* 2. 頁面內邊距與 Header 重構，徹底消除重疊擠壓 */
+  .page-wrap {
+    padding: 1rem 1rem 4rem;
   }
-  .stage-head { padding: 0.6rem 0.5rem 0.5rem 0.5rem; }
-  .stage-head h2 { font-size: 1.35rem; }
-  .stage-head .sub { font-size: 0.82rem; }
+
+  .mono-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .header-main {
+    width: 100%;
+  }
+
+  .mono-header h1 {
+    font-size: 1.45rem;
+    line-height: 1.3;
+    margin: 0.2rem 0;
+  }
+
+  .mono-header .sub {
+    font-size: 0.825rem;
+    line-height: 1.5;
+  }
+
+  /* 標籤隨附排版，絕對不重疊遮擋 */
+  .header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
+  .meta-pill {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+  }
+
+  /* 3. 分類頁籤 Tabs 與搜尋框滿版排列 */
+  .mono-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .tabs-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .tab-btn {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
+  }
+
+  .search-wrap {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 0.55rem 1rem 0.55rem 2.4rem;
+  }
+
+  /* 4. 專案卡片網格單欄模式 */
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .mono-subcard {
+    padding: 1.25rem;
+    border-radius: 14px;
+  }
 }
 
 @media (max-width: 480px) {
-  #stage-wrap { height: 410px; }
-  .mono-header { padding: 1rem 0; }
+  .mono-header { padding: 0.75rem 0; }
   .mono-badge { font-size: 0.65rem; }
   .meta-pill { font-size: 0.68rem; padding: 0.2rem 0.6rem; }
-  .nav-brand { font-size: 0.85rem; }
+  .nav-brand { font-size: 0.82rem; }
 }
