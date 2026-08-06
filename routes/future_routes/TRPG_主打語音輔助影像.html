@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 上帝版 TRPG 系統藍圖與開發路線圖</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 傳統四色階 Tokens */
+            --color-gaoyu: #efefef;       /* 縞羽 */
+            --color-xiangpi: #e6d1c5;     /* 香皮 */
+            --color-yunmu: #c6b8b1;       /* 雲母 */
+            --color-peijiu: #ac9f8a;      /* 佩玖 */
+            --color-ink-dark: #3d352b;    /* 沉木墨色 */
+
+            --bg-paper: var(--color-gaoyu);
+            --bg-card: #f9f8f6;
+            --border-hairline: rgba(198, 184, 177, 0.6);
+            --border-accent: var(--color-peijiu);
+
+            --text-primary: var(--color-ink-dark);
+            --text-secondary: #6e6255;
+            --text-muted: #918579;
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.7;
+            padding: 2.5rem 1.75rem;
+            position: relative;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-hairline);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--color-ink-dark);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1.25rem;
+        }
+
+        .tag-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-tag {
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+        }
+
+        /* 4 Core Pillars Grid */
+        .pillar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 600px) {
+            .pillar-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.75rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.07);
+        }
+
+        .card h2 {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-hairline);
+            padding-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card ul {
+            padding-left: 1.2rem;
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+        }
+
+        .card li { margin-bottom: 0.65rem; }
+        .card li strong { color: var(--text-primary); }
+
+        /* NFC Physical Carrier Display Component */
+        .nfc-display-box {
+            background: var(--bg-card);
+            border: 1px solid var(--color-peijiu);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .carrier-item {
+            background: var(--color-gaoyu);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.25rem 1rem;
+            text-align: center;
+        }
+
+        .carrier-item .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .carrier-item h4 {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+        }
+
+        .carrier-item p {
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+        }
+
+        /* Roadmap Timeline Component */
+        .roadmap-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .roadmap-card h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .roadmap-timeline {
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid var(--color-yunmu);
+        }
+
+        .roadmap-step {
+            position: relative;
+            margin-bottom: 1.75rem;
+        }
+
+        .roadmap-step:last-child { margin-bottom: 0; }
+
+        .roadmap-step::before {
+            content: "";
+            position: absolute;
+            left: -2.45rem;
+            top: 0.35rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--color-peijiu);
+            border: 2px solid var(--color-gaoyu);
+        }
+
+        .step-phase {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--color-ink-dark);
+            font-weight: 700;
+        }
+
+        .step-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0.1rem 0 0.4rem;
+        }
+
+        .step-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .carrier-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .carrier-grid { grid-template-columns: 1fr; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar" style="position: sticky; top: 0; z-index: 1000; background: rgba(239, 239, 239, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-yunmu); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+    <a href="../index.html" class="subpage-return-btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-xiangpi); color: var(--color-ink-dark); border: 1px solid var(--color-yunmu); padding: 0.45rem 1rem; border-radius: 6px; font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <header>
+        <div class="subtitle">VOICE-FIRST, VISION-ASSISTED CO-DM ARCHITECTURE</div>
+        <h1>🎲 AI 上帝版 TRPG 系統藍圖與開發路線</h1>
+        <div class="tag-row">
+            <span class="pill-tag">🎙️ 語音演繹</span>
+            <span class="pill-tag">👁️ 視覺追蹤</span>
+            <span class="pill-tag">💳 NFC 載體</span>
+            <span class="pill-tag">🌐 資產交易所</span>
+        </div>
+    </header>
+
+    <!-- 4 大核心架構 -->
+    <div class="pillar-grid">
+        <!-- 1. 聲音演繹 -->
+        <div class="card">
+            <h2>🎙️ 一、 聲效與語音演繹引擎</h2>
+            <ul>
+                <li><strong>AI 多角色旁白與 NPC 演繹：</strong> 系統識別文本後自動進行多角變聲（老者、怪物等），並帶入情感與語速控制。</li>
+                <li><strong>自動情境 BGM 混合器：</strong> LLM 即時捕捉對話關鍵字，秒級切換背景音樂與環境音效（如雨聲、鐵門聲）。</li>
+                <li><strong>玩家即時語音濾鏡：</strong> 玩家使用麥克風發言時，系統即時套用專屬角色音效（重低音、空間迴音）。</li>
+            </ul>
+        </div>
+
+        <!-- 2. NFC 角色創建 -->
+        <div class="card">
+            <h2>💳 二、 雙軌實體 NFC 角色創建</h2>
+            <ul>
+                <li><strong>自由創作模式：</strong> 資深玩家可手動填寫 App，靠卡寫入。AI 自動進行修飾與世界觀擴寫。</li>
+                <li><strong>AI 隨機 / 半隨機生成：</strong> 刷卡即抽樣職業、性格瑕疵與天賦，適合快速開局。</li>
+                <li><strong>動態存檔與實體載體：</strong> 角色受傷、升級時資料即時更新寫入 NFC。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- NFC 實體載體展示區 -->
+    <div class="nfc-display-box">
+        <div class="carrier-item">
+            <div class="icon">🎴</div>
+            <h4>加密角色卡片</h4>
+            <p>標準 NTAG215 卡片，繪製角色美術圖案與動態狀態寫入。</p>
+        </div>
+        <div class="carrier-item">
+            <div class="icon">🪙</div>
+            <h4>金屬冒險硬幣</h4>
+            <p>內嵌微型 NFC 晶片，作為特定裝備、技能與貨幣證明。</p>
+        </div>
+        <div class="carrier-item">
+            <div class="icon">🎲</div>
+            <h4>感應骰子底座</h4>
+            <p>可替換底座，紀錄該棋子角色在歷史冒險中的高光時刻。</p>
+        </div>
+    </div>
+
+    <div class="pillar-grid">
+        <!-- 3. 視覺與 AR 投影 -->
+        <div class="card">
+            <h2>👁️ 三、 視覺追蹤與 AR 投影引擎</h2>
+            <ul>
+                <li><strong>追蹤投影：</strong> 頂置攝影機捕捉棋子位置，即時投影血條、狀態光環（中毒、昏迷）於棋子腳下。</li>
+                <li><strong>戰術與視線判定：</strong> 自動計算移動距離、辨識障礙物並進行視線 (LoS) 與遮蔽判定。</li>
+                <li><strong>卡牌與實體傳輸：</strong> 丟出實體卡牌時綻放動態魔法陣；實體道具可置於感應區傳輸至角色庫。</li>
+            </ul>
+        </div>
+
+        <!-- 4. 生態系與資產 -->
+        <div class="card">
+            <h2>🌐 四、 真實生態系與資產交易所</h2>
+            <ul>
+                <li><strong>真實玩家交易所：</strong> 高等級角色卡與加密稀有裝備卡可在玩家間進行拍賣與交易。</li>
+                <li><strong>英雄殿堂：</strong> 戰死角色可做「實體封印」，成為記載冒險歷程的紀念收藏品。</li>
+                <li><strong>跨劇本流通：</strong> 經 GM 許可後，玩家可帶著自己的實體 NFC 裝備卡跨劇本使用。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Roadmap 路線圖 -->
+    <div class="roadmap-card">
+        <h2>🚀 專案開發路線圖 (Roadmap)</h2>
+        <div class="roadmap-timeline">
+            <div class="roadmap-step">
+                <div class="step-phase">PHASE 1 (POC / MVP)</div>
+                <div class="step-title">概念驗證與核心演算法</div>
+                <div class="step-desc">完成頂置鏡頭 ArUco 標籤定位、Whisper 語音轉文字測試與基礎 LLM Function Calling 指令化。</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="step-phase">PHASE 2 (MODULE INTEGRATION)</div>
+                <div class="step-title">音效與 NFC 感應模組整合</div>
+                <div class="step-desc">導入動態 BGM 切換、語音變聲濾鏡，並結合 NFC 讀寫卡片實作「雙軌建角系統」。</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="step-phase">PHASE 3 (AR & GAMEPLAY)</div>
+                <div class="step-title">AR 追蹤投影與遊戲性優化</div>
+                <div class="step-desc">結合頂置投影機實作棋子動態光環追蹤、視線 LoS 計算與實體卡牌魔法陣效果。</div>
+            </div>
+            <div class="roadmap-step">
+                <div class="step-phase">PHASE 4 (ECOSYSTEM & MARKET)</div>
+                <div class="step-title">實體資產生態系與市場開放</div>
+                <div class="step-desc">開發加密 NFC 驗證技術、跨劇本道具匯入機制，以及玩家間的實體角色卡交易所。</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        AI Co-DM Specification &copy; 2026. Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+</body>
+</html>

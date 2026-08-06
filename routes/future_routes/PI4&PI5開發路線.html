@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="AI Board Game Master 的 Raspberry Pi 4 與 Pi 5 雙平台對照暨雲端 AI 系統規格。">
+    <title>AI Board Game Master｜PI4 & PI5 開發路線對照</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mono / Lieflat 設計系統 Tokens */
+            --paper:      #ECEAE3;  /* 極亮基準 */
+            --paper-2:    #F4F3EE;
+            --paper-3:    #E2E0D8;
+            --ink:        #16161A;  /* 極暗基準 */
+            --ink-soft:   #26262A;
+            --gray-1:     #45454A;
+            --gray-2:     #6B6B6E;
+            --gray-3:     #94938E;
+            --gray-4:     #BCB9AF;
+            --gray-5:     #D6D3C8;
+            --line:       #CFCCC2;
+
+            --bg-paper: var(--paper-2);
+            --bg-card: var(--paper);
+            --border-hairline: var(--line);
+            --border-accent: var(--ink);
+
+            --text-primary: var(--ink);
+            --text-secondary: var(--gray-2);
+            --text-muted: var(--gray-3);
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --ease-smooth: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Subpage Return Navigation Bar */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--ink);
+            color: var(--paper-2);
+            border-color: var(--ink);
+        }
+
+        main {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            padding: 2.5rem 2.5rem 5rem;
+        }
+
+        .hero {
+            padding: 2.5rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: 0 4px 20px rgba(61, 53, 43, 0.04);
+            margin-bottom: 2.5rem;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--color-ink-dark);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 900px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--border-hairline);
+        }
+
+        section {
+            margin-top: 3rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--color-ink-dark);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.35rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.07);
+        }
+
+        .card.full {
+            grid-column: 1 / -1;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border-hairline);
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-xiangpi);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--color-ink-dark);
+            font-weight: 700;
+        }
+
+        td { color: var(--text-secondary); }
+
+        td.ok { color: #2d5a3d; font-weight: 600; }
+        td.warn { color: #8a5a00; font-weight: 600; }
+        td.bad { color: #a83232; font-weight: 600; }
+
+        .list {
+            padding-left: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        .list li {
+            margin: 0.35rem 0;
+        }
+
+        .code-block {
+            padding: 1.25rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1.25rem 0;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* Photo Gallery & Lightbox Styles */
+        .picture-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .picture-card {
+            background: #ffffff;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .picture-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.1);
+            border-color: var(--color-peijiu);
+        }
+
+        .picture-img-wrap {
+            cursor: zoom-in;
+            position: relative;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .picture-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .picture-card:hover .picture-img-wrap img {
+            transform: scale(1.04);
+        }
+
+        .picture-img-wrap::after {
+            content: "🔍 點擊放大查看";
+            position: absolute;
+            bottom: 0.6rem; right: 0.6rem;
+            background: rgba(61, 53, 43, 0.75);
+            color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            border: 1px solid rgba(198, 184, 177, 0.4);
+            opacity: 0.85;
+        }
+
+        .picture-body {
+            padding: 1.1rem 1.25rem;
+        }
+
+        .picture-tag {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .picture-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.3rem;
+        }
+
+        .picture-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        /* Lightbox Modal Styles */
+        .lightbox-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(43, 36, 28, 0.92);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .lightbox-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-img-wrap {
+            position: relative;
+            max-width: 92vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--color-xiangpi);
+        }
+
+        .lightbox-caption {
+            margin-top: 1rem;
+            color: var(--color-gaoyu);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            background: rgba(61, 53, 43, 0.85);
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            border: 1px solid var(--color-yunmu);
+            text-align: center;
+        }
+
+        .lightbox-close-btn {
+            position: absolute;
+            top: -1.2rem; right: -1.2rem;
+            width: 36px; height: 36px;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        main {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            main { padding: 2rem 1.25rem 4rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            main { padding: 1.5rem 1rem 4rem; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+            .picture-gallery { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">專案技術規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<main>
+    <header class="hero">
+        <span class="eyebrow">HARDWARE & ARCHITECTURE SPECIFICATION</span>
+        <h1>AI Board Game Master｜PI4 & PI5 開發路線對照</h1>
+        <p>樹莓派 Raspberry Pi 4 1GB (主推薦) 與 Pi 5 1GB 雙平台硬體對照，結合雲端大模型（Whisper + LLM + TTS + RAG）、第二代外觀 3D 渲染模型展台與本地視覺（MediaPipe Hands）之全系統量產與可行性分析指南。</p>
+        <div class="hero-meta">
+            <span class="pill">PI4 V2 3D Photo Gallery</span>
+            <span class="pill">Raspberry Pi 4 / 5</span>
+            <span class="pill">MediaPipe Hands</span>
+            <span class="pill">Faster-Whisper</span>
+            <span class="pill">Qwen3.5-8B</span>
+            <span class="pill">Google TTS</span>
+        </div>
+    </header>
+
+    <!-- NEW SECTION: Pi4 V2 3D Model Photo Gallery -->
+    <section>
+        <h2>第二代 PI4 3D 外觀渲染圖與產品概念展</h2>
+        <div class="card full" style="padding: 1.75rem;">
+            <span class="tag">第二代外觀設計 3D 展示</span>
+            <h3>PI4 V2 產品設計與 3D 模型圖展 (點擊圖片可放大)</h3>
+            <p style="margin-bottom: 1.25rem;">收錄第二代 Raspberry Pi 4 AI BOX 機構渲染、俯視視角、正側視視圖、散熱與介面佈局實體概念圖。</p>
+
+            <div class="picture-gallery">
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/產品設計概念圖.png" alt="產品設計概念圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/產品設計概念圖.png" data-caption="PI4 V2 產品設計總體概念與視覺語意圖">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">CONCEPT ART</span>
+                        <div class="picture-title">產品設計概念圖.png</div>
+                        <div class="picture-desc">展示第二代 PI4 AI BOX 全面升級的圓潤與科技簡約語意。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/01.png" alt="01.png 渲染圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/01.png" data-caption="01.png 3D 視角 1：頂置相機雲台與圓潤散熱艙">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">3D VIEW // 01</span>
+                        <div class="picture-title">01.png 外觀渲染圖</div>
+                        <div class="picture-desc">頂置廣角鏡頭雲台與雙層機構包覆視角。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/02.png" alt="02.png 渲染圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/02.png" data-caption="02.png 3D 視角 2：正側視圖與離合器轉動架構">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">3D VIEW // 02</span>
+                        <div class="picture-title">02.png 機構渲染圖</div>
+                        <div class="picture-desc">展示轉動懸臂與鏡頭對焦死區優化佈局。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/03.png" alt="03.png 渲染圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/03.png" data-caption="03.png 3D 視角 3：底座介面與極簡線條">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">3D VIEW // 03</span>
+                        <div class="picture-title">03.png 俯視渲染圖</div>
+                        <div class="picture-desc">展示底座 4.0cm 供電區與精準結構設計。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/04.png" alt="04.png 渲染圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/04.png" data-caption="04.png 3D 視角 4：整體造型細節近照">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">3D VIEW // 04</span>
+                        <div class="picture-title">04.png 細節近照圖</div>
+                        <div class="picture-desc">展示第二代外殼質感與組裝開孔精確度。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/AI_01.png" alt="AI_01.png 模擬圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/AI_01.png" data-caption="AI_01.png AI 渲染視覺 1：智慧桌遊情境模擬">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">AI RENDER // 01</span>
+                        <div class="picture-title">AI_01.png 視覺情境圖</div>
+                        <div class="picture-desc">模擬桌遊裁判機於沉浸式遊戲場景中的擺設效果。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/AI_02.png" alt="AI_02.png 模擬圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/AI_02.png" data-caption="AI_02.png AI 渲染視覺 2：光影氣氛與環境效果">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">AI RENDER // 02</span>
+                        <div class="picture-title">AI_02.png 情境光影圖</div>
+                        <div class="picture-desc">展示第二代質感材料在環境光線下的細節。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/AI_03.png" alt="AI_03.png 模擬圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/AI_03.png" data-caption="AI_03.png AI 渲染視覺 3：整體質感展示">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">AI RENDER // 03</span>
+                        <div class="picture-title">AI_03.png 全景情境圖</div>
+                        <div class="picture-desc">展現智慧硬體與桌遊地圖對應之全景氛圍。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/pi4_v2_3d/AI_04.png" alt="AI_04.png 模擬圖" class="lightbox-trigger" data-full="../../assets/images/pi4_v2_3d/AI_04.png" data-caption="AI_04.png AI 渲染視覺 4：最終量產外觀概念">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">AI RENDER // 04</span>
+                        <div class="picture-title">AI_04.png 量產概念圖</div>
+                        <div class="picture-desc">結合質感紋理與實體功能鍵之量產完工視覺。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>核心結論與技術架構摘要</h2>
+        <div class="grid">
+            <article class="card">
+                <span class="tag">主推薦平台</span>
+                <h3>Raspberry Pi 4 (1GB RAM) 完全可行</h3>
+                <p>經實測，採用「雲端大模型 + 本地 MediaPipe Hands」分離式架構，Pi 4 1GB 記憶體與算力完全可滿足需求。記憶體使用約 700MB（裕度 300MB），CPU 使用率 50–70%，完全支援免風扇自然散熱。</p>
+            </article>
+            <article class="card">
+                <span class="tag">效能黃金關鍵</span>
+                <h3>影像降頻與多線程處理</h3>
+                <p>Pi 4 上運行的黃金建議為：相機解析度降至 <strong>320×240 或 640×360</strong>，使用單手偵測 (max_num_hands=1) 並跳格處理 (skip every 2-3 frames)，可穩定達到 <strong>12–20 FPS</strong>。</p>
+            </article>
+            <article class="card">
+                <span class="tag">極速首字回應</span>
+                <h3>全雲端語音與 LLM 串流</h3>
+                <p>語音識別 (STT) 採用 Faster-Whisper，LLM 使用 Qwen3.5-8B，TTS 使用 Google Cloud (Neural2)。透過管道串流 (Pipeline Streaming)，首字語音延遲僅 <strong>0.8–1.5 秒</strong>。</p>
+            </article>
+        </div>
+    </section>
+
+    <section>
+        <h2>Pi 4 1GB vs Pi 5 1GB 硬體與可行性對照表</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>項目 / 模組</th>
+                        <th>Raspberry Pi 4 (1GB)</th>
+                        <th>Raspberry Pi 5 (1GB)</th>
+                        <th>部署與技術建議</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CPU & 處理能力</strong></td>
+                        <td>4x Cortex-A72 @ 1.8GHz</td>
+                        <td>4x Cortex-A76 @ 2.4GHz</td>
+                        <td>Pi 5 CPU 算力提升約 2-3 倍。Pi 4 需注意算力配額，避免高熱降頻。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RAM 記憶體佔用</strong></td>
+                        <td>約 700 MB / 1 GB (剩餘 ~300MB)</td>
+                        <td>約 750 MB / 1 GB (剩餘 ~250MB)</td>
+                        <td class="ok">可行。因語音與 LLM 均移至雲端，本地僅運行 OS + WebRTC + MediaPipe Hands。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>本地視覺 (MediaPipe Hands)</strong></td>
+                        <td class="ok">12–20 FPS (建議 320x240)</td>
+                        <td class="ok">30 FPS (滿影格運行)</td>
+                        <td>Pi 4 務必限制輸入解析度並開放多線程讀取影格。不建議同時運行 Face Mesh 或 YOLO。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>首字語音回應延遲 (Latency)</strong></td>
+                        <td>1.2 – 1.8 秒</td>
+                        <td class="ok">0.8 – 1.3 秒</td>
+                        <td>雲端 API 回應時間占大頭，硬體效能差異對體驗影響極小。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>熱管理 (Thermal)</strong></td>
+                        <td class="ok">無風扇散熱片即可 (50-60°C)</td>
+                        <td class="warn">建議加裝主動風扇 (Active Cooler)</td>
+                        <td>Pi 4 在量產成本與功耗上具備顯著優勢。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>本地與雲端模型推薦與運作建議</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>模型與功能</th>
+                        <th>可行性</th>
+                        <th>預估 FPS</th>
+                        <th>推薦指數</th>
+                        <th>運作建議</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>MediaPipe Hands</strong><br><small>(手部與手勢偵測)</small></td>
+                        <td class="ok">可行</td>
+                        <td>Pi 4: 12–20 FPS<br>Pi 5: 30 FPS</td>
+                        <td class="ok">★★★★★</td>
+                        <td>專案核心視覺模型。Pi 4 上強烈建議降解析度至 320x240 運行，並使用多線程讀取影格以防阻塞主線程。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MediaPipe Face Mesh</strong><br><small>(表情與視線追蹤)</small></td>
+                        <td class="warn">勉強可行</td>
+                        <td>Pi 4: 8–12 FPS<br>Pi 5: 25–30 FPS</td>
+                        <td class="warn">★★★☆☆</td>
+                        <td>運算開銷較大。在 Pi 4 上不建議與 Hands 同時運行，否則極易引發 CPU 滿載與音訊卡頓。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>YOLOv8-nano</strong><br><small>(實體卡牌/道具辨識)</small></td>
+                        <td class="bad">不推薦 (Pi 4)</td>
+                        <td>Pi 4: 2–5 FPS<br>Pi 5: 10–15 FPS</td>
+                        <td class="warn">★★☆☆☆</td>
+                        <td>無 NPU 加速下 CPU 推理極慢。若需在 Pi 5 上運行，建議限制推理頻率。</td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenCV ArUco</strong><br><small>(二維標記與標籤辨識)</small></td>
+                        <td class="ok">極佳 (替代方案)</td>
+                        <td>Pi 4: 30+ FPS<br>Pi 5: 60+ FPS</td>
+                        <td class="ok">★★★★★</td>
+                        <td>超輕量演算法，對 CPU 與記憶體幾無負擔。若 Pi 4 算力不足以支撐 MediaPipe，是降低成本的最佳替代方案。</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>硬體抉擇與終極系統配置推薦</h2>
+        <div class="grid">
+            <article class="card">
+                <span class="tag">情境 A：新產品開發</span>
+                <h3>新專案強烈建議選用 Pi 5 1GB</h3>
+                <ul class="list">
+                    <li>CPU 算力提升 2-3 倍，MediaPipe Hands 滿影格 30 FPS。</li>
+                    <li>首字語音延遲更低，互動質感顯著增強。</li>
+                    <li>為未來功能升級（Face Mesh / 輕量 YOLO）保留擴充裕度。</li>
+                </ul>
+            </article>
+            <article class="card">
+                <span class="tag">情境 B：現成採用 Pi 4</span>
+                <h3>Pi 4 1GB 可完全穩定商用</h3>
+                <ul class="list">
+                    <li>影像解析度限制於 320x240 或 640x360。</li>
+                    <li>設定 max_num_hands=1 並進行跳格 (skip frames) 處理。</li>
+                    <li>免風扇自然散熱，RAM 穩定控制在 700MB 內。</li>
+                </ul>
+            </article>
+        </div>
+
+        <div class="card full">
+            <h3>AI Master 最終系統推薦配置</h3>
+            <div class="table-wrap">
+                <table style="border: 0;">
+                    <tbody>
+                        <tr><td><strong>SBC 平台</strong></td><td>Raspberry Pi 4 1GB (主推薦) / Raspberry Pi 5 1GB</td></tr>
+                        <tr><td><strong>作業系統</strong></td><td>Raspberry Pi OS Lite 64-bit</td></tr>
+                        <tr><td><strong>本地視覺 (Vision)</strong></td><td>MediaPipe Hands（Pi 4: 320×240 / 12–20 FPS；Pi 5: 30 FPS）</td></tr>
+                        <tr><td><strong>雲端 STT</strong></td><td>Faster Whisper Large-v3</td></tr>
+                        <tr><td><strong>雲端 LLM</strong></td><td>Qwen3.5-8B Instruct</td></tr>
+                        <tr><td><strong>雲端 TTS</strong></td><td>Google Cloud TTS (Neural2)</td></tr>
+                        <tr><td><strong>雲端 RAG</strong></td><td>FAISS + BGE-M3 向量檢索</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        AI Board Game Master · PI4 & PI5 Hardware Specification Guide<br>
+        Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</main>
+
+<!-- Lightbox Modal Container -->
+<div id="lightbox-modal" class="lightbox-modal">
+    <div class="lightbox-img-wrap">
+        <button class="lightbox-close-btn" id="lightbox-close">&times;</button>
+        <img id="lightbox-img" src="" alt="Enlarged 3D View" class="lightbox-img">
+        <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const modal = document.getElementById("lightbox-modal");
+        const modalImg = document.getElementById("lightbox-img");
+        const modalCaption = document.getElementById("lightbox-caption");
+        const closeBtn = document.getElementById("lightbox-close");
+        const triggers = document.querySelectorAll(".lightbox-trigger");
+
+        triggers.forEach(img => {
+            img.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const fullSrc = img.getAttribute("data-full") || img.src;
+                const captionText = img.getAttribute("data-caption") || img.alt;
+
+                modalImg.src = fullSrc;
+                modalCaption.textContent = captionText;
+                modal.classList.add("active");
+            });
+        });
+
+        function closeModal() {
+            modal.classList.remove("active");
+        }
+
+        if (closeBtn) closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal || e.target === modalImg.parentElement) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && modal.classList.contains("active")) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

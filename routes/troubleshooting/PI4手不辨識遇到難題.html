@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspberry Pi 4 MediaPipe 手勢辨識疑難排解手冊</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mono / Lieflat 設計系統 Tokens */
+            --paper:      #ECEAE3;  /* 極亮基準 */
+            --paper-2:    #F4F3EE;
+            --paper-3:    #E2E0D8;
+            --ink:        #16161A;  /* 極暗基準 */
+            --ink-soft:   #26262A;
+            --gray-1:     #45454A;
+            --gray-2:     #6B6B6E;
+            --gray-3:     #94938E;
+            --gray-4:     #BCB9AF;
+            --gray-5:     #D6D3C8;
+            --line:       #CFCCC2;
+
+            --bg-paper: var(--paper-2);
+            --bg-card: var(--paper);
+            --border-hairline: var(--line);
+            --border-accent: var(--ink);
+
+            --text-primary: var(--ink);
+            --text-secondary: var(--gray-2);
+            --text-muted: var(--gray-3);
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --ease-smooth: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Subpage Return Navigation Bar */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(239, 239, 239, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-yunmu);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--color-peijiu);
+            color: #ffffff;
+            border-color: var(--color-ink-dark);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 5rem;
+        }
+
+        .hero {
+            padding: 2.5rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: 0 4px 20px rgba(61, 53, 43, 0.04);
+            margin-bottom: 2.5rem;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--color-ink-dark);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 900px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--border-hairline);
+        }
+
+        /* TOC Navigation */
+        .toc-card {
+            background: #ffffff;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.25rem 1.75rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.02);
+        }
+
+        .toc-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 0.5rem 1.5rem;
+        }
+
+        .toc-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .toc-link:hover {
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-weight: 600;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--color-ink-dark);
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+        }
+
+        ul, ol {
+            padding-left: 1.35rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.65rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge-danger { background: rgba(220, 38, 38, 0.15); color: #b91c1c; border: 1px solid rgba(220, 38, 38, 0.3); }
+        .badge-warn { background: rgba(217, 119, 6, 0.15); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.3); }
+        .badge-ok { background: rgba(22, 163, 74, 0.15); color: #15803d; border: 1px solid rgba(22, 163, 74, 0.3); }
+
+        .flow-container {
+            background: #ffffff;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-num {
+            background: var(--color-ink-dark);
+            color: var(--color-gaoyu);
+            font-family: var(--font-mono);
+            font-weight: 700;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .step-content {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            padding-top: 0.15rem;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-hairline);
+        }
+
+        .code-block {
+            padding: 1.25rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+        }
+
+        .checklist-container {
+            background: #ffffff;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checklist-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 0.25rem;
+            accent-color: var(--color-peijiu);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checklist-label {
+            font-size: 0.925rem;
+            color: var(--text-primary);
+        }
+
+        .final-note-card {
+            background: var(--color-xiangpi);
+            border: 1px solid var(--color-peijiu);
+            border-radius: 10px;
+            padding: 1.75rem;
+            margin-top: 2.5rem;
+        }
+
+        .final-note-title {
+            font-family: var(--font-heading);
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .card { padding: 1.25rem; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <header class="hero">
+        <span class="eyebrow">HARDWARE & SOFTWARE TROUBLESHOOTING GUIDE</span>
+        <h1>Raspberry Pi 4 MediaPipe 手勢辨識 疑難排解手冊</h1>
+        <p>實戰記錄於 2026-07-30 · 適用於 Pi4 (1GB RAM) + Raspberry Pi OS + 官方 MediaPipe Tasks API 完整排查與解決方案</p>
+        <div class="hero-meta">
+            <span class="pill">Raspberry Pi 4</span>
+            <span class="pill">MediaPipe Tasks API</span>
+            <span class="pill">Python 3.11/3.12</span>
+            <span class="pill">Debian Trixie 踩坑</span>
+            <span class="pill">SSD Anchors 解碼</span>
+        </div>
+    </header>
+
+    <div class="toc-card">
+        <div class="toc-title">📋 快速導覽目錄 (TOC)</div>
+        <div class="toc-grid">
+            <a href="#diagnosis" class="toc-link">① 遇到問題時的 6 步診斷流程圖</a>
+            <a href="#layer4" class="toc-link">② 真正根因：Python 版本過新 (3.13 衝突)</a>
+            <a href="#layer1" class="toc-link">③ 次要問題：偵測不到手掌（手刻 Anchor）</a>
+            <a href="#layer2" class="toc-link">④ 次要問題：正規化範圍錯誤 ([-1, 1])</a>
+            <a href="#layer3" class="toc-link">⑤ 排查方向誤判：AES 指令集分析</a>
+            <a href="#layer5" class="toc-link">⑥ 操作疏失：檔案內容截斷 (ImportError)</a>
+            <a href="#checklist" class="toc-link">⑦ 快速自我檢查清單 (Checklist)</a>
+            <a href="#final" class="toc-link">⑧ 核心教訓與優先順序總結</a>
+        </div>
+    </div>
+
+    <!-- Section 1 -->
+    <h2 id="diagnosis">① 遇到問題時，先跑這個診斷流程圖</h2>
+    <div class="flow-container">
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">先確認 Python 版本：<code>python3 --version</code>，確認是否落在 3.9~3.12 之間（MediaPipe 官方支援區間）。</div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">確認系統架構：<code>uname -m</code>，確認是 aarch64 還是 armv7l。</div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">確認 mediapipe 是否能 import：<code>python3 -c "import mediapipe as mp; print(mp.__version__)"</code>。</div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">確認 Tasks API 是否正常：<code>python3 -c "from mediapipe.tasks.python import vision; print('OK')"</code>。</div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">5</div>
+            <div class="step-content">確認模組檔案語法正確：<code>python3 -m py_compile modules/camera_module.py</code>。</div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">6</div>
+            <div class="step-content">確認能否 import 到你的類別：<code>python3 -c "from modules.camera_module import CameraModule"</code>。</div>
+        </div>
+    </div>
+
+    <!-- Section 2: 真正根因置頂 -->
+    <h2 id="layer4">② 核心重點（真正根因）：Python 版本過新</h2>
+    <div class="card">
+        <span class="badge badge-ok">★ 真正根因！請優先檢查與修復</span>
+        <p><strong>症狀：</strong><code>pip install mediapipe==x.x.x</code> 找不到對應版本，或是只找到奇怪的版本號（如 1.0.0）。</p>
+        <p><strong>根因：</strong>Raspberry Pi OS 若基於較新的 Debian（例如 trixie / Debian 13），會內建 Python 3.13，但 MediaPipe 官方 wheel 目前最高只支援到 <strong>Python 3.12</strong>。</p>
+        <p><strong>診斷指令：</strong></p>
+        <div class="code-block">python3 --version
+cat /etc/os-release</div>
+        <p><strong>解決方式：建立 Python 3.11 虛擬環境</strong></p>
+        <div class="code-block">sudo apt update
+sudo apt install -y python3.11 python3.11-venv
+
+cd ~/你的專案路徑
+python3.11 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install mediapipe==0.10.14
+python3 -c "import mediapipe as mp; print(mp.__version__)"
+python3 -c "from mediapipe.tasks.python import vision; print('OK')"</div>
+        <p><strong>若 apt 找不到 python3.11：</strong>代表軟體源版本更新（如 trixie），建議改用 Bookworm 版本的 Raspberry Pi OS（原生即為 Python 3.11，相容性最穩定）。</p>
+    </div>
+
+    <!-- Section 3 -->
+    <h2 id="layer1">③ 次要問題：偵測不到手掌（手刻 anchor 問題）</h2>
+    <div class="card">
+        <span class="badge badge-danger">已被官方 API 取代，不建議手刻</span>
+        <p><strong>症狀：</strong>log 一直顯示「未偵測到手掌」，信心分數始終低於門檻。</p>
+        <p><strong>根因：</strong>若自行用 <code>tflite_runtime</code> 載入 <code>palm_detection_lite.tflite</code>，模型輸出的 18 個數值是「相對 anchor 的偏移量」，不是絕對座標。若沒做 SSD 2016 anchors 解碼，算出來的框座標完全錯誤。</p>
+        <p><strong>解法（若仍要手刻）：</strong></p>
+        <div class="code-block">def generate_ssd_anchors(input_size=192):
+    anchors = []
+    strides = [8, 16]
+    anchor_counts = [2, 6]
+    for layer, stride in enumerate(strides):
+        grid_size = input_size // stride
+        for y in range(grid_size):
+            for x in range(grid_size):
+                xc = (x + 0.5) * stride / input_size
+                yc = (y + 0.5) * stride / input_size
+                for _ in range(anchor_counts[layer]):
+                    anchors.append((xc, yc))
+    return anchors</div>
+        <p><strong>最佳解法：</strong>直接使用上方的 Python 3.11 虛擬環境，改用官方 <code>HandLandmarker</code> Tasks API，完全無需手刻此層。</p>
+    </div>
+
+    <!-- Section 4 -->
+    <h2 id="layer2">④ 次要問題：正規化範圍錯誤</h2>
+    <div class="card">
+        <span class="badge badge-danger">已被官方 API 取代</span>
+        <p><strong>症狀：</strong>即使加了 anchor 解碼，confidence 仍然平坦、沒有起伏。</p>
+        <p><strong>根因：</strong>MediaPipe 官方模型訓練時，圖像張量正規化範圍是 <code>[-1, 1]</code>，但常見錯誤寫法是：</p>
+        <div class="code-block">img = img.astype(np.float32) / 255.0   # ❌ 錯誤，範圍變成 [0,1]</div>
+        <p><strong>正確寫法：</strong></p>
+        <div class="code-block">img = img.astype(np.float32)
+img = (img - 127.5) / 127.5   # ✅ 正確，範圍是 [-1,1]</div>
+    </div>
+
+    <!-- Section 5 -->
+    <h2 id="layer3">⑤ 排查方向誤判：AES 指令集分析</h2>
+    <div class="card">
+        <span class="badge badge-warn">排查方向合理，但非主因</span>
+        <p><strong>症狀：</strong>懷疑官方 <code>mediapipe</code> pip 套件因為硬體不支援 AES-NI 而 SIGILL 崩潰。</p>
+        <p><strong>檢查方式：</strong></p>
+        <div class="code-block">cat /proc/cpuinfo | grep aes</div>
+        <p><strong>重要提醒：</strong>即使這個指令沒有任何輸出，也不代表這就是真正的崩潰原因！請務必先確認「② 核心重點（Python 版本）」，避免繞一大圈。</p>
+    </div>
+
+    <!-- Section 6 -->
+    <h2 id="layer5">⑥ 操作疏失：檔案內容截斷</h2>
+    <div class="card">
+        <span class="badge badge-warn">操作疏失類問題</span>
+        <p><strong>症狀：</strong><code>ImportError: cannot import name 'CameraModule' from 'modules.camera_module'</code>，但模組本身可以被 import，只是找不到類別。</p>
+        <p><strong>根因：</strong>透過終端機貼上含中文字元的長段程式碼時，容易在某一行被截斷，導致後面的 class 定義整段遺失。</p>
+        <p><strong>診斷指令：</strong></p>
+        <div class="code-block">python3 -m py_compile modules/camera_module.py
+grep -n "^class " modules/camera_module.py
+python3 -c "
+import modules.camera_module as cm
+print([x for x in dir(cm) if not x.startswith('_')])
+"</div>
+        <p><strong>修復方式：</strong>用 heredoc 方式覆寫或追加，避免逐行手動貼上：</p>
+        <div class="code-block">cat >> modules/camera_module.py << 'EOF'
+# 這裡貼上遺失的完整程式碼區塊
+EOF</div>
+    </div>
+
+    <!-- Section 7 -->
+    <h2 id="checklist">⑦ 快速自我檢查清單</h2>
+    <div class="checklist-container">
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label"><code>python3 --version</code> 是否在 3.9 ~ 3.12 之間？（若為 3.13 請切換至 Python 3.11 venv）</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label"><code>pip install mediapipe==0.10.14</code> 是否能正常安裝且無崩潰？</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label"><code>from mediapipe.tasks.python import vision</code> 是否能正常 import？</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label">是否直接使用官方 <code>hand_landmarker.task</code> + <code>HandLandmarker</code> API，而非手刻 tflite anchor 解碼？</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label"><code>python3 -m py_compile</code> 檢查語法是否正確？</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label">若用 Web 串流 FPS 過低，是否測試過純 CLI 模式（<code>python3 modules/camera_module.py</code>）比較速度？</span>
+        </label>
+        <label class="checklist-item">
+            <input type="checkbox">
+            <span class="checklist-label">若啟用雙手偵測（<code>num_hands=2</code>），FPS 是否明顯下降？可嘗試降低解析度或縮短 <code>time.sleep()</code>。</span>
+        </label>
+    </div>
+
+    <!-- Section 8 -->
+    <h2 id="final">⑧ 核心教訓與優先順序總結</h2>
+    <div class="final-note-card">
+        <div class="final-note-title">💡 關鍵教訓心得</div>
+        <p><strong>真正卡關的根本原因，往往不是表面看到的症狀。</strong></p>
+        <p>這次「偵測不到手掌」背後真正的根因是系統版本（Debian trixie + Python 3.13）超前於 mediapipe 官方套件的支援範圍，而不是最初懷疑的 AES 硬體限制或 anchor 解碼邏輯。</p>
+        <p style="margin-top: 0.75rem;"><strong>建議排查優先順序：</strong>下次遇到類似問題，請務必先檢查 <strong>Python 版本相容性</strong>（② 核心重點），再考慮硬體限制（⑤ AES 指令集），最後才去手刻底層邏輯（③④ 手刻 Anchor / 正規化）。這樣可以省下大量排查時間。</p>
+    </div>
+
+    <footer>
+        Raspberry Pi 4 MediaPipe 疑難排解手冊 · ReFei Tech<br>
+        Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+</body>
+</html>

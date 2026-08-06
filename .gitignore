@@ -1,0 +1,13 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Gemini & Agent temp logs
+.gemini/
+.agents/
+*.log
+tmp/
+node_modules/

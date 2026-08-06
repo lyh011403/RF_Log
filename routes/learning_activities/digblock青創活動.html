@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>創業機會與115年度SBIR計畫深度彙整</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 傳統四色階 Tokens */
+            --color-gaoyu: #efefef;       /* 縞羽 */
+            --color-xiangpi: #e6d1c5;     /* 香皮 */
+            --color-yunmu: #c6b8b1;       /* 雲母 */
+            --color-peijiu: #ac9f8a;      /* 佩玖 */
+            --color-ink-dark: #3d352b;    /* 沉木墨色 */
+
+            --bg-paper: var(--color-gaoyu);
+            --bg-card: #f9f8f6;
+            --border-hairline: rgba(198, 184, 177, 0.65);
+            --border-accent: var(--color-peijiu);
+
+            --text-primary: var(--color-ink-dark);
+            --text-secondary: #6e6255;
+            --text-muted: #918579;
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Subpage Return Navigation Bar */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(239, 239, 239, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-yunmu);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--color-peijiu);
+            color: #ffffff;
+            border-color: var(--color-ink-dark);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 5rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            color: var(--color-ink-dark);
+            text-align: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--color-peijiu);
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--color-yunmu);
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            border-left: 4px solid var(--color-peijiu);
+            padding-left: 0.75rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.35rem 1.6rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+            border: 1px solid var(--border-hairline);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+        }
+
+        ul, ol {
+            padding-left: 1.35rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border-hairline);
+            padding: 0.85rem 1.1rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            font-weight: 700;
+        }
+
+        td {
+            color: var(--text-secondary);
+        }
+
+        .highlight {
+            background-color: rgba(172, 159, 138, 0.25);
+            color: var(--color-ink-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .alert-box {
+            background-color: rgba(192, 86, 47, 0.08);
+            border-left: 4px solid #c0562f;
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            margin: 1.25rem 0;
+            color: var(--text-primary);
+        }
+
+        .citation {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+            .card { padding: 1.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <h1 class="hero-title">DIGBLOCK 青創活動：創業機會與 115 年度 SBIR 計畫彙整</h1>
+
+    <!-- 壹、創業機會 從點子到獲利 -->
+    <h2>壹、《創業機會 從點子到獲利》簡報彙整</h2>
+    
+    <div class="card">
+        <h3>基本資訊</h3>
+        <ul>
+            <li><strong>簡報人：</strong>林奕利</li>
+            <li><strong>公司與品牌：</strong>崔洧企業有限公司 / 「奕利的店」（創立於 2003 年，標榜「只賣自己敢吃的」）</li>
+            <li><strong>主要產品：</strong>風味香腸、香腸DIY、鮑魚雞湯、木耳露、四物膳、老菜脯</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>一、 品牌發展歷程 (2003–迄今)</h3>
+        <ul>
+            <li><span class="tag">2003 年</span> 崔洧企業有限公司成立，同年催生網路品牌「奕利的店」，開啟網路販售新通路。</li>
+            <li><span class="tag">2004 年</span> 獲選中小企業處圓夢坊創業成功範例。</li>
+            <li><span class="tag">2005 年</span> 榮獲經濟部新創事業獎 - 微型創業優質獎。</li>
+            <li><span class="tag">2006–2008 年</span> 連續受邀參加聯合國全球婦女高峰會 (GSW) 及亞太經合會 (APEC)；擔任行政院青輔會代言人。</li>
+            <li><span class="tag">2009 年</span> 擔任行政院勞委會「多元就業方案」、「培力計畫」諮詢輔導顧問。</li>
+            <li><span class="tag">2010 年</span> 進入 City Super 與 Jasons 高端超市通路。</li>
+            <li><span class="tag">2011 年</span> 榮獲 APEC 婦女創業菁英。</li>
+            <li><span class="tag">2013 年</span> 獲北京大學與賽富基金投資、福建 101 創業之星、兩岸新創業大賽三等獎。</li>
+            <li><span class="tag">2017–迄今</span> 進入國際通路期與回饋家鄉。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>二、 創業迷思與商業剖析</h3>
+        <p><strong>核心理念：</strong>「顧客願意付錢」才是真需求，創業失敗常源於一開始判斷錯誤。</p>
+        <ul>
+            <li><strong>迷思一（我喜歡，別人一定喜歡）：</strong>案例中上班族投入 30 萬成立手工皂品牌，一年賣不到 100 組（興趣不等於市場需求）。</li>
+            <li><strong>迷思二（朋友都說很好）：</strong>朋友不是客戶，真正的驗證是顧客願不願意掏錢。</li>
+            <li><strong>迷思三（有技術就能創業）：</strong>技術 100 分但行銷僅 20 分，產品再好也賣不出去。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>三、 商機來源與市場分析</h3>
+        <ul>
+            <li><strong>創業機會四大來源：</strong>
+                <ol>
+                    <li>解決痛點（如 Uber、Foodpanda）</li>
+                    <li>消費習慣改變（如疫情後的外送、線上課程、遠距工作）</li>
+                    <li>法規改變（如環保法規提升）</li>
+                    <li>人口結構改變（如超高齡社會帶來長照、銀髮食品、輔具服務）</li>
+                </ol>
+            </li>
+            <li><strong>商機與時機判定：</strong>
+                <ul>
+                    <li>商機 &ne; 市場：解決問題才是商機（利用 AI 幫中小企業寫文案比單純賣 AI 工具易成交）。</li>
+                    <li>時機勝於努力：智慧型手機普及後，App 需求才爆發。</li>
+                </ul>
+            </li>
+            <li><strong>觀測工具：</strong>Google Trends、經濟部中小企業白皮書、國發會人口統計、勞動部產業報告。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>四、 2026 雙軸轉型與綠色商機</h3>
+        <ul>
+            <li><strong>價值創造三要素：</strong>市場差異化（提升送禮價值）、低仿冒力（專利與數位/情感護城河）、目標客群（鎖定高健康意識與重視在地故事者）。</li>
+            <li><strong>2026 雙軸轉型：</strong>
+                <ul>
+                    <li><span class="highlight">數位化：</span>數位雙生預測產能（減少浪費）、AI 輔助跨國體驗。</li>
+                    <li><span class="highlight">永續化：</span>循環經濟（包裝減量、在地採購）。</li>
+                </ul>
+            </li>
+            <li><strong>綠色溢價數據：</strong><span class="highlight">70%</span> 消費者更願意購買永續品牌；消費者願意支付平均 <span class="highlight">+9.7%</span> 的額外溢價。</li>
+            <li><strong>反脆弱團隊結構：</strong>由「創意腦」（研發/故事）、「執行腦」（財務/合規）與「外交腦」（通路/政府資源）組成。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>五、 創業失敗統計與風險</h3>
+        <ul>
+            <li><strong>全球失敗主因：</strong>沒有市場需求 (42%)、資金耗盡 (29%)、團隊問題 (23%)。</li>
+            <li><strong>台灣常見陷阱：</strong>過度樂觀、低估成本、高估銷售。</li>
+            <li><strong>2025-2026 新風險：</strong>供應鏈深度透明度（需追蹤至 Tier 2）、網路安全與信任、ESG 法規門檻（無碳排數據易被排除）。</li>
+        </ul>
+    </div>
+
+    <!-- 貳、115年度 SBIR 小型企業創新研發計畫 -->
+    <h2>貳、《115年度 SBIR 小型企業創新研發計畫》懶人包彙整</h2>
+
+    <div class="card">
+        <h3>一、 計畫基本特色與資格</h3>
+        <ul>
+            <li><strong>主管機關：</strong>經濟部中小及新創企業署</li>
+            <li><strong>四大小特色：</strong>隨到隨受理（全年全天）、全程線上申請、申請簡便（Phase 1 僅需簡報）、專人服務 (0800-888-968)。</li>
+            <li><strong>申請資格（同時符合）：</strong>
+                <ol>
+                    <li>依法辦理公司、商業登記、獨資、合夥、有限合夥之營利事業。</li>
+                    <li>實收資本額/出資額在 <span class="highlight">1億元以下</span>，或經常僱用員工數 <span class="highlight">未滿200人</span>。</li>
+                </ol>
+            </li>
+            <li><strong>適用領域：</strong>創新技術（資通、電子、機械、生技製藥、民生化工）、創新服務。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>二、 申請階段與補助金額上限</h3>
+        <p class="citation">* 註：政府補助款以總計畫經費 50% 為上限。</p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>類型</th>
+                        <th>階段名稱</th>
+                        <th>重點說明</th>
+                        <th>補助金額上限</th>
+                        <th>計畫期程</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3"><strong>個別申請</strong></td>
+                        <td>Phase 1 (先期研究)</td>
+                        <td>創新構想小規模實驗/分析，驗證可行性</td>
+                        <td><span class="highlight">150 萬元</span></td>
+                        <td>6 個月</td>
+                    </tr>
+                    <tr>
+                        <td>Phase 2 (研究開發)</td>
+                        <td>產品雛形開發、生產方法，至小量試產/試營運</td>
+                        <td><span class="highlight">1,200 萬元</span></td>
+                        <td>6個月 ~ 2年</td>
+                    </tr>
+                    <tr>
+                        <td>Phase 2+ (加值應用)</td>
+                        <td>研發成果商品化、技術升級、新市場拓展</td>
+                        <td><span class="highlight">600 萬元</span></td>
+                        <td>6個月 ~ 1年</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2"><strong>聯盟申請</strong><br>(3家以上)</td>
+                        <td>Phase 2 (研究開發)</td>
+                        <td>跨領域技術整合或供應鏈共同開發</td>
+                        <td><span class="highlight">3,000 萬元</span></td>
+                        <td>9個月 ~ 2年</td>
+                    </tr>
+                    <tr>
+                        <td>Phase 2+ (加值應用)</td>
+                        <td>成果多元應用與產業鏈整合</td>
+                        <td><span class="highlight">2,500 萬元</span></td>
+                        <td>9個月 ~ 1年</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>三、 經費編列原則</h3>
+        <ul>
+            <li><strong>人事費：</strong>原則占總經費 60% 為限，須為公司具勞保之正式研發員工（兼職不可列）。</li>
+            <li><strong>消耗性器材與材料費：</strong>原則占總經費 25% 為限。</li>
+            <li><strong>設備使用與維護費：</strong>購買 1 年內保固期設備不得編列維護費。</li>
+            <li><strong>技術移轉費：</strong>技轉費以占 60% 為原則，專利/智財購買上限 30%。</li>
+            <li><strong>專利申請費補助（新制度）：</strong>國內專利每案上限 <span class="highlight">3 萬元</span>；國外專利每案上限 <span class="highlight">10 萬元</span>。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>四、 必備申請文件</h3>
+        <ol>
+            <li>申請書</li>
+            <li>申請者自我檢查表（加蓋公司及負責人印章）</li>
+            <li>最近一年「年度損益及稅額計算表」（未滿 1 年新創以最新一期營業稅申報書替代）</li>
+            <li>最近一期勞保「投保單位被保險人名冊」（5人以下檢附就業保險證明）</li>
+            <li>最近 1 個月內「納稅義務人違章欠稅查復表」（須含國稅與地方稅）</li>
+            <li>Phase 1 附「計畫簡報」；Phase 2/2+ 附「計畫書」</li>
+            <li>個資同意書、曾執行政府計畫揭露聲明書、建議迴避人員清單</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h3>五、 加分條件與不合格條款</h3>
+        <ul>
+            <li><strong>優質加分條件：</strong>
+                <ul>
+                    <li>曾獲經濟部創新獎項（小巨人獎、新創事業獎、中小企業創新研究獎等）。</li>
+                    <li>屬傳統產業、新創事業、女性創業、青年創業或社會創新組織。</li>
+                    <li>全體員工近兩年平均加薪達 <span class="highlight">3% 以上</span>。</li>
+                    <li>研發標的為身障產品、高齡銀髮服務、防災科技。</li>
+                    <li>符合 22 類特定技術升級傳統產業（如成衣、鞋類、家電、袋包箱等）。</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="alert-box">
+            <strong>不符合資格（不得申請/撤銷補助）：</strong>
+            <ul>
+                <li>5 年內有執行政府計畫重大違約或受停權處分者。</li>
+                <li>3 年內欠繳應納稅捐者。</li>
+                <li>同一案件已獲得其他政府機關補助者。</li>
+                <li>近 3 年有嚴重違反環保、勞工、食安或身心障礙者權益保障法且情節重大者。</li>
+                <li>公司或負責人近 3 年有金融犯罪判決確定者。</li>
+                <li>陸資企業或外國公司在台分公司。</li>
+                <li>公司處於解散、撤銷、停業或歇業狀態者。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>六、 常見計畫缺失與審查注意事項</h3>
+        <ul>
+            <li><strong>創新性不足：</strong>未展現超越國內同業之技術或服務指標。</li>
+            <li><strong>查核點不明確：</strong>缺乏客觀之量化數據指標（如良率增加○%、產值提升○%）。</li>
+            <li><strong>人力編列違規：</strong>待聘人力人月數超過總研發人力 <span class="highlight">30%</span>；誤將兼職人員納入。</li>
+            <li><strong>經費科目誤編：</strong>將辦公事務用品編入材料費；材料費未詳述規格尺寸。</li>
+        </ul>
+    </div>
+
+    <footer>
+        DIGBLOCK 青創活動 · 創業機會與 115 年度 SBIR 計畫深度彙整<br>
+        Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+</body>
+</html>

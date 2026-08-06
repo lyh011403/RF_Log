@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Board Game Master Rev.B 完整硬體規格</title>
+<style>
+body{font-family:Segoe UI,"Microsoft JhengHei",sans-serif;background:#f4f6f8;margin:0;color:#222}
+header{background:#1f4e79;color:#fff;padding:24px}
+main{max-width:1150px;margin:auto;padding:24px}
+section{background:#fff;padding:20px;border-radius:10px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:8px}
+th{background:#eaf1f8}
+pre{background:#f7f7f7;padding:12px;border-radius:6px;overflow:auto}
+h2{border-left:6px solid #1f4e79;padding-left:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>AI Board Game Master Rev.B</h1>
+<p>硬體規格、BOM、接線規劃與PCB佈線指南</p>
+</header>
+<main>
+
+<section>
+<h2>一、系統架構</h2>
+<pre>
+IP5328P
+├── MaixCAM
+├── WS2812B
+└── Ferrite Bead
+      └── MG90S
+
+RP2040
+├── PN532
+└── AS5600
+</pre>
+</section>
+
+<section>
+<h2>二、完整接線規劃（Net List）</h2>
+<table>
+<tr><th>Net</th><th>接線方式</th></tr>
+<tr><td>Net_5V_MAIN</td><td>IP5328P 5V → MaixCAM VBUS → WS2812 VCC → 470µF → Ferrite Bead</td></tr>
+<tr><td>Net_5V_DIRTY</td><td>Ferrite Bead → 470µF → 0.1µF → MG90S VCC</td></tr>
+<tr><td>Net_GND</td><td>所有模組共地，Servo 回流避免穿越 MCU 區域</td></tr>
+<tr><td>UART_TX</td><td>MaixCAM GPIOA18 → 22Ω → RP2040 GP0</td></tr>
+<tr><td>UART_RX</td><td>RP2040 GP1 → 22Ω → MaixCAM GPIOA19</td></tr>
+<tr><td>Servo PWM</td><td>MaixCAM GPIOA17 → 100Ω → MG90S PWM</td></tr>
+<tr><td>LED DIN</td><td>RP2040 GP15 → 470Ω → WS2812 DIN</td></tr>
+<tr><td>I²C0</td><td>GP4 SDA → PN532 SDA；GP5 SCL → PN532 SCL（各 4.7kΩ Pull-up）</td></tr>
+<tr><td>I²C1</td><td>GP6 SDA → AS5600 SDA；GP7 SCL → AS5600 SCL（各 4.7kΩ Pull-up）</td></tr>
+<tr><td>Speaker</td><td>MaixCAM VOP → SPK+；MaixCAM VON → SPK−（不可接 GND）</td></tr>
+<tr><td>3.3V</td><td>MaixCAM 3.3V 不外接；RP2040 使用自身 3.3V 供電</td></tr>
+</table>
+</section>
+
+<section>
+<h2>三、BOM</h2>
+<table>
+<tr><th>元件</th><th>規格</th></tr>
+<tr><td>Ferrite Bead</td><td>Murata BLM31PG121SN1L (120Ω@100MHz, 3.5A)</td></tr>
+<tr><td>470µF</td><td>Low ESR ×2</td></tr>
+<tr><td>0.1µF</td><td>X7R ×6</td></tr>
+<tr><td>22Ω</td><td>UART ×2</td></tr>
+<tr><td>100Ω</td><td>Servo PWM ×1</td></tr>
+<tr><td>470Ω</td><td>WS2812 DIN ×1</td></tr>
+<tr><td>4.7kΩ</td><td>I²C Pull-up ×4</td></tr>
+</table>
+</section>
+
+<section>
+<h2>四、PCB 佈線建議</h2>
+<table>
+<tr><th>項目</th><th>建議</th></tr>
+<tr><td>Servo 5V/GND</td><td>40~60 mil，最短路徑至 Ferrite 與電容</td></tr>
+<tr><td>5V Main</td><td>30~40 mil</td></tr>
+<tr><td>UART</td><td>8~10 mil，雙絞線，小於10cm</td></tr>
+<tr><td>I²C</td><td>8~10 mil，Pull-up 靠近 RP2040</td></tr>
+<tr><td>Audio</td><td>VOP/VON 差分成對，遠離 Servo</td></tr>
+<tr><td>GND</td><td>整板鋪銅，Servo 與數位回流分離</td></tr>
+</table>
+</section>
+
+<section>
+<h2>五、PCB 分區</h2>
+<pre>
+Power(IP5328P)
+   │
+MaixCAM ─ RP2040
+   │        ├─ PN532
+   │        └─ AS5600
+Ferrite
+   │
+Servo
+   │
+Speaker
+</pre>
+</section>
+
+</main>
+</body>
+</html>

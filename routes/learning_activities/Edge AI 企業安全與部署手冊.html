@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="企業級 Edge AI、NemoClaw、GROMACS 與 AI Gateway 安全部署指南">
+    <title>Edge AI × NemoClaw × GROMACS 安全指南 v3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 傳統四色階 Tokens */
+            --color-gaoyu: #efefef;       /* 縞羽 */
+            --color-xiangpi: #e6d1c5;     /* 香皮 */
+            --color-yunmu: #c6b8b1;       /* 雲母 */
+            --color-peijiu: #ac9f8a;      /* 佩玖 */
+            --color-ink-dark: #3d352b;    /* 沉木墨色 */
+
+            --bg-paper: var(--color-gaoyu);
+            --bg-card: #f9f8f6;
+            --border-hairline: rgba(198, 184, 177, 0.6);
+            --border-accent: var(--color-peijiu);
+
+            --text-primary: var(--color-ink-dark);
+            --text-secondary: #6e6255;
+            --text-muted: #918579;
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .wrap {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        aside {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem 1.25rem;
+            border-right: 1px solid var(--border-hairline);
+            background: rgba(239, 239, 239, 0.85);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-hairline);
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--color-ink-dark);
+        }
+
+        .icon {
+            display: grid;
+            place-items: center;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--color-xiangpi);
+            border: 1px solid var(--color-yunmu);
+            font-size: 1.1rem;
+        }
+
+        .brand small {
+            display: block;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 400;
+        }
+
+        .cat {
+            margin: 1.25rem 0.5rem 0.5rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        nav a {
+            display: block;
+            padding: 0.4rem 0.75rem;
+            margin: 0.2rem 0;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        nav a:hover {
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-weight: 600;
+        }
+
+        main {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            padding: 2.5rem 2.5rem 5rem;
+        }
+
+        .hero {
+            padding: 2.5rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: 0 4px 20px rgba(61, 53, 43, 0.04);
+            margin-bottom: 2.5rem;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--color-ink-dark);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 900px;
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--border-hairline);
+            margin: 0.4rem 0.4rem 0 0;
+        }
+
+        section {
+            margin-top: 3.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--color-ink-dark);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+        }
+
+        .lead {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.35rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.07);
+        }
+
+        .card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            margin: 0.5rem 0 0.5rem;
+        }
+
+        .card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .notice {
+            margin: 1.5rem 0;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--color-yunmu);
+            border-left: 4px solid var(--color-peijiu);
+            border-radius: 6px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.925rem;
+        }
+
+        .notice.warn {
+            border-left-color: #c0562f;
+            background: rgba(192, 86, 47, 0.08);
+        }
+
+        .notice.ok {
+            border-left-color: #2d5a3d;
+            background: rgba(45, 90, 61, 0.08);
+        }
+
+        .diagram {
+            padding: 1.5rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .table {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-hairline);
+            text-align: left;
+        }
+
+        th {
+            background: var(--color-xiangpi);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--color-ink-dark);
+            font-weight: 700;
+        }
+
+        td { color: var(--text-secondary); }
+
+        .step {
+            display: grid;
+            grid-template-columns: 50px 1fr;
+            gap: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            background: var(--bg-card);
+            margin: 1rem 0;
+        }
+
+        .n {
+            display: grid;
+            place-items: center;
+            width: 42px; height: 42px;
+            border-radius: 8px;
+            background: var(--color-xiangpi);
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            font-family: var(--font-mono);
+            font-weight: 800;
+        }
+
+        .step h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+        }
+
+        .step p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .label {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            margin-right: 0.5rem;
+            border-radius: 3px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+        }
+
+        .risk { background: rgba(192, 86, 47, 0.15); color: #c0562f; }
+        .act { background: rgba(45, 90, 61, 0.15); color: #2d5a3d; }
+
+        pre {
+            padding: 1.25rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .checkgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .check {
+            padding: 1.25rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .check strong {
+            display: block;
+            font-family: var(--font-heading);
+            color: var(--color-ink-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .check p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .ref {
+            margin: 1rem 0;
+            padding: 1.25rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .ref strong {
+            color: var(--color-ink-dark);
+            font-family: var(--font-heading);
+        }
+
+        .ref p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        a { color: var(--color-ink-dark); font-weight: 600; text-decoration: underline; }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+            .card { padding: 1.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+
+        @media (max-width: 900px) {
+            .wrap { display: block; }
+            aside { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar" style="position: sticky; top: 0; z-index: 1000; background: rgba(239, 239, 239, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-yunmu); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+    <a href="../index.html" class="subpage-return-btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--color-xiangpi); color: var(--color-ink-dark); border: 1px solid var(--color-yunmu); padding: 0.45rem 1rem; border-radius: 6px; font-family: var(--font-mono, monospace); font-size: 0.85rem; font-weight: 600; text-decoration: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="wrap">
+    <aside>
+        <div class="brand">
+            <div class="icon">🧪</div>
+            <span>Edge AI Secure Lab<small>NemoClaw × GROMACS × Gateway v3</small></span>
+        </div>
+        <nav>
+            <div class="cat">OVERVIEW</div>
+            <a href="#intro">整合總覽</a>
+            <a href="#corrections">重要校正</a>
+            <a href="#architecture">目標架構</a>
+            <div class="cat">IMPLEMENT</div>
+            <a href="#flow">任務生命週期</a>
+            <a href="#gateway">AI Gateway 專章</a>
+            <a href="#agents">NemoClaw 與 Sandbox</a>
+            <a href="#gromacs">GROMACS 科學工作流</a>
+            <a href="#mcp">MCP Skill 模式</a>
+            <a href="#rag">RAG 與資料治理</a>
+            <div class="cat">SECURITY</div>
+            <a href="#defense">五道防線</a>
+            <a href="#supply">供應鏈與機密</a>
+            <a href="#network">網路與容器</a>
+            <div class="cat">OPERATE</div>
+            <a href="#observability">稽核與 SLO</a>
+            <a href="#testing">驗證與紅隊</a>
+            <a href="#runbook">事件應變</a>
+            <a href="#checklist">上線檢核</a>
+            <a href="#refs">參考資料</a>
+        </nav>
+    </aside>
+
+    <main>
+        <header id="intro" class="hero">
+            <span class="eyebrow">ENTERPRISE EDGE AI · SCIENTIFIC AGENT SECURITY</span>
+            <h1>企業級 Edge AI 自主智慧體<br>與縱深安全防禦指南</h1>
+            <p>整合 NemoClaw／OpenShell、NeMo Guardrails、AI Gateway、GROMACS、MCP 與 Palo Alto Prisma AIRS 的可執行安全架構。核心原則是：模型負責推理與規劃；政策、身份、沙盒與可驗證工具負責決定「能不能做」。</p>
+            <div>
+                <span class="chip">NemoClaw</span>
+                <span class="chip">OpenShell</span>
+                <span class="chip">GROMACS</span>
+                <span class="chip">AI Gateway</span>
+                <span class="chip">MCP Sandbox</span>
+                <span class="chip">RAG Governance</span>
+            </div>
+        </header>
+
+        <section id="corrections">
+            <h2>重要校正與補強</h2>
+            <p class="lead">已將原始筆記的概念保留，並修正容易造成部署誤解的地方；正式採購、對外簡報或合規文件仍應以當下原廠版本、授權條款與實測數據為準。</p>
+            <div class="table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>原始敘述</th>
+                            <th>建議修正</th>
+                            <th>原因／落地方式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>「NemoClaw 是自主研究大腦」</td>
+                            <td>NemoClaw 是在 OpenShell 沙盒內部署與操作相容 Agent 的參考整合／生命週期工具；LLM、Agent framework、工作流與工具才共同構成「大腦」。</td>
+                            <td>避免把部署與治理層誤寫成單一推理模型。將模型、Orchestrator、Skill、政策與狀態機分別標示。</td>
+                        </tr>
+                        <tr>
+                            <td>「NeMo Guardrails 在 Gateway 端攔截且不消耗 LLM 算力」</td>
+                            <td>部分規則可用字串、分類器或政策引擎執行；但某些 Guardrails 流程可能仍需呼叫模型或額外推論。</td>
+                            <td>安全設計需做延遲與成本預算，不能假設所有 Rail 都是零成本。</td>
+                        </tr>
+                        <tr>
+                            <td>「所有流量都通過 Portkey」</td>
+                            <td>AI Gateway 應收斂 LLM 與 Agent API 流量；GROMACS 的 MPI／RoCE 資料面不應硬經 API Gateway。</td>
+                            <td>控制面經 Gateway；HPC 資料面走受控叢集網路與 Scheduler，避免性能與可靠性問題。</td>
+                        </tr>
+                        <tr>
+                            <td>「MCP 可讀寫 HR／GitLab／Jira」</td>
+                            <td>預設唯讀；寫入／部署／刪除等動作必須用最小權限、結構化參數、短效授權與人工核准。</td>
+                            <td>避免過度自主性與 LLM 直接造成不可逆企業操作。</td>
+                        </tr>
+                        <tr>
+                            <td>「AI 自我進化，自動上架 Skill Bundle」</td>
+                            <td>成功軌跡可被記錄、評估與候選化；進入正式 Skill Library 前需測試、簽章、審核與可回滾發布。</td>
+                            <td>防止模型把錯誤、偏誤或受攻擊軌跡自動固化為生產能力。</td>
+                        </tr>
+                        <tr>
+                            <td>「單機／四機原子數與互連效能」</td>
+                            <td>列為研討會案例或待驗證基準，不作通用容量承諾。</td>
+                            <td>GROMACS 擴展性受系統拓撲、MPI、網卡、domain decomposition、記憶體、力場與 I/O 影響，必須以目標工作負載 benchmark 驗證。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="architecture">
+            <h2>目標軟體架構</h2>
+            <div class="diagram">[Researcher / Employee / Open WebUI]
+              │  OIDC / MFA / TLS
+              ▼
+       [AI Gateway: auth · routing · quota · DLP · audit]
+              │
+              ▼
+ [Guardrails / Policy: input · retrieval · dialog · execution · output]
+              │
+              ▼
+ [Agent Orchestrator: state machine · plan · approval · retry]
+       ┌──────┴───────────┐
+       ▼                  ▼
+[RAG with ACL]      [Skill Router]
+       │                  │
+       ▼          ┌───────┴────────┐
+[Trusted KB]       ▼                ▼
+              [GROMACS Sandbox] [HR/GitLab/Jira MCP]
+                     │                │
+          [HPC Scheduler / MPI]   [Scoped internal APIs]
+                     │
+              [Artifact + Result Store]</div>
+            <div class="notice ok">
+                <strong>責任切分：</strong>Gateway 處理身份、流量、模型路由與審計；Guardrails／OPA 類政策層判斷內容與動作；Orchestrator 管理狀態與審批；Sandbox 與 Scheduler 實際執行受限任務；RAG 僅提供有權限的證據。
+            </div>
+        </section>
+
+        <section id="flow">
+            <h2>任務生命週期</h2>
+            <article class="step">
+                <div class="n">01</div>
+                <div>
+                    <h3>任務提交與身份綁定</h3>
+                    <p>使用者透過前端提出研究或行政需求。Gateway 以 OIDC／JWT 驗證身分、部門、角色、設備狀態與資料分級；每次請求產生 correlation ID。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">02</div>
+                <div>
+                    <h3>輸入與檢索安全判斷</h3>
+                    <p>執行 Prompt Injection、敏感資料與內容長度檢查；RAG 在檢索前先依 ACL 過濾，並把文件內的「指令」視為不可信資料，而非可執行命令。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">03</div>
+                <div>
+                    <h3>規劃與風險分級</h3>
+                    <p>Agent 產出結構化計畫：工具、資料集、預估資源、輸入參數、預期輸出與風險等級。高風險行為必須停在 approval gate。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">04</div>
+                <div>
+                    <h3>政策准入與安全執行</h3>
+                    <p>Tool Router 驗證 JSON Schema、allowlist、ABAC、短效 capability token 與 sandbox policy；核准後由 GROMACS／MCP Sandbox 執行。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">05</div>
+                <div>
+                    <h3>結果驗證與可追溯輸出</h3>
+                    <p>解析器驗證結果格式、數值範圍、輸出檔雜湊與引用來源。LLM 只能根據已驗證結果撰寫摘要，不能自行捏造模擬結論。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">06</div>
+                <div>
+                    <h3>審計、候選技能與回饋</h3>
+                    <p>保存請求、政策決策、模型版本、工具版本、輸入雜湊、結果與人工核准。成功軌跡只進入「候選技能」；測試與審核通過才可發布。</p>
+                </div>
+            </article>
+        </section>
+
+        <section id="gateway">
+            <h2>AI Gateway 專章</h2>
+            <p class="lead">AI Gateway 是 LLM 與 Agent 控制面的單一入口，不是單純反向代理。它將所有模型請求轉為可身分化、可配額化、可審計化與可施行資料政策的操作。</p>
+            <div class="grid">
+                <article class="card">
+                    <span class="chip">Identity</span>
+                    <h3>驗證與授權</h3>
+                    <p>使用者採 SSO/MFA；服務使用 mTLS、Service Account 與短效 Token。授權採 RBAC + ABAC，例如限制資料部門、用途、工具與有效期限。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Routing</span>
+                    <h3>模型與資料路由</h3>
+                    <p>依資料級別、模型能力、成本、健康度與延遲導向地端或已核准後端；機密資料不得因 fallback 自動送往外部模型。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Budget</span>
+                    <h3>資源與成本防護</h3>
+                    <p>控制 RPM、TPM、並發、queue depth、最大 context、輸出 token、timeout 與每部門預算；避免 DoS、GPU/RAM 耗盡與帳單失控。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Audit</span>
+                    <h3>日誌即證據</h3>
+                    <p>記錄 actor、application、model、policy、資料分類、RAG 文件 ID、tool call、結果摘要、風險旗標與 correlation ID；敏感原文需遮罩或受控保存。</p>
+                </article>
+            </div>
+            <h3>Gateway 與 HPC 的界線</h3>
+            <div class="notice">
+                <strong>控制面 ≠ 資料面：</strong>使用者請求、模型推論、工具申請、審核與稽核經 AI Gateway。GROMACS 跨節點 MPI、RoCE、checkpoint I/O 和 scheduler 內部通訊屬 HPC 資料面，應由叢集網路隔離、Scheduler ACL、檔案系統權限與監控控制，而非全部穿越 HTTP API Gateway。
+            </div>
+            <h3>最小 Audit Event</h3>
+            <pre><code>{
+  "event_id": "uuid",
+  "correlation_id": "uuid",
+  "time": "2026-07-14T16:00:00+08:00",
+  "actor": {"id": "user-or-service", "role": "researcher"},
+  "application": "science-agent",
+  "model": {"id": "approved-model", "version": "pinned"},
+  "policy": {"version": "2026-07-14", "decision": "allow"},
+  "data_classification": "internal",
+  "rag_document_ids": ["kb-102"],
+  "tool": {"name": "gromacs.submit", "risk": "medium"},
+  "input_hash": "sha256:...",
+  "result_artifact": "artifact://run-123",
+  "risk_flags": []
+}</code></pre>
+        </section>
+
+        <section id="agents">
+            <h2>NemoClaw、OpenShell 與 Agent 治理</h2>
+            <div class="grid">
+                <article class="card">
+                    <span class="chip">NemoClaw</span>
+                    <h3>部署與生命週期整合</h3>
+                    <p>將它定位為在 OpenShell 受控 Sandbox 中運行相容 Agent 的參考堆疊與操作工具；避免將其等同於單一模型、通用科學推理引擎或自動學習平台。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">OpenShell</span>
+                    <h3>宣告式最小權限</h3>
+                    <p>將檔案、網路、程序、二進位與憑證權限寫成政策；每個 Sandbox 僅能取得任務必要權限，並保留可匯出的執行記錄。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Approval</span>
+                    <h3>人類核准閘門</h3>
+                    <p>提交大規模模擬、寫入企業系統、下載資料、外部連線、修改 GitLab 或發送郵件都需依風險等級進入人工核准。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Skill Lifecycle</span>
+                    <h3>技能發布治理</h3>
+                    <p>Skill 須有 owner、版本、SBOM、測試、最小權限政策、授權範圍與退役日期。成功軌跡先成候選，不可自動升級生產能力。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="gromacs">
+            <h2>GROMACS 科學工作流安全化</h2>
+            <p class="lead">科學 Agent 的目標不應是「自行下結論」，而是產出可重現、可檢查、可審核的實驗計畫與模擬 Artifact。GROMACS 可用 checkpoint 支援中斷後續跑，但可重現性仍需保存完整的版本、參數、輸入與硬體／軟體環境。</p>
+            <div class="table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>階段</th>
+                            <th>Agent 可做</th>
+                            <th>必須由系統強制</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>假設生成</td>
+                            <td>根據核准文獻與材料資料提出候選配方、模擬目標與比較指標</td>
+                            <td>標示證據、限制範圍，不可宣稱未經模擬驗證的物理結論</td>
+                        </tr>
+                        <tr>
+                            <td>參數建議</td>
+                            <td>生成候選 mdp／拓撲／作業描述</td>
+                            <td>Template allowlist、單位／範圍檢查、force field 與版本鎖定、人工 review</td>
+                        </tr>
+                        <tr>
+                            <td>作業提交</td>
+                            <td>提出資源估計與 job spec</td>
+                            <td>Scheduler quota、partition、時間／CPU/GPU/RAM 上限、資料集 ACL、核准流程</td>
+                        </tr>
+                        <tr>
+                            <td>執行與續跑</td>
+                            <td>讀取受控 status、建議 retry 或 checkpoint restart</td>
+                            <td>唯讀狀態 API、checkpoint 完整性、禁止任意 shell、失敗上限與成本上限</td>
+                        </tr>
+                        <tr>
+                            <td>分析與報告</td>
+                            <td>根據已驗證結果生成圖表說明與摘要</td>
+                            <td>解析器驗證數值與檔案雜湊；報告標示模型、誤差、seed、版本與重現命令</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3>科學重現性 Manifest</h3>
+            <pre><code>run_id: tim-2026-00123
+purpose: "TIM thermal-conductivity candidate comparison"
+input_hashes:
+  topology: sha256:...
+  mdp: sha256:...
+  coordinates: sha256:...
+software:
+  gromacs: "pinned-version"
+  container_image: "registry/science/gromacs@sha256:..."
+execution:
+  scheduler_job_id: "..."
+  mpi_ranks: 0
+  gpu_count: 0
+  random_seed: 0
+artifacts:
+  checkpoint: artifact://...
+  trajectories: artifact://...
+  analysis_report: artifact://...
+approval:
+  requested_by: "researcher-id"
+  approved_by: "reviewer-id"</code></pre>
+            <div class="notice">
+                <strong>TIM 與 Blackwell 案例的正確寫法：</strong>可作為「研討會展示／概念驗證案例」描述。不要將特定原子數、四機串聯、互連頻寬或效能增益寫成通用保證；應改附你自己的 system topology、GROMACS version、input system、benchmark 命令、wall time、scaling efficiency 和重現 Artifact。
+            </div>
+        </section>
+
+        <section id="mcp">
+            <h2>將 GROMACS 與 MCP 封裝為安全 Skill</h2>
+            <div class="notice warn">
+                <strong>禁止：</strong>將使用者自然語言或 LLM 產出的任意檔案路徑、Shell 片段、URL、SQL、Slurm 指令直接傳給容器或 HPC Scheduler。
+            </div>
+            <h3>安全 Skill 介面原則</h3>
+            <ul>
+                <li>以具版本的 JSON Schema 接受 job template、資料集 ID、資源級別與已核准參數，而非自由文字命令。</li>
+                <li>以 allowlist 選取容器映像、GROMACS 版本、force field、Scheduler partition 與輸出路徑。</li>
+                <li>Skill 使用專屬非 root 身分、唯讀輸入、寫入專屬工作區、受限 egress 與短效憑證。</li>
+                <li>高成本或有資料外傳風險的工作進入 approval gate；所有結果透過 Artifact Store 回傳。</li>
+            </ul>
+            <h3>推薦 API 契約</h3>
+            <pre><code>POST /skills/gromacs/submit
+{
+  "template_id": "tim-nemd-v3",
+  "dataset_id": "materials-internal-042",
+  "parameter_set_id": "approved-params-017",
+  "resource_tier": "research-small",
+  "purpose": "compare candidate A/B",
+  "approval_id": "required-for-large-jobs"
+}
+
+# Server validates: identity, ABAC, template, dataset ACL,
+# parameter range, quota, approval, image digest, egress policy.
+# It returns a run_id, never raw shell access.</code></pre>
+        </section>
+
+        <section id="rag">
+            <h2>RAG、知識庫與科學資料治理</h2>
+            <div class="grid">
+                <article class="card">
+                    <span class="chip">ACL-first</span>
+                    <h3>先授權再檢索</h3>
+                    <p>向量查詢前根據使用者、部門、專案、資料級別與目的過濾。不得先檢索全部資料後才在回覆階段遮罩。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Provenance</span>
+                    <h3>每段都有來源</h3>
+                    <p>chunk 應保留原始文件、版本、擁有者、有效日期、雜湊、資料級別與索引時間。科學回答需回鏈到文獻／實驗或 run artifact。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Injection Defense</span>
+                    <h3>文件不等於指令</h3>
+                    <p>將 PDF、網頁、Issue、README 內的命令視為不可信內容；檢索 Rails 檢測注入語句，禁止文件文字直接改寫系統規則或觸發工具。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Freshness</span>
+                    <h3>版本與撤銷</h3>
+                    <p>索引支援到期、撤銷、重新嵌入與回溯；回答顯示版本與日期。對安全、法規與實驗 SOP 設置較短的更新檢查週期。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="defense">
+            <h2>Palo Alto 五道防線：優化版</h2>
+            <article class="step">
+                <div class="n">01</div>
+                <div>
+                    <h3>模型與 Artifact 進門前：AIRS Model Security</h3>
+                    <p><span class="label risk">威脅</span>惡意權重、pickle RCE、轉換腳本與依賴投毒。<br><span class="label act">控制</span>掃描模型、程式碼與依賴；優先不可執行格式；建立雜湊、簽章、Model Card、SBOM 與部署准入。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">02</div>
+                <div>
+                    <h3>推論與 Agent 運行時：AIRS／Guardrails</h3>
+                    <p><span class="label risk">威脅</span>Prompt Injection、資料外洩、工具濫用、越獄。<br><span class="label act">控制</span>Input、retrieval、dialog、execution、output 多階段檢查；外加 JSON Schema、權限決策與人工核准。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">03</div>
+                <div>
+                    <h3>統一進出口：AI Gateway</h3>
+                    <p><span class="label risk">威脅</span>影子 AI、外部 SaaS 外傳、Key 外洩、用量失控。<br><span class="label act">控制</span>集中認證、模型 allowlist、DLP、rate／token／budget、模型路由、不可抵賴日誌。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">04</div>
+                <div>
+                    <h3>開發供應鏈：IDE、套件、MCP、CI/CD</h3>
+                    <p><span class="label risk">威脅</span>惡意 Extension、PyPI/npm 套件、MCP Server、CI Secret。<br><span class="label act">控制</span>端點／依賴掃描、私有鏡像、鎖版雜湊、SBOM、Secret scanning、簽章與部署政策。</p>
+                </div>
+            </article>
+            <article class="step">
+                <div class="n">05</div>
+                <div>
+                    <h3>NGFW 與零信任微分段</h3>
+                    <p><span class="label risk">威脅</span>GPU／推論節點被內網橫移與直接存取。<br><span class="label act">控制</span>僅 Gateway／Orchestrator 可存取模型端點；HPC、管理、資料、Sandbox 分區；預設 deny egress 與異常流量告警。</p>
+                </div>
+            </article>
+        </section>
+
+        <section id="supply">
+            <h2>供應鏈、機密與資料保護</h2>
+            <div class="checkgrid">
+                <div class="check">
+                    <strong>模型／映像准入</strong>
+                    <p>只允許私有 Registry 中已掃描、已簽章、雜湊固定的模型與 Container Image；不可使用浮動 tag。</p>
+                </div>
+                <div class="check">
+                    <strong>套件鎖版</strong>
+                    <p>Python/npm 使用 lockfile 與 hash；CI 建立 SBOM，掃描 CVE、惡意行為與 License；避免安裝時任意執行腳本。</p>
+                </div>
+                <div class="check">
+                    <strong>Secrets</strong>
+                    <p>Key 不進入 Git、Image、Prompt、Notebook 與一般 log；使用 Secrets Manager、短效 Token、輪替與撤銷。</p>
+                </div>
+                <div class="check">
+                    <strong>資料最小化</strong>
+                    <p>送進模型、RAG、工具與日誌的資料皆採最小必要集合；個資、商業機密與研究 IP 有分級、遮罩與保留期。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="network">
+            <h2>網路、容器與 HPC 隔離</h2>
+            <div class="table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>區域</th>
+                            <th>允許來源</th>
+                            <th>可連線目標</th>
+                            <th>禁止事項</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>AI Gateway</td>
+                            <td>企業 App／受管使用者</td>
+                            <td>核准模型 API、Guardrails、Orchestrator、SIEM</td>
+                            <td>直接存取資料庫、Scheduler admin、任意外網</td>
+                        </tr>
+                        <tr>
+                            <td>LLM 推論</td>
+                            <td>僅 Gateway／受管 Orchestrator</td>
+                            <td>必要模型儲存、監控</td>
+                            <td>一般內網直連、公開 Port 8000／11434</td>
+                        </tr>
+                        <tr>
+                            <td>Agent Sandbox</td>
+                            <td>僅 Skill Router</td>
+                            <td>特定 MCP API、Artifact Store、受管 DNS</td>
+                            <td>任意 egress、host mount、privileged、Docker socket</td>
+                        </tr>
+                        <tr>
+                            <td>GROMACS/HPC</td>
+                            <td>Scheduler／核准 Submit Skill</td>
+                            <td>MPI/RDMA fabric、平行檔案系統、Artifact Store</td>
+                            <td>從 Web UI 直接 SSH、非核准 job、外網下載</td>
+                        </tr>
+                        <tr>
+                            <td>管理平面</td>
+                            <td>受管管理跳板與管理員</td>
+                            <td>節點、Registry、Secrets、Policy</td>
+                            <td>與一般業務流量共網段</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="observability">
+            <h2>稽核、可觀測性與 SLO</h2>
+            <div class="grid">
+                <article class="card">
+                    <span class="chip">Security</span>
+                    <h3>安全事件</h3>
+                    <p>記錄 Prompt／RAG 注入阻擋、DLP 命中、越權工具請求、Sandbox policy denial、異常 egress、模型／映像准入拒絕。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Science</span>
+                    <h3>科學可重現性</h3>
+                    <p>保存 run manifest、輸入雜湊、container digest、GROMACS 版本、seed、job ID、checkpoint、輸出 artifact 與分析版本。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Reliability</span>
+                    <h3>服務健康度</h3>
+                    <p>追蹤 p50/p95 latency、首 token、queue depth、tokens/s、GPU/CPU/RAM、Sandbox 失敗率、Scheduler 排隊與 job 成功率。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Cost</span>
+                    <h3>配額與預算</h3>
+                    <p>按部門／專案追蹤 token、GPU-hours、儲存、網路與任務成本；設定警告與硬上限，防止 Agent 無限制 retry 或模擬爆量。</p>
+                </article>
+            </div>
+            <h3>起始 SLO 建議</h3>
+            <ul>
+                <li>高風險工具調用：100% 有身份、政策版本、核准與結果 Artifact 的可關聯事件。</li>
+                <li>模型 API：設定符合業務的可用性目標；延遲應依模型／token budget 分級，避免對長推理任務承諾不合理秒數。</li>
+                <li>科學任務：run manifest 完整率 100%；失敗重試有次數上限與人工升級條件。</li>
+                <li>安全事件：高風險 policy denial 與疑似資料外傳在既定分鐘級目標內送至 SIEM／SOC。</li>
+            </ul>
+        </section>
+
+        <section id="testing">
+            <h2>驗證、紅隊與發布閘門</h2>
+            <div class="grid">
+                <article class="card">
+                    <span class="chip">Agent Red Team</span>
+                    <h3>對抗測試</h3>
+                    <p>測直接／間接注入、跨角色資料取得、工具參數竄改、惡意檔案、長 context 干擾、外部 URL 與迴圈重試。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Science QA</span>
+                    <h3>科學工作流測試</h3>
+                    <p>以固定小型 benchmark 驗證 template、單位、參數範圍、容器、排程、checkpoint restart 與結果解析器。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Load Test</span>
+                    <h3>資源壓測</h3>
+                    <p>驗證 Gateway 的 rate limit、queue、timeout、模型 OOM 行為、HPC quota 與 job storm 保護。</p>
+                </article>
+                <article class="card">
+                    <span class="chip">Release Gate</span>
+                    <h3>阻擋上線條件</h3>
+                    <p>未簽章 Artifact、無法關聯日誌、越權 Skill 可成功、惡意 RAG 文件可觸發操作、回滾未演練，皆不得發布。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="runbook">
+            <h2>安全事件 Runbook</h2>
+            <div class="checkgrid">
+                <div class="check">
+                    <strong>1. 偵測與分級</strong>
+                    <p>區分模型供應鏈、資料外洩、Prompt Injection、MCP／Skill 濫用、Sandbox 逃逸、HPC 異常作業與服務阻斷。</p>
+                </div>
+                <div class="check">
+                    <strong>2. 遏制</strong>
+                    <p>撤銷 capability token、停用 Skill／模型版本、封鎖 Gateway route 或 egress；必要時切換為只讀、無工具模式。</p>
+                </div>
+                <div class="check">
+                    <strong>3. 證據保全</strong>
+                    <p>保存 audit、policy、container、network、scheduler、artifact 與身份日誌，並鎖定相關雜湊與版本。</p>
+                </div>
+                <div class="check">
+                    <strong>4. 根因與修補</strong>
+                    <p>修正權限、模板、政策、掃描規則或程式碼；輪替機密；將攻擊手法加入 regression test。</p>
+                </div>
+                <div class="check">
+                    <strong>5. 恢復與檢討</strong>
+                    <p>從可信版本 Canary 恢復，監控復發訊號；完成含時間線、影響、根因、責任與期限的 postmortem。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="checklist">
+            <h2>上線檢核表</h2>
+            <div class="checkgrid">
+                <div class="check"><strong>□ 控制面已收斂</strong><p>所有 LLM／Agent API 經 Gateway；推論服務不對一般內網裸露。</p></div>
+                <div class="check"><strong>□ Tool 不可任意執行</strong><p>每個 Skill 有 Schema、allowlist、ABAC、短效 token、timeout、quota 與可審計結果。</p></div>
+                <div class="check"><strong>□ RAG 可授權且可追溯</strong><p>ACL 在檢索前生效；chunk 有來源／版本／分類；注入測試已通過。</p></div>
+                <div class="check"><strong>□ 科學任務可重現</strong><p>GROMACS run manifest、輸入與映像雜湊、版本、seed、job、checkpoint 和 artifact 完整保存。</p></div>
+                <div class="check"><strong>□ 供應鏈可驗證</strong><p>模型、程式、MCP、依賴與映像已掃描、鎖版、簽章／雜湊驗證並建立 SBOM。</p></div>
+                <div class="check"><strong>□ Sandbox 與網路最小化</strong><p>non-root、無 privileged、無 Docker socket、唯讀輸入、受限 egress、微分段與管理網隔離。</p></div>
+                <div class="check"><strong>□ 監控與應變就緒</strong><p>SIEM、告警、SLO、配額、Runbook、紅隊與回滾演練已完成。</p></div>
+                <div class="check"><strong>□ 自我演進受治理</strong><p>候選技能需測試、人工審核、簽章與 Canary，禁止自動直接上線。</p></div>
+            </div>
+        </section>
+
+        <section id="refs">
+            <h2>參考資料</h2>
+            <div class="ref">
+                <strong>NVIDIA NemoClaw</strong>
+                <p>NemoClaw 提供 OpenShell 容器中的 onboarding、生命週期管理與 agent operations。<br><a href="https://docs.nvidia.com/nemoclaw/user-guide/openclaw/home" target="_blank" rel="noopener">NemoClaw documentation</a></p>
+            </div>
+            <div class="ref">
+                <strong>NVIDIA OpenShell</strong>
+                <p>OpenShell 提供自主 Agent 的私有安全執行期，以及可限制檔案、憑證、基礎設施與網路活動的 sandbox 政策。<br><a href="https://docs.nvidia.com/openshell/home" target="_blank" rel="noopener">OpenShell developer guide</a></p>
+            </div>
+            <div class="ref">
+                <strong>Prisma AIRS Model Security</strong>
+                <p>模型掃描可涵蓋模型、程式碼與依賴，並可 API-first 整合進 build、test、deployment 流程。<br><a href="https://www.paloaltonetworks.com/prisma/ai-model-security" target="_blank" rel="noopener">Prisma AIRS model security</a></p>
+            </div>
+            <div class="ref">
+                <strong>GROMACS User Guide</strong>
+                <p>GROMACS 的 checkpoint 可支援中斷後續跑；實際重現與效能仍須保存完整環境與輸入 Artifact。<br><a href="https://manual.gromacs.org/current/user-guide/managing-simulations.html" target="_blank" rel="noopener">Managing long simulations</a></p>
+            </div>
+            <div class="ref">
+                <strong>NVIDIA NeMo Guardrails</strong>
+                <p>可將控制設置於 input、retrieval、dialog、execution、output 等階段。<br><a href="https://docs.nvidia.com/nemo/guardrails/about-nemo-guardrails-library/rail-types" target="_blank" rel="noopener">Guardrail types</a></p>
+            </div>
+        </section>
+
+        <footer>
+            Edge AI Secure Lab · NemoClaw × OpenShell × GROMACS × AI Gateway · v3.0<br>
+            Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+        </footer>
+    </main>
+</div>
+
+</body>
+</html>

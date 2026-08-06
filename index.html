@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>睿非科技 Reaify Tech — 水墨科技樹與研發路線控制台</title>
+
+    <!-- Clean Grotesque, Noto Serif TC & JetBrains Mono Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <!-- 水墨質感背景與纖維紋理 (Paper Substrate & Fiber) -->
+    <div id="paper-bg"></div>
+    <div id="fiber"></div>
+    <div id="mouse-glow" class="mouse-glow"></div>
+
+    <!-- 頂部固定式晶透導覽列 (Sticky Navigation Bar) -->
+    <header class="sticky-nav">
+        <div class="nav-container">
+            <a href="#sec-header" class="nav-brand">
+                <span class="brand-code">REAIFY TECH</span> // 研發與技術規格平台
+            </a>
+
+            <!-- 桌上型電腦 錨點導航 -->
+            <nav class="nav-links">
+                <a href="#sec-tree" class="nav-link active">研發路線導覽圖</a>
+                <a href="#sec-future" class="nav-link">未來發想路線</a>
+                <a href="#sec-trouble" class="nav-link">疑難排解手冊</a>
+                <a href="#sec-legacy" class="nav-link">舊方案規格</a>
+                <a href="#sec-learning" class="nav-link">學習與營運指南</a>
+            </nav>
+
+            <!-- 手機端 RWD 漢堡按鈕 -->
+            <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="開啓選單">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 手機端 RWD 導覽抽屜 -->
+    <div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="mobile-menu-head">
+            <span>研發知識庫選單</span>
+            <button id="close-mobile-menu" class="close-mobile-menu">&times;</button>
+        </div>
+        <div class="mobile-menu-links">
+            <a href="#sec-tree" class="mobile-nav-link">研發路線導覽圖</a>
+            <a href="#sec-future" class="mobile-nav-link">未來發想路線</a>
+            <a href="#sec-trouble" class="mobile-nav-link">疑難排解手冊</a>
+            <a href="#sec-legacy" class="mobile-nav-link">舊方案規格</a>
+            <a href="#sec-learning" class="mobile-nav-link">學習與營運指南</a>
+        </div>
+    </div>
+
+    <div class="page-wrap" id="sec-header">
+        <!-- Mono Header -->
+        <header class="mono-header">
+            <div class="header-main">
+                <span class="mono-badge">REAIFY TECH // 研發資料整合平台</span>
+                <h1>睿非科技研發專案與發想路線全景</h1>
+                <div class="sub">這是 Reaify Tech 的資料整合平台，專門把一些發想、學習的種種整理起來的網站。</div>
+            </div>
+            <div class="header-meta">
+                <span class="meta-pill">9 筆研發項目</span>
+                <span class="meta-pill">INTERACTIVE NAV</span>
+            </div>
+        </header>
+
+        <!-- Category Nav & Search Filter -->
+        <nav class="mono-nav">
+            <div id="category-tabs" class="tabs-group">
+                <!-- JS Populated Tabs -->
+            </div>
+            <div class="search-wrap">
+                <input type="text" id="search-input" placeholder="搜尋專案名稱、硬體規格、關鍵字...">
+            </div>
+        </nav>
+
+        <!-- Section 1: 研發路線導覽圖 -->
+        <section class="tree-section" id="sec-tree">
+            <div class="section-head">
+                <h2>研發路線導覽圖</h2>
+                <p class="sub">點擊中央核心展開分類分支 · 滑鼠懸停探討各分組專案內容</p>
+            </div>
+
+            <!-- Stage Wrap & SVG Canvas for Ink Wash Tech Tree -->
+            <div id="stage-wrap">
+                <svg id="stage" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <filter id="ink-edge" x="-100%" y="-100%" width="300%" height="300%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+                            <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+                        </filter>
+                        <filter id="ink-r-filter" x="-100%" y="-100%" width="300%" height="300%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="1" seed="12" result="noise"/>
+                            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.6" xChannelSelector="R" yChannelSelector="G"/>
+                        </filter>
+                        <filter id="ink-edge-soft" x="-150%" y="-150%" width="400%" height="400%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="3" result="n" />
+                            <feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G" result="disp"/>
+                            <feGaussianBlur in="disp" stdDeviation="3.2"/>
+                        </filter>
+                        <filter id="brush-wobble" x="-100%" y="-100%" width="300%" height="300%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="5" result="n">
+                                <animate attributeName="seed" values="1;30" dur="14s" repeatCount="indefinite"/>
+                            </feTurbulence>
+                            <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+                        </filter>
+                        <filter id="ripple-edge" x="-100%" y="-100%" width="300%" height="300%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="1" seed="2" result="n"/>
+                            <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/>
+                        </filter>
+                        <filter id="ink-swirl-edge" x="-100%" y="-100%" width="300%" height="300%">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="2" seed="9" result="n">
+                                <animate attributeName="seed" values="1;60" dur="7s" repeatCount="indefinite"/>
+                            </feTurbulence>
+                            <feDisplacementMap in="SourceGraphic" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+                        </filter>
+
+                        <radialGradient id="rg-ink-node" cx="50%" cy="45%" r="58%">
+                            <stop offset="0%" stop-color="#242422" stop-opacity=".95"/>
+                            <stop offset="60%" stop-color="#242422" stop-opacity=".8"/>
+                            <stop offset="100%" stop-color="#242422" stop-opacity="0"/>
+                        </radialGradient>
+                        <radialGradient id="rg-ink-child" cx="50%" cy="45%" r="55%">
+                            <stop offset="0%" stop-color="#3A3A38" stop-opacity=".9"/>
+                            <stop offset="100%" stop-color="#3A3A38" stop-opacity="0"/>
+                        </radialGradient>
+                        <radialGradient id="rg-halo" cx="50%" cy="50%" r="60%">
+                            <stop offset="0%" stop-color="#16161A" stop-opacity=".16"/>
+                            <stop offset="100%" stop-color="#16161A" stop-opacity="0"/>
+                        </radialGradient>
+                        <radialGradient id="rg-droplet" cx="45%" cy="40%" r="60%">
+                            <stop offset="0%" stop-color="#16161A" stop-opacity=".85"/>
+                            <stop offset="100%" stop-color="#16161A" stop-opacity="0"/>
+                        </radialGradient>
+                        <!-- SVG Sticky Ball Liquid Gooey Filter (#gooey-sticky) -->
+                        <filter id="gooey-sticky">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                            <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+                        </filter>
+
+                        <linearGradient id="liquid-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#16161A" stop-opacity="0.95"/>
+                            <stop offset="40%" stop-color="#3A3A38" stop-opacity="0.85"/>
+                            <stop offset="70%" stop-color="#242422" stop-opacity="0.9"/>
+                            <stop offset="100%" stop-color="#16161A" stop-opacity="1.0"/>
+                        </linearGradient>
+
+                        <!-- Crisp High-Craft R Text Vector -->
+                        <linearGradient id="r-text-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1.0"/>
+                            <stop offset="100%" stop-color="#ECEAE3" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+
+                    <g id="ripple-layer"></g>
+                    <g id="brush-layer"></g>
+                    <g id="brush-hit-layer"></g>
+                    <g id="cluster-root"></g>
+                    <g id="core-halo-layer"></g>
+                    <!-- Central Core Ball (Clean & Unified with Branches) -->
+                    <g id="core-layer"></g>
+                    <g id="droplet-layer"></g>
+                </svg>
+                <div id="label-layer"></div>
+            </div>
+        </section>
+
+        <!-- Section 2: 未來發想路線 (Future Routes) -->
+        <section class="route-group-section" id="sec-future">
+            <div class="section-head-flex">
+                <div>
+                    <h2>未來發想路線 (Future Routes)</h2>
+                    <p class="sub">電腦視覺桌遊戰術追蹤、AI 語音 Co-DM 與樹莓派 4B/5 規格對照</p>
+                </div>
+                <span class="meta-pill">3 筆專案</span>
+            </div>
+            <div class="cards-grid" id="grid-future">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
+        <!-- Section 3: 疑難排解手冊 (Troubleshooting) -->
+        <section class="route-group-section" id="sec-trouble">
+            <div class="section-head-flex">
+                <div>
+                    <h2>疑難排解手冊 (Troubleshooting)</h2>
+                    <p class="sub">Pi 4 MediaPipe Python 3.13 卡關排查與 pigpio DMA PWM 馬達追蹤零點校準</p>
+                </div>
+                <span class="meta-pill">2 筆手冊</span>
+            </div>
+            <div class="cards-grid" id="grid-trouble">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
+        <!-- Section 4: 舊方案規格 (Legacy Spec) -->
+        <section class="route-group-section" id="sec-legacy">
+            <div class="section-head-flex">
+                <div>
+                    <h2>舊方案規格 (Legacy Spec)</h2>
+                    <p class="sub">《Aldrich Fief 獵巫鎮》第一代 MAIXCAM AI BOX 雙核硬體架構與 PCB 原理圖</p>
+                </div>
+                <span class="meta-pill">1 筆規格</span>
+            </div>
+            <div class="cards-grid" id="grid-legacy">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
+        <!-- Section 5: 學習與營運指南 (Learning Activities) -->
+        <section class="route-group-section" id="sec-learning">
+            <div class="section-head-flex">
+                <div>
+                    <h2>學習與營運指南 (Learning Activities)</h2>
+                    <p class="sub">包含 SPARK/SPIN 顧問式銷售、Edge AI 企業縱深安全與 DIGBLOCK 青創 SBIR 補助</p>
+                </div>
+                <span class="meta-pill">3 筆指南</span>
+            </div>
+            <div class="cards-grid" id="grid-learning">
+                <!-- JS Populated -->
+            </div>
+        </section>
+
+        <footer class="mono-footer">
+            睿非科技 REAIFY TECH · 研發與發想路線資料整合平台<br>
+            紙灰 (#ECEAE3) 與炭黑 (#16161A) 極簡設計 · 版權所有 2026
+        </footer>
+    </div>
+
+    <!-- Quick View Panel (規格速覽面板) -->
+    <div id="drawer-overlay" class="drawer-overlay"></div>
+    <aside id="drawer" class="drawer">
+        <div class="drawer-header">
+            <div>
+                <span id="drawer-code" class="meta-pill">SPEC // 01</span>
+                <h2 id="drawer-title" style="font-size: 1.3rem; margin-top: 0.25rem; font-family: 'Space Grotesk', sans-serif;">專案名稱</h2>
+            </div>
+            <button id="close-drawer" class="close-drawer" title="關閉面板">&times;</button>
+        </div>
+        <div class="drawer-content">
+            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+                <a id="drawer-external-link" href="#" target="_blank" class="mono-btn primary" style="flex: 1; text-align: center; text-decoration: none;">
+                    在新分頁開啟完整規格頁面 &rarr;
+                </a>
+            </div>
+            <div style="width: 100%; height: 78vh; border: 1.5px solid #16161A; border-radius: 12px; overflow: hidden; background: #fff;">
+                <iframe id="drawer-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </aside>
+
+    <script src="assets/js/main.js?v=20260806-fix35"></script>
+</body>
+</html>

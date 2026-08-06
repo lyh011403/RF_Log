@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>樹莓派 4B 手部 Node 0 置中追蹤與 MG90S 馬達除錯指南</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mono / Lieflat 設計系統 Tokens */
+            --paper:      #ECEAE3;  /* 極亮基準 */
+            --paper-2:    #F4F3EE;
+            --paper-3:    #E2E0D8;
+            --ink:        #16161A;  /* 極暗基準 */
+            --ink-soft:   #26262A;
+            --gray-1:     #45454A;
+            --gray-2:     #6B6B6E;
+            --gray-3:     #94938E;
+            --gray-4:     #BCB9AF;
+            --gray-5:     #D6D3C8;
+            --line:       #CFCCC2;
+
+            --bg-paper: var(--paper-2);
+            --bg-card: var(--paper);
+            --border-hairline: var(--line);
+            --border-accent: var(--ink);
+
+            --text-primary: var(--ink);
+            --text-secondary: var(--gray-2);
+            --text-muted: var(--gray-3);
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --ease-smooth: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Subpage Return Navigation Bar */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(239, 239, 239, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-yunmu);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--color-peijiu);
+            color: #ffffff;
+            border-color: var(--color-ink-dark);
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            transition: all 0.3s ease;
+        }
+
+        .hero {
+            padding: 2.25rem 2rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: 0 4px 20px rgba(61, 53, 43, 0.04);
+            margin-bottom: 2rem;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.5rem, 3.2vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--color-ink-dark);
+            line-height: 1.25;
+            margin-bottom: 1rem;
+            word-break: break-word;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 900px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--border-hairline);
+        }
+
+        /* TOC Navigation */
+        .toc-card {
+            background: #ffffff;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.02);
+        }
+
+        .toc-title {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.5rem 1.25rem;
+        }
+
+        .toc-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: block;
+            word-break: break-word;
+        }
+
+        .toc-link:hover {
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-weight: 600;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.2rem, 2.5vw, 1.4rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--color-ink-dark);
+            margin-top: 2.25rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            color: var(--color-ink-dark);
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+        }
+
+        ul, ol {
+            padding-left: 1.35rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.65rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .badge-danger { background: rgba(220, 38, 38, 0.15); color: #b91c1c; border: 1px solid rgba(220, 38, 38, 0.3); }
+        .badge-warn { background: rgba(217, 119, 6, 0.15); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.3); }
+        .badge-ok { background: rgba(22, 163, 74, 0.15); color: #15803d; border: 1px solid rgba(22, 163, 74, 0.3); }
+
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.75rem;
+            margin: 1.25rem 0;
+        }
+
+        .flow-step {
+            background: #ffffff;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+        }
+
+        .flow-step h4 {
+            margin: 0 0 0.35rem 0;
+            color: var(--color-ink-dark);
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .flow-step p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .flow-badge {
+            display: inline-block;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.4rem;
+            border: 1px solid var(--color-yunmu);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .info-box {
+            background-color: rgba(198, 184, 177, 0.2);
+            border-left: 4px solid var(--color-peijiu);
+            padding: 1.1rem 1.25rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+        }
+
+        .warning-box {
+            background-color: rgba(220, 38, 38, 0.08);
+            border-left: 4px solid #dc2626;
+            padding: 1.1rem 1.25rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+        }
+
+        .success-box {
+            background-color: rgba(22, 163, 74, 0.08);
+            border-left: 4px solid #16a34a;
+            padding: 1.1rem 1.25rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-hairline);
+            word-break: break-word;
+        }
+
+        .code-block {
+            padding: 1.25rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            font-size: 0.875rem;
+            min-width: 500px;
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border-hairline);
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            font-weight: 700;
+        }
+
+        td {
+            color: var(--text-secondary);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: #dc2626;
+            color: white;
+            border-radius: 50%;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .final-note-card {
+            background: var(--color-xiangpi);
+            border: 1px solid var(--color-peijiu);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .final-note-title {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive Scaling System */
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .flow-container { grid-template-columns: repeat(2, 1fr); }
+            .card { padding: 1.25rem; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .flow-container { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <header class="hero">
+        <span class="eyebrow">HARDWARE & MOTOR TROUBLESHOOTING GUIDE</span>
+        <h1>樹莓派 4B 手部 Node 0 置中追蹤與 MG90S 馬達除錯指南</h1>
+        <p>實戰開發與硬體控制除錯經驗總結筆記 (深化優化版) · 結合 pigpio DMA PWM、MediaPipe Lite 與連續旋轉馬達校準</p>
+        <div class="hero-meta">
+            <span class="pill">Raspberry Pi 4B</span>
+            <span class="pill">pigpio DMA PWM</span>
+            <span class="pill">MediaPipe Lite (Node 0)</span>
+            <span class="pill">MG90S 360° Servo</span>
+            <span class="pill">FastAPI</span>
+        </div>
+    </header>
+
+    <div class="toc-card">
+        <div class="toc-title">📋 快速導覽目錄 (TOC)</div>
+        <div class="toc-grid">
+            <a href="#pipeline" class="toc-link">① 系統資料流向與控制架構 (Control Pipeline)</a>
+            <a href="#params" class="toc-link">② 核心控制參數與邏輯規範</a>
+            <a href="#bugs" class="toc-link">③ 四大經典 Bug 深度根因分析與處方</a>
+            <a href="#pwm-compare" class="toc-link">④ 軟體 PWM vs 硬體 DMA PWM 核心差異表</a>
+            <a href="#code" class="toc-link">⑤ 核心控制演算法代碼精華 (Python Code)</a>
+            <a href="#sop" class="toc-link">⑥ 伺服馬達靜止零點校準 SOP</a>
+            <a href="#systemd" class="toc-link">⑦ pigpio systemd 開機服務配置指南</a>
+            <a href="#takeaways" class="toc-link">⑧ 樹莓派機器人控制三大金律</a>
+        </div>
+    </div>
+
+    <!-- Section 1: 系統架構 -->
+    <h2 id="pipeline">① 系統資料流向與控制架構 (Control Pipeline)</h2>
+    <div class="card">
+        <p>本系統將軟體視訊處理與硬體 DMA PWM 驅動結合，資料傳遞流程如下：</p>
+        <div class="flow-container">
+            <div class="flow-step">
+                <span class="flow-badge">STEP 1</span>
+                <h4>攝影機擷取</h4>
+                <p>OpenCV V4L2<br>320x240 @ 30fps</p>
+            </div>
+            <div class="flow-step">
+                <span class="flow-badge">STEP 2</span>
+                <h4>骨幹手勢辨識</h4>
+                <p>MediaPipe Lite<br>擷取 Landmark 0</p>
+            </div>
+            <div class="flow-step">
+                <span class="flow-badge">STEP 3</span>
+                <h4>控制演算法</h4>
+                <p>30% 死區比對 +<br>克服死區脈衝計算</p>
+            </div>
+            <div class="flow-step">
+                <span class="flow-badge">STEP 4</span>
+                <h4>DMA 脈衝發射</h4>
+                <p>pigpio Daemon<br>微秒級 (μs) 訊號</p>
+            </div>
+            <div class="flow-step">
+                <span class="flow-badge">STEP 5</span>
+                <h4>伺服馬達驅動</h4>
+                <p>MG90S 360 馬達<br>帶動鏡頭置中</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: 核心參數 -->
+    <h2 id="params">② 核心控制參數與邏輯規範</h2>
+    <div class="card">
+        <div class="grid-2">
+            <div class="info-box">
+                <h4 style="margin-top:0; color:var(--color-ink-dark);">關鍵參數設定</h4>
+                <ul>
+                    <li><b>追蹤點</b>：MediaPipe <code>Landmark 0</code>（手腕根部 WRIST）</li>
+                    <li><b>靜止基準 (STOP_PW)</b>：<code>1470 μs</code>（實測完全靜止零點）</li>
+                    <li><b>死區克服量 (MIN_MOVE_PW)</b>：<code>40 μs</code>（保證偏離即轉動）</li>
+                    <li><b>最高旋轉增益 (MAX_MOVE_PW)</b>：<code>120 μs</code>（控制最大轉速）</li>
+                    <li><b>中央死區 (CENTER_TOLERANCE)</b>：<code>0.15</code>（畫面中央總寬 30%）</li>
+                </ul>
+            </div>
+            <div class="success-box">
+                <h4 style="margin-top:0; color:#15803d;">控制邏輯分支</h4>
+                <ul>
+                    <li><b>Node 0 進入中央 30% 綠框</b> ➔ 輸出 <code>1470 μs</code>（馬達物理靜止）</li>
+                    <li><b>Node 0 偏離綠框右側</b> ➔ 輸出 <code>1470 + (40~120) μs</code> 平滑轉向</li>
+                    <li><b>Node 0 偏離綠框左側</b> ➔ 輸出 <code>1470 - (40~120) μs</code> 平滑轉向</li>
+                    <li><b>未偵測到手部</b> ➔ 輸出 <code>1470 μs</code>（保持靜止防爆走）</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: 四大經典 Bug -->
+    <h2 id="bugs">③ 四大經典 Bug 深度根因分析與處方</h2>
+    <div class="card">
+        <!-- Bug 1 -->
+        <div style="margin-bottom: 2rem;">
+            <h3><span class="step-number">1</span>按下開始偵測，馬達即瘋狂爆走</h3>
+            <div class="warning-box">
+                <b>根本原因分析：</b><br>
+                舊邏輯在「對齊 ➔ 停止」時呼叫 <code>pwm.stop()</code>，在「偏離 ➔ 開始」時呼叫 <code>pwm.start()</code>。
+                <b>RPi.GPIO 軟體 PWM 每次在 <code>pwm.start()</code> 重啟瞬間，都會產生一個固定方向（順時針）的初始化電壓毛刺 (Spike)</b>。當手部在邊界頻繁微抖時，無數個重啟毛刺疊加，馬達就被誤導為全速暴力旋轉。
+            </div>
+            <div class="success-box">
+                <b>解法：</b><br>
+                廢除追蹤過程中動態 <code>start/stop</code> 的架構！改為<b>程式啟動時只 <code>start</code> 一次</b>，整個生命週期完全只透過修改脈衝寬度控制。靜止時輸出靜止基準值，絕不關閉 PWM。
+            </div>
+        </div>
+
+        <!-- Bug 2 -->
+        <div style="margin-bottom: 2rem;">
+            <h3><span class="step-number">2</span>不管切換 1 還是 -1，馬達都只朝順時針轉</h3>
+            <div class="warning-box">
+                <b>根本原因分析：</b><br>
+                1. 軟體 PWM 重啟造成的順時針毛刺蓋過了真實控制訊號。<br>
+                2. 為了讓馬達轉慢，將幅度壓縮得太小（如偏離量 &lt; 0.3%），這個變化量<b>落在 MG90S 馬達內部電位器的機械死區 (Deadband) 內</b>。馬達靜摩擦力無法克服，正轉動不了，只有毛刺發生時朝順時針衝。
+            </div>
+            <div class="success-box">
+                <b>解法：</b><br>
+                加入<b>死區克服基礎量 <code>MIN_MOVE_PW = 40 μs</code></b>。只要手偏離中央死區，輸出的脈衝寬度必然直接跨越死區（例：<code>1470 + 40 = 1510 μs</code> 或 <code>1470 - 40 = 1430 μs</code>），確保馬達一定能順暢雙向旋轉！
+            </div>
+        </div>
+
+        <!-- Bug 3 -->
+        <div style="margin-bottom: 2rem;">
+            <h3><span class="step-number">3</span>馬達即使沒看到手也會一直「抽搐/脈動 (Twitching)」</h3>
+            <div class="warning-box">
+                <b>根本原因分析：</b><br>
+                1. <b>軟體 PWM 缺陷</b>：<code>RPi.GPIO</code> 是用 CPU 執行緒搭配 OS 睡眠實現的。當樹莓派同時執行 OpenCV、MediaPipe、FastAPI 時，CPU 負載波動導致 OS 喚醒時間不準，脈衝產生 ±100μs 誤差，馬達收到的訊號不斷微幅微抖。<br>
+                2. <b>靜止點校準偏差</b>：原本用軟體 PWM 校準的靜止點為 <code>7.10% (1420 μs)</code>，但精確的硬體零點其實是 <code>7.35% (1470 μs)</code>，相差了 50μs，導致馬達在理論零點時其實一直處於微幅旋轉狀態。
+            </div>
+            <div class="success-box">
+                <b>解法：</b><br>
+                1. 升級為 <code>pigpio</code> <b>硬體 DMA PWM</b>：直接由樹莓派 DMA（直接記憶體存取）控制器產生訊號，完全不受 CPU 負載與 OS 排程影響，誤差 &lt; 1μs。<br>
+                2. 使用專門校準工具實測出真正的零點：<b><code>1470 μs</code></b>。
+            </div>
+        </div>
+
+        <!-- Bug 4 -->
+        <div>
+            <h3><span class="step-number">4</span>手移到左右兩邊馬達沒反應 / 畫面突然黑屏</h3>
+            <div class="warning-box">
+                <b>根本原因分析：</b><br>
+                1. 舊版設計了過度複雜的遲滯鎖（Hysteresis），手只要進過一次死區就被鎖定為 <code>_aligned = True</code>，必須偏移 &gt;30% 才能解鎖，導致大部分範圍馬達都被鎖死。<br>
+                2. 程式中遺漏了 <code>global _aligned</code> 宣告，造成 Python 拋出 <code>UnboundLocalError</code> 導致 OpenCV 視訊串流崩潰（黑畫面）。
+            </div>
+            <div class="success-box">
+                <b>解法：</b><br>
+                移除過複雜的狀態鎖，簡化為無狀態的單一死區判定 (<code>CENTER_TOLERANCE = 0.15</code>)；修復 Python 全域變數宣告。
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: PWM 比較 -->
+    <h2 id="pwm-compare">④ 軟體 PWM vs 硬體 DMA PWM 核心差異表</h2>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>比較項目</th>
+                        <th>RPi.GPIO (軟體 PWM)</th>
+                        <th>pigpio (硬體 DMA PWM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>脈衝產生原理</b></td>
+                        <td>Python 執行緒 + OS 睡眠</td>
+                        <td>DMA 控制器 + 硬體定時器</td>
+                    </tr>
+                    <tr>
+                        <td><b>CPU 負載影響</b></td>
+                        <td>高負載時嚴重漂移 (±100μs)</td>
+                        <td>完全不受影響 (&lt; 1μs)</td>
+                    </tr>
+                    <tr>
+                        <td><b>馬達表現</b></td>
+                        <td>抽搐、抖動、發熱、脈衝毛刺爆走</td>
+                        <td>極度平穩、零抖動、精確運轉</td>
+                    </tr>
+                    <tr>
+                        <td><b>pwm.start() 影響</b></td>
+                        <td>重啟會產生方向固定的 Spike</td>
+                        <td>輸出極度乾淨，無初期毛刺</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 5: 控制代碼 -->
+    <h2 id="code">⑤ 核心控制演算法代碼精華 (Python Code)</h2>
+    <div class="card">
+        <p>這段是 <code>test_tracking_web_final.py</code> 中最精華的控制邏輯，方便未來直接移植：</p>
+        <div class="code-block"># ── 核心運轉計算 (process_frame 內) ──────────────────────
+if tracking_enabled:
+    if abs(offset) &lt;= CENTER_TOLERANCE:
+        # ── 進入 30% 死區：馬達輸出 1470us 靜止 ──
+        target_pw = STOP_PW
+        status    = f"ALIGNED (off={offset:+.3f}) - STOP"
+    else:
+        # ── 偏離死區：基礎克服量 (40us) + 動態比例增益 ──
+        ratio     = min(1.0, (abs(offset) - CENTER_TOLERANCE) / (0.5 - CENTER_TOLERANCE))
+        add_pw    = MIN_MOVE_PW + ratio * (MAX_MOVE_PW - MIN_MOVE_PW)
+        
+        direction = TRACK_SIGN * np.sign(offset)
+        target_pw = int(STOP_PW + direction * add_pw)
+
+# ── pigpio DMA 安全輸出 ───────────────────────────────────
+def set_pw(pw: int):
+    global _last_pw
+    pw_clamped = max(1000, min(2000, pw))
+    with _pwm_lock:
+        if abs(pw_clamped - _last_pw) &gt;= 2:  # 變化大於 2us 才觸發 DMA 更新
+            pi.set_servo_pulsewidth(SERVO_PIN, pw_clamped)
+            _last_pw = pw_clamped</div>
+    </div>
+
+    <!-- Section 6: 校準 SOP -->
+    <h2 id="sop">⑥ 伺服馬達靜止零點校準 SOP (Calibration Guide)</h2>
+    <div class="card">
+        <p>日後若更換馬達或硬體，可執行我們編寫的 <code>calibrate_pigpio.py</code> 工具重新找靜止點：</p>
+        <ol>
+            <li>執行校準工具：<code>python calibrate_pigpio.py</code></li>
+            <li>從預設 <code>1420 μs</code> 開始測試，觀察馬達轉動方向。</li>
+            <li>輸入 <code>+5</code> 或 <code>-5</code> 微調脈衝寬度，直到馬達<b>軸心完全不動</b>。</li>
+            <li>找到完全靜止的值後輸入 <code>q</code>，更新回主程式的 <code>STOP_PW</code>。</li>
+        </ol>
+    </div>
+
+    <!-- Section 7: systemd -->
+    <h2 id="systemd">⑦ pigpio systemd 開機服務配置指南 (Bookworm 相容)</h2>
+    <div class="card">
+        <div class="code-block"># 建立服務檔 /etc/systemd/system/pigpiod.service
+sudo bash -c 'cat &lt;&lt;EOF &gt; /etc/systemd/system/pigpiod.service
+[Unit]
+Description=Pigpio daemon
+After=network.target
+
+[Service]
+ExecStartPre=/sbin/ldconfig /usr/local/lib
+ExecStart=/usr/local/bin/pigpiod
+Type=forking
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+# 載入並啟動服務
+sudo systemctl daemon-reload
+sudo systemctl enable pigpiod
+sudo systemctl start pigpiod</div>
+    </div>
+
+    <!-- Section 8: 金律 -->
+    <h2 id="takeaways">⑧ 樹莓派機器人控制三大金律 (Key Takeaways)</h2>
+    <div class="final-note-card">
+        <div class="final-note-title">💡 開發三大金律</div>
+        <ol style="line-height: 2;">
+            <li><b>做精確伺服/馬達控制時，永遠不要用 <code>RPi.GPIO</code> 的軟體 PWM</b>：Raspberry Pi 跑 Linux 非實時作業系統，軟體 PWM 在 CPU 有負載時必然抖動。請務必使用 <code>pigpio</code> 或硬體 PWM 晶片（如 PCA9685）。</li>
+            <li><b>連續旋轉伺服馬達必須給予「死區補償 (Deadband Offset)」</b>：馬達轉動有最小啟動脈衝門檻，計算 speed 時直接給比例值會讓小偏移無動力；必須使用 <code>STOP_PW ± (MIN_PW + ratio * MAX_PW)</code> 的算式。</li>
+            <li><b>伺服馬達 PWM 訊號保持 Session 持續輸出，切勿頻繁 Start/Stop</b>：PWM 訊號的停止應該輸出靜止基準寬度，而非切斷 GPIO 電壓。頻繁開關只會帶來開關毛刺。</li>
+        </ol>
+    </div>
+
+    <footer>
+        樹莓派 4B 手部 Node 0 置中追蹤與 MG90S 馬達除錯指南 · ReFei Tech<br>
+        Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+</body>
+</html>

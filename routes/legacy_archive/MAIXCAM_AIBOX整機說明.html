@@ -1,0 +1,282 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>AI BOX 智慧桌遊裁判機 - 專案總結規範書</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm;
+            @bottom-right {
+                content: counter(page);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #64748b;
+            }
+            @bottom-left {
+                content: "睿非科技 (ReFei Tech) | 專案機密文件";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 9pt;
+                color: #64748b;
+            }
+        }
+        
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-banner {
+            background-color: #0f172a;
+            color: #ffffff;
+            margin: -20mm -15mm 25px -15mm;
+            padding: 30px 15mm;
+            border-bottom: 4px solid #3b82f6;
+        }
+
+        .header-banner h1 {
+            font-size: 22pt;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header-banner p {
+            font-size: 12pt;
+            margin: 0;
+            color: #94a3b8;
+        }
+
+        h2 {
+            font-size: 16pt;
+            color: #0f172a;
+            border-left: 5px solid #3b82f6;
+            padding-left: 12px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 13pt;
+            color: #1e3a8a;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        ul {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #334155;
+        }
+
+        td {
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .callout {
+            background-color: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+            page-break-inside: avoid;
+        }
+
+        .callout-title {
+            font-weight: bold;
+            color: #14532d;
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+
+        .warning-callout {
+            background-color: #fff7ed;
+            border-left: 4px solid #ea580c;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+            page-break-inside: avoid;
+        }
+
+        .warning-title {
+            font-weight: bold;
+            color: #7c2d12;
+            margin-bottom: 8px;
+            font-size: 11pt;
+        }
+        
+        .highlight {
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .section-break {
+            border-top: 1px dashed #cbd5e1;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <h1>AI BOX 智慧桌遊裁判機</h1>
+        <p>專案總結與開發規範書 (Project Master Specification)</p>
+    </div>
+
+    <p>本文件旨在彙整「睿非科技 (ReFei Tech)」旗下專案代號《Aldrich Fief》（獵巫鎮）之「AI BOX 智慧桌遊裁判機」的所有開發決策、系統架構、硬體規格與商業策略。作為團隊內部開發、對外展示及未來量產的最高指導原則。</p>
+
+    <h2>一、 產品定位與商業策略</h2>
+    
+    <h3>1. 產品核心價值 (What & Why)</h3>
+    <p>AI BOX 是一款專為實體桌遊店設計的邊緣運算互動設備。透過客製化的嵌入式系統與輕量化視覺追蹤技術，取代真人裁判，提供無感流暢的遊戲引導與客觀判決，大幅降低 B2B 桌遊店的人事成本並提升玩家體驗。</p>
+
+    <h3>2. 商業護城河 (Moats)</h3>
+    <ul>
+        <li><span class="highlight">雲端大腦與「裝笨」終端 (軟體壁壘)：</span>維持「邊緣視覺觸發 + 雲端邏輯運算」的混合架構。核心遊戲邏輯、RAG 檢索與高階語音辨識留在雲端，防止競爭者逆向工程抄襲。</li>
+        <li><span class="highlight">NFC「UID 本地綁定法」 (防盜版壁壘)：</span>實體卡牌不存資料，僅依賴 NTAG213 晶片出廠即鎖死、全球唯一的 7-byte 硬體 UID。MaixCAM 本地維護 <code>game_config.json</code> 進行比對，徹底阻斷盜版卡牌產業鏈。</li>
+        <li><span class="highlight">獨家工業機構設計 (工程壁壘)：</span>自主研發的「直驅磁吸離合器」結構，完美解決桌遊現場玩家暴力硬轉導致馬達崩牙的物理痛點。</li>
+    </ul>
+
+    <h3>3. 商業化認證路線</h3>
+    <p>考量台灣 NCC 與 BSMI 認證成本，初期建議採行「拔除內建電池與 NFC」的外接電源妥協版（轉為 NCC 僅需驗 Wi-Fi，BSMI 免驗），以快速滾動現金流。資金充裕後再推動具備 Qi2 充電與鋰電池的「頂配旗艦版」。</p>
+
+
+    <h2>二、 系統硬體架構與分工</h2>
+    
+    <p>系統採用確保 AI 效能最大化的<span class="highlight">「雙核主從分離架構」</span>，將高耗能運算與底層高頻硬體控制徹底脫鉤。</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30%;">處理核心</th>
+                <th style="width: 35%;">負責任務</th>
+                <th style="width: 35%;">連接外設</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>大腦：MaixCAM</b><br>(SG2002, Linux)</td>
+                <td>高頻邊緣視覺辨識 (30+ FPS)、雲端通訊、音訊播放、統籌決策。</td>
+                <td>MAX98357A I2S 功放<br>MG90S 360° 舵機 (發送 PWM)<br>USB Wi-Fi/藍牙</td>
+            </tr>
+            <tr>
+                <td><b>小弟：RP2040-Zero</b><br>(Microcontroller)</td>
+                <td>高頻硬體輪詢 (極短超時防卡死)、精準時序控制、燈效渲染。</td>
+                <td>PN532 NFC 模組 (I2C)<br>AS5600 磁編碼器 (I2C)<br>WS2812B 燈板 (PIO)</td>
+            </tr>
+            <tr>
+                <td colspan="3" style="background-color: #f1f5f9;"><b>雙核橋樑：</b>兩者透過 <b>UART (TX交叉接RX)</b> 進行高速指令與狀態同步。</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <div class="section-break"></div>
+
+
+    <h2>三、 核心電路佈線與穩壓規範</h2>
+
+    <p>為防範實體店面高頻運作下當機或燒毀，硬體佈線必須嚴格遵守以下「三大保命法則」與阻抗匹配規範。</p>
+
+    <h3>1. 電源與共地 (Power & Ground)</h3>
+    <ul>
+        <li><span class="highlight">全系統共地 (Common Ground)：</span>MaixCAM、RP2040-Zero、所有模組與外設的 <b>GND</b> 必須無縫連接至同一實體地網絡。</li>
+        <li><span class="highlight">大電流分離供電：</span>MG90S 舵機、WS2812B 燈板與 PN532 的 VCC，<b>絕對不可</b>從微控制器的 3V3 取電。必須直接連接至電源模組 (IP5328P) 的 <b>VBUS_5V</b> 主輸出軌。</li>
+        <li><span class="highlight">嚴禁穩壓晶片打架 (LDO Conflict)：</span>RP2040-Zero 若已由 5V 軌供電，其 <b>3V3 引腳絕對不可與 MaixCAM 的 3V3 相連</b>，必須保持獨立穩壓。RP2040 的 3V3 僅用於提供上拉電阻與 AS5600 的邏輯高電平。</li>
+    </ul>
+
+    <h3>2. 關鍵保護元件 (BOM 必備)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>元件類型</th>
+                <th>規格</th>
+                <th>應用位置與目的</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>上拉電阻</b></td>
+                <td>4.7 kΩ</td>
+                <td>共 4 顆。分別跨接於 PN532 與 AS5600 的 I2C 總線 (SCL, SDA) 與 RP2040 的 3V3 之間，達成 5V/3.3V 邏輯電位安全握手。</td>
+            </tr>
+            <tr>
+                <td><b>阻尼電阻</b></td>
+                <td>330 Ω 或 470 Ω</td>
+                <td>串聯於 RP2040 的 GP15 與 WS2812B 的 DIN 之間，防範高頻訊號反射擊穿燈珠。</td>
+            </tr>
+            <tr>
+                <td><b>濾波電容</b></td>
+                <td>470 µF / 16V</td>
+                <td>並聯於動力電源 (VBUS_5V) 端，吸收舵機啟動突波，防範 MaixCAM 電壓驟降重啟。</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <h2>四、 3D 機構設計與組裝規範</h2>
+
+    <p>外殼設計採「三層漢堡式 (Cyber-Block)」，由下至上層層疊加，材料選型需符合物理應力需求。</p>
+
+    <h3>1. 機構分層與材料</h3>
+    <ul>
+        <li><b>能源底座艙 (Base Layer)：</b>高度縮減為 4.0cm，內置供電系統與 PN532。建議使用 <b>PETG</b>，確保高剛性承重。</li>
+        <li><b>傳動與離合層 (Neck Layer)：</b>負責 360° 轉向。包含 MG90S 舵機與 6906 深溝球軸承。建議使用 <b>PETG 或 PC</b>，以承受頻繁打滑強轉。</li>
+        <li><b>雲台大腦艙 (Head Layer)：</b>倒吊 AS5600、內置 MaixCAM、純銅散熱夾心與腔體喇叭。建議使用 <b>消光 PLA+</b>，減少反光干擾 AI 視覺。</li>
+    </ul>
+
+    <h3>2. 核心專利機構：直驅磁吸離合器</h3>
+    <div class="callout">
+        <div class="callout-title">防暴力物理機制</div>
+        <p>捨棄齒輪，採用「上下磁吸盤 + 釹鐵硼磁鐵 x8」直驅。兩盤接觸面必須貼附 <b>0.1mm 鐵氟龍膠帶</b>。正常時磁力同步轉動；遇外力強轉時，平順打滑脫離，保護馬達軸心不崩牙。</p>
+    </div>
+
+    <h3>3. 角度閉環控制 (Closed-loop Control)</h3>
+    <p>解決 360° 舵機無法定位的問題：將 <b>AS5600 磁編碼器</b>倒吊於旋轉軸心頂端（或使用過孔滑環設計），由 RP2040 高頻讀取絕對角度，當到達目標方位時，通知 MaixCAM 發送停止 PWM (1500µs) 給舵機，達成精準煞車定位。</p>
+
+</body>
+</html>

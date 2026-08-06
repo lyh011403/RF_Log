@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAIXCAM AI BOX 舊方案完整整合與開發規範手冊</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Mono / Lieflat 設計系統 Tokens */
+            --paper:      #ECEAE3;  /* 極亮基準 */
+            --paper-2:    #F4F3EE;
+            --paper-3:    #E2E0D8;
+            --ink:        #16161A;  /* 極暗基準 */
+            --ink-soft:   #26262A;
+            --gray-1:     #45454A;
+            --gray-2:     #6B6B6E;
+            --gray-3:     #94938E;
+            --gray-4:     #BCB9AF;
+            --gray-5:     #D6D3C8;
+            --line:       #CFCCC2;
+
+            --bg-paper: var(--paper-2);
+            --bg-card: var(--paper);
+            --border-hairline: var(--line);
+            --border-accent: var(--ink);
+
+            --text-primary: var(--ink);
+            --text-secondary: var(--gray-2);
+            --text-muted: var(--gray-3);
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --ease-smooth: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            margin: 0; padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Subpage Return Navigation Bar */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(239, 239, 239, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-yunmu);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            padding: 0.45rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--color-peijiu);
+            color: #ffffff;
+            border-color: var(--color-ink-dark);
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 5rem;
+        }
+
+        .hero {
+            padding: 2.5rem;
+            border: 1px solid var(--border-hairline);
+            border-radius: 12px;
+            background: var(--bg-card);
+            box-shadow: 0 4px 20px rgba(61, 53, 43, 0.04);
+            margin-bottom: 2.5rem;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            font-weight: 700;
+            border: 1px solid var(--color-yunmu);
+            color: var(--color-ink-dark);
+            background: var(--color-xiangpi);
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--color-ink-dark);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 900px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            background: rgba(198, 184, 177, 0.25);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--border-hairline);
+        }
+
+        /* Module Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--color-yunmu);
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.25rem;
+            border-radius: 6px 6px 0 0;
+            font-family: var(--font-heading);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+        }
+
+        .tab-btn.active {
+            background: var(--color-ink-dark);
+            color: var(--color-gaoyu);
+            border-color: var(--color-ink-dark);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--color-ink-dark);
+            margin-top: 2rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.35rem 1.6rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+        }
+
+        ul, ol {
+            padding-left: 1.35rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.4rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border-hairline);
+            padding: 0.85rem 1.1rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            font-weight: 700;
+        }
+
+        td {
+            color: var(--text-secondary);
+        }
+
+        .code-block {
+            padding: 1.25rem;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            background: #2b241c;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            background-color: rgba(172, 159, 138, 0.25);
+            color: var(--color-ink-dark);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .callout {
+            background-color: rgba(198, 184, 177, 0.2);
+            border-left: 4px solid var(--color-peijiu);
+            padding: 1rem 1.25rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .callout-title {
+            font-weight: bold;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        /* Picture Gallery Grid Styles */
+        .picture-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .picture-card {
+            background: #ffffff;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .picture-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.1);
+            border-color: var(--color-peijiu);
+        }
+
+        /* Lightbox Modal Styles */
+        .lightbox-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(43, 36, 28, 0.92);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .lightbox-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-img-wrap {
+            position: relative;
+            max-width: 92vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--color-xiangpi);
+            transition: transform 0.2s ease;
+        }
+
+        .lightbox-caption {
+            margin-top: 1rem;
+            color: var(--color-gaoyu);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            background: rgba(61, 53, 43, 0.85);
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            border: 1px solid var(--color-yunmu);
+            text-align: center;
+        }
+
+        .lightbox-close-btn {
+            position: absolute;
+            top: -1.2rem; right: -1.2rem;
+            width: 36px; height: 36px;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-close-btn:hover {
+            background: var(--color-peijiu);
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .picture-img-wrap {
+            cursor: zoom-in;
+            position: relative;
+        }
+
+        .picture-img-wrap::after {
+            content: "🔍 點擊放大查看";
+            position: absolute;
+            bottom: 0.6rem; right: 0.6rem;
+            background: rgba(61, 53, 43, 0.75);
+            color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            border: 1px solid rgba(198, 184, 177, 0.4);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .picture-gallery { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs { overflow-x: auto; flex-wrap: nowrap; }
+            .card { padding: 1.25rem; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+
+        .picture-card:hover .picture-img-wrap::after {
+            opacity: 1;
+        }
+
+        .picture-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.3s ease;
+        }
+
+        .picture-card:hover img {
+            transform: scale(1.03);
+        }
+
+        .picture-body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .picture-tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .picture-title {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .picture-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <header class="hero">
+        <span class="eyebrow">LEGACY HARDWARE ARCHITECTURE & EDA SPECIFICATION</span>
+        <h1>MAIXCAM AI BOX 舊方案完整整合與開發手冊</h1>
+        <p>完整收錄《Aldrich Fief 獵巫鎮》第一代舊款外觀產品圖展示、整機說明、雙核硬體架構與 PCB EDA 原理圖 Rev.B 四合一全量資料。</p>
+        <div class="hero-meta">
+            <span class="pill">MAIXCAM Photo Gallery</span>
+            <span class="pill">MaixCAM (CVI1835)</span>
+            <span class="pill">RP2040</span>
+            <span class="pill">IP5328P</span>
+            <span class="pill">PN532 NFC</span>
+            <span class="pill">AS5600</span>
+            <span class="pill">PCB EDA Rev.B</span>
+        </div>
+    </header>
+
+    <!-- Tab Buttons -->
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-gallery">📷 第一代舊款外觀實體圖</button>
+        <button class="tab-btn" data-tab="tab-overview">一、專案總結與整機規範</button>
+        <button class="tab-btn" data-tab="tab-architecture">二、整體硬體架構與 BOM 接線</button>
+        <button class="tab-btn" data-tab="tab-eda">三、EDA 電路設計與佈線 (Rev.B)</button>
+    </div>
+
+    <!-- Section 0: Photo Gallery Page -->
+    <div id="tab-gallery" class="tab-content active">
+        <div class="card">
+            <h2>第一代舊款 AI BOX 外觀實體圖展示</h2>
+            <p>以下為《Aldrich Fief 獵巫鎮》第一代舊款邊緣 AI 桌遊裁判機之機構外觀實體與機構視覺展示。</p>
+            
+            <div class="picture-gallery">
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/MAIXCAM_01.png" alt="MAIXCAM_01 第一代外觀正視圖" onerror="this.src='../../assets/images/MAIXCAM_01.png'">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">HARDWARE PHOTO // 01</span>
+                        <div class="picture-title">MAIXCAM_01.png 第一代外觀視圖</div>
+                        <div class="picture-desc">展示第一代 AI BOX 頂置雲台大腦艙、相機鏡頭配置與 Cyber-Block 三層漢堡式機構外觀。</div>
+                    </div>
+                </div>
+
+                <div class="picture-card">
+                    <div class="picture-img-wrap">
+                        <img src="../../assets/images/MAIXCAM_02.png" alt="MAIXCAM_02 第一代外觀側視圖" onerror="this.src='../../assets/images/MAIXCAM_02.png'">
+                    </div>
+                    <div class="picture-body">
+                        <span class="picture-tag">HARDWARE PHOTO // 02</span>
+                        <div class="picture-title">MAIXCAM_02.png 第一代外觀與結構圖</div>
+                        <div class="picture-desc">展示第一代底座艙高度 4.0cm 供電區、直驅磁吸離合器傳動介面與 360° 轉向視覺懸臂配置。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: 專案總結與整機規範 -->
+    <div id="tab-overview" class="tab-content">
+        <div class="card">
+            <h2>一、 產品定位與商業策略</h2>
+            <h3>1. 產品核心價值 (What & Why)</h3>
+            <p>AI BOX 是一款專為實體桌遊店設計的邊緣運算互動設備（專案代號《Aldrich Fief 獵巫鎮》）。透過客製化的嵌入式系統與輕量化視覺追蹤技術，取代真人裁判，提供無感流暢的遊戲引導與客觀判決，大幅降低 B2B 桌遊店的人事成本並提升玩家體驗。</p>
+            
+            <h3>2. 商業護城河 (Moats)</h3>
+            <ul>
+                <li><span class="highlight">雲端大腦與「裝笨」終端 (軟體壁壘)：</span>維持「邊緣視覺觸發 + 雲端邏輯運算」的混合架構。核心遊戲邏輯、RAG 檢索與高階語音辨識留在雲端，防止競爭者逆向工程抄襲。</li>
+                <li><span class="highlight">NFC「UID 本地綁定法」 (防盜版壁壘)：</span>實體卡牌不存資料，僅依賴 NTAG213 晶片出廠即鎖死、全球唯一的 7-byte 硬體 UID。MaixCAM 本地維護 <code>game_config.json</code> 進行比對，徹底阻斷盜版卡牌產業鏈。</li>
+                <li><span class="highlight">獨家工業機構設計 (工程壁壘)：</span>自主研發的「直驅磁吸離合器」結構，完美解決桌遊現場玩家暴力硬轉導致馬達崩牙的物理痛點。</li>
+            </ul>
+
+            <h3>3. 商業化認證路線</h3>
+            <p>考量台灣 NCC 與 BSMI 認證成本，初期建議採行「拔除內建電池與 NFC」的外接電源妥協版（轉為 NCC 僅需驗 Wi-Fi，BSMI 免驗），以快速滾動現金流。資金充裕後再推動具備 Qi2 充電與鋰電池的「頂配旗艦版」。</p>
+        </div>
+
+        <div class="card">
+            <h2>二、 系統硬體架構與分工</h2>
+            <p>系統採用確保 AI 效能最大化的<span class="highlight">「雙核主從分離架構」</span>，將高耗能運算與底層高頻硬體控制徹底脫鉤。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">處理核心</th>
+                            <th style="width: 35%;">負責任務</th>
+                            <th style="width: 35%;">連接外設</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>大腦：MaixCAM</b><br>(CVI1835 / Linux)</td>
+                            <td>高頻邊緣視覺辨識 (30+ FPS)、雲端通訊、音訊播放、統籌決策。</td>
+                            <td>MAX98357A I2S 功放<br>MG90S 360° 舵機 (發送 PWM)<br>USB Wi-Fi/藍牙</td>
+                        </tr>
+                        <tr>
+                            <td><b>小弟：RP2040-Zero</b><br>(Microcontroller)</td>
+                            <td>高頻硬體輪詢 (極短超時防卡死)、精準時序控制、燈效渲染。</td>
+                            <td>PN532 NFC 模組 (I2C)<br>AS5600 磁編碼器 (I2C)<br>WS2812B 燈板 (PIO)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="background-color: rgba(198, 184, 177, 0.2);"><b>雙核橋樑：</b>兩者透過 <b>UART (TX交叉接RX)</b> 進行高速指令與狀態同步。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>三、 核心電路佈線與穩壓規範</h2>
+            <p>為防範實體店面高頻運作下當機或燒毀，硬體佈線必須嚴格遵守以下「三大保命法則」與阻抗匹配規範。</p>
+            <h3>1. 電源與共地 (Power & Ground)</h3>
+            <ul>
+                <li><span class="highlight">全系統共地 (Common Ground)：</span>MaixCAM、RP2040-Zero、所有模組與外設的 <b>GND</b> 必須無縫連接至同一實體地網絡。</li>
+                <li><span class="highlight">大電流分離供電：</span>MG90S 舵機、WS2812B 燈板與 PN532 的 VCC，<b>絕對不可</b>從微控制器的 3V3 取電。必須直接連接至電源模組 (IP5328P) 的 <b>VBUS_5V</b> 主輸出軌。</li>
+                <li><span class="highlight">嚴禁穩壓晶片打架 (LDO Conflict)：</span>RP2040-Zero 若已由 5V 軌供電，其 <b>3V3 引腳絕對不可與 MaixCAM 的 3V3 相連</b>，必須保持獨立穩壓。RP2040 的 3V3 僅用於提供上拉電阻與 AS5600 的邏輯高電平。</li>
+            </ul>
+
+            <h3>2. 關鍵保護元件 (BOM 必備)</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>元件類型</th>
+                            <th>規格</th>
+                            <th>應用位置與目的</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>上拉電阻</b></td>
+                            <td>4.7 kΩ</td>
+                            <td>共 4 顆。分別跨接於 PN532 與 AS5600 的 I2C 總線 (SCL, SDA) 與 RP2040 的 3V3 之間，達成 5V/3.3V 邏輯電位安全握手。</td>
+                        </tr>
+                        <tr>
+                            <td><b>阻尼電阻</b></td>
+                            <td>330 Ω 或 470 Ω</td>
+                            <td>串聯於 RP2040 的 GP15 與 WS2812B 的 DIN 之間，防範高頻訊號反射擊穿燈珠。</td>
+                        </tr>
+                        <tr>
+                            <td><b>濾波電容</b></td>
+                            <td>470 µF / 16V</td>
+                            <td>並聯於動力電源 (VBUS_5V) 端，吸收舵機啟動突波，防範 MaixCAM 電壓驟降重啟。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>四、 3D 機構設計與組裝規範</h2>
+            <p>外殼設計採「三層漢堡式 (Cyber-Block)」，由下至上層層疊加，材料選型需符合物理應力需求。</p>
+            <h3>1. 機構分層與材料</h3>
+            <ul>
+                <li><b>能源底座艙 (Base Layer)：</b>高度縮減為 4.0cm，內置供電系統與 PN532。建議使用 <b>PETG</b>，確保高剛性承重。</li>
+                <li><b>傳動與離合層 (Neck Layer)：</b>負責 360° 轉向。包含 MG90S 舵機與 6906 深溝球軸承。建議使用 <b>PETG 或 PC</b>，以承受頻繁打滑強轉。</li>
+                <li><b>雲台大腦艙 (Head Layer)：</b>倒吊 AS5600、內置 MaixCAM、純銅散熱夾心與腔體喇叭。建議使用 <b>消光 PLA+</b>，減少反光干擾 AI 視覺。</li>
+            </ul>
+
+            <h3>2. 核心專利機構：直驅磁吸離合器</h3>
+            <div class="callout">
+                <div class="callout-title">防暴力物理機制</div>
+                <p>捨棄齒輪，採用「上下磁吸盤 + 釹鐵硼磁鐵 x8」直驅。兩盤接觸面必須貼附 <b>0.1mm 鐵氟龍膠帶</b>。正常時磁力同步轉動；遇外力強轉時，平順打滑脫離，保護馬達軸心不崩牙。</p>
+            </div>
+
+            <h3>3. 角度閉環控制 (Closed-loop Control)</h3>
+            <p>解決 360° 舵機無法定位的問題：將 <b>AS5600 磁編碼器</b>倒吊於旋轉軸心頂端，由 RP2040 高頻讀取絕對角度，當到達目標方位時，通知 MaixCAM 發送停止 PWM (1500µs) 給舵機，達成精準煞車定位。</p>
+        </div>
+    </div>
+
+    <!-- Section 2: 整體架構 -->
+    <div id="tab-architecture" class="tab-content">
+        <div class="card">
+            <h2>1. 系統拓撲與接線架構</h2>
+            <div class="code-block">IP5328P
+├── MaixCAM
+├── WS2812B
+└── Ferrite Bead
+      └── MG90S
+
+RP2040
+├── PN532
+└── AS5600</div>
+        </div>
+
+        <div class="card">
+            <h2>2. 完整接線規劃 (Net List)</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Net 名稱</th>
+                            <th>接線方式與說明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Net_5V_MAIN</td><td>IP5328P 5V → MaixCAM VBUS → WS2812 VCC → 470µF → Ferrite Bead</td></tr>
+                        <tr><td>Net_5V_DIRTY</td><td>Ferrite Bead → 470µF → 0.1µF → MG90S VCC</td></tr>
+                        <tr><td>Net_GND</td><td>所有模組共地，Servo 回流避免穿越 MCU 區域</td></tr>
+                        <tr><td>UART_TX</td><td>MaixCAM GPIOA18 → 22Ω → RP2040 GP0</td></tr>
+                        <tr><td>UART_RX</td><td>RP2040 GP1 → 22Ω → MaixCAM GPIOA19</td></tr>
+                        <tr><td>Servo PWM</td><td>MaixCAM GPIOA17 → 100Ω → MG90S PWM</td></tr>
+                        <tr><td>LED DIN</td><td>RP2040 GP15 → 470Ω → WS2812 DIN</td></tr>
+                        <tr><td>I²C0</td><td>GP4 SDA → PN532 SDA；GP5 SCL → PN532 SCL（各 4.7kΩ Pull-up）</td></tr>
+                        <tr><td>I²C1</td><td>GP6 SDA → AS5600 SDA；GP7 SCL → AS5600 SCL（各 4.7kΩ Pull-up）</td></tr>
+                        <tr><td>Speaker</td><td>MaixCAM VOP → SPK+；MaixCAM VON → SPK−（不可接 GND）</td></tr>
+                        <tr><td>3.3V</td><td>MaixCAM 3.3V 不外接；RP2040 使用自身 3.3V 供電</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. BOM 表與元件規格清單</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>元件</th>
+                            <th>詳細規格描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Ferrite Bead</td><td>Murata BLM31PG121SN1L (120Ω@100MHz, 3.5A)</td></tr>
+                        <tr><td>470µF 電容</td><td>Low ESR ×2</td></tr>
+                        <tr><td>0.1µF 電容</td><td>X7R ×6</td></tr>
+                        <tr><td>22Ω 電阻</td><td>UART 阻抗匹配 ×2</td></tr>
+                        <tr><td>100Ω 電阻</td><td>Servo PWM 限流 ×1</td></tr>
+                        <tr><td>470Ω 電阻</td><td>WS2812 DIN 阻尼 ×1</td></tr>
+                        <tr><td>4.7kΩ 電阻</td><td>I²C 上拉 Pull-up ×4</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>4. PCB 佈線與分區指南</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>佈線建議</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Servo 5V/GND</td><td>40~60 mil，最短路徑至 Ferrite 與電容</td></tr>
+                        <tr><td>5V Main</td><td>30~40 mil</td></tr>
+                        <tr><td>UART</td><td>8~10 mil，雙絞線，小於10cm</td></tr>
+                        <tr><td>I²C</td><td>8~10 mil，Pull-up 靠近 RP2040</td></tr>
+                        <tr><td>Audio</td><td>VOP/VON 差分成對，遠離 Servo</td></tr>
+                        <tr><td>GND</td><td>整板鋪銅，Servo 與數位回流分離</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="code-block">PCB 區域分區架構：
+Power(IP5328P)
+   │
+MaixCAM ─ RP2040
+   │        ├─ PN532
+   │        └─ AS5600
+Ferrite
+   │
+Servo
+   │
+Speaker</div>
+        </div>
+    </div>
+
+    <!-- Section 3: EDA 電路設計 -->
+    <div id="tab-eda" class="tab-content">
+        <div class="card">
+            <h2>1. PCB EDA 原理圖 Rev.B 草案與工程提醒</h2>
+            <div class="callout" style="border-left-color: var(--color-peijiu);">
+                <div class="callout-title">工程提醒：</div>
+                <p>來源清單不是完整 netlist。圖中可辨識的阻值與 GPIO 已照錄；電源腳位、接頭腳序及 MaixCAM/RP2040 模組實際 pin number 必須在畫 PCB 前對照原廠 datasheet。</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. Sheet 1: 電源與主控制器 (Power & Main Controllers)</h2>
+            <div class="code-block">主電路接線拓撲：
+[U1: IP5328P] 5V OUT ───► +5V_MAIN (經 470µF C1 濾波)
+                            ├──► [U2: MaixCAM] VBUS
+                            └──► [FB1: Ferrite Bead 120Ω] ──► +5V_SERVO (470µF+0.1µF) ──► [M1: MG90S SERVO]
+
+[U2: MaixCAM] ↔ [U3: RP2040] UART 通訊：
+  - GPIOA18 (TX) ── [R1: 22Ω] ──► P0 (RX)
+  - GPIOA19 (RX) ◄── [R2: 22Ω] ── P1 (TX)
+
+[U2: MaixCAM] 舵機控制：
+  - GPIOA17 (PWM) ── [R3: 100Ω] ──► SERVO PWM
+
+[U2: MaixCAM] 音訊輸出：
+  - VOP (SPK+) / VON (SPK-) ──► 腔體喇叭 (BTL 差動輸出，不可接 GND)</div>
+        </div>
+
+        <div class="card">
+            <h2>3. Sheet 2: RP2040 周邊與 LED 介面 (RP2040 Peripherals & LED)</h2>
+            <div class="code-block">周邊匯流排拓撲：
+[U3: RP2040]
+  ├── I²C0 (GP4 SDA / GP5 SCL + 4.7kΩ R5/R6 上拉) ──► [U4: PN532 NFC 模組]
+  ├── I²C1 (GP6 SDA / GP7 SCL + 4.7kΩ R7/R8 上拉) ──► [U5: AS5600 磁編碼器]
+  └── GP15 (LED DATA) ── [R4: 470Ω] ───────────────► [D1: WS2812B DIN] (+5V_MAIN, 0.1µF C4)
+
+LAYOUT NOTES:
+• I²C pull-up 先確認模組是否已內建
+• C4 靠近 WS2812 VDD/GND
+• Servo 回流遠離 I²C 與音訊區</div>
+        </div>
+    </div>
+
+    <footer>
+        MAIXCAM AI BOX 舊方案完整整合與開發手冊 · ReFei Tech<br>
+        Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+<!-- Lightbox Modal HTML -->
+<div id="lightbox-modal" class="lightbox-modal">
+    <div class="lightbox-img-wrap">
+        <button class="lightbox-close-btn" id="lightbox-close">&times;</button>
+        <img id="lightbox-img" class="lightbox-img" src="" alt="放大照片">
+        <div id="lightbox-caption" class="lightbox-caption">照片預覽</div>
+    </div>
+</div>
+
+<script>
+    // Tab Navigation Switcher
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            const activeContent = document.getElementById(btn.dataset.tab);
+            if (activeContent) activeContent.classList.add('active');
+        });
+    });
+
+    // Lightbox Click to Zoom Logic
+    const modal = document.getElementById('lightbox-modal');
+    const modalImg = document.getElementById('lightbox-img');
+    const modalCaption = document.getElementById('lightbox-caption');
+    const closeBtn = document.getElementById('lightbox-close');
+
+    document.querySelectorAll('.picture-card').forEach(card => {
+        const img = card.querySelector('img');
+        const title = card.querySelector('.picture-title');
+        
+        if (img) {
+            img.style.cursor = 'zoom-in';
+            img.addEventListener('click', () => {
+                modalImg.src = img.src;
+                modalCaption.textContent = title ? title.textContent : img.alt;
+                modal.classList.add('active');
+            });
+        }
+    });
+
+    function closeModal() {
+        modal.classList.remove('active');
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target === modalImg) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+</script>
+
+</body>
+</html>

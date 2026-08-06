@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像辨識 TRPG 輔助系統（CV-TRPG）工程落地指南</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mono / Lieflat 設計系統 Tokens */
+            --paper:      #ECEAE3;  /* 極亮基準 */
+            --paper-2:    #F4F3EE;
+            --paper-3:    #E2E0D8;
+            --ink:        #16161A;  /* 極暗基準 */
+            --ink-soft:   #26262A;
+            --gray-1:     #45454A;
+            --gray-2:     #6B6B6E;
+            --gray-3:     #94938E;
+            --gray-4:     #BCB9AF;
+            --gray-5:     #D6D3C8;
+            --line:       #CFCCC2;
+
+            --bg-paper: var(--paper-2);
+            --bg-card: var(--paper);
+            --border-hairline: var(--line);
+            --border-accent: var(--ink);
+
+            --text-primary: var(--ink);
+            --text-secondary: var(--gray-2);
+            --text-muted: var(--gray-3);
+
+            --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --ease-smooth: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-paper);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.7;
+            padding: 2.5rem 1.75rem;
+            position: relative;
+        }
+
+        /* 3.5% Opacity SVG Fine Grain Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.035;
+            z-index: 9999;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            border-bottom: 1px solid var(--border-hairline);
+            padding-bottom: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .spec-badge-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .spec-badge {
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 4px;
+            background: var(--color-xiangpi);
+            color: var(--color-ink-dark);
+            border: 1px solid var(--color-yunmu);
+            font-weight: 600;
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .lead-text {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            max-width: 850px;
+        }
+
+        /* Section Headings */
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--text-primary);
+            margin-top: 3rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 1.2rem;
+            background: var(--color-peijiu);
+            border-radius: 2px;
+        }
+
+        /* Feature Cards Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(61, 53, 43, 0.03);
+        }
+
+        .feature-card:hover {
+            background: #ffffff;
+            border-color: var(--color-peijiu);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(61, 53, 43, 0.07);
+        }
+
+        .feature-card h3 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--color-ink-dark);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-card ul {
+            padding-left: 1.2rem;
+            color: var(--text-secondary);
+            font-size: 0.925rem;
+        }
+
+        .feature-card li { margin-bottom: 0.5rem; }
+
+        /* System Architecture Flowchart Component */
+        .arch-flow-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-radius: 10px;
+            padding: 1.75rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .arch-svg {
+            width: 100%;
+            min-width: 650px;
+            height: auto;
+        }
+
+        /* Tech Table Component */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-hairline);
+        }
+
+        th {
+            background: var(--color-xiangpi);
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-ink-dark);
+            font-weight: 700;
+        }
+
+        td strong { color: var(--text-primary); }
+
+        /* Challenge Cards Component */
+        .challenge-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hairline);
+            border-left: 4px solid var(--color-peijiu);
+            border-radius: 0 8px 8px 0;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .challenge-box h4 {
+            color: var(--color-ink-dark);
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .challenge-box ul {
+            padding-left: 1.2rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .challenge-box li { margin-bottom: 0.35rem; }
+
+        /* Code Block Component */
+        .code-container {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block {
+            background: #2b241c;
+            border: 1px solid var(--color-yunmu);
+            border-radius: 8px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            color: #efefef;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.55;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--color-peijiu);
+            border: none;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            background: var(--color-ink-dark);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-hairline);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.775rem;
+            color: var(--text-muted);
+        }
+
+        /* 📱 RWD Responsive & Collapsible Proportion Scaling */
+        .container {
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (max-width: 1024px) {
+            .container { padding: 1.75rem 1.25rem 3.5rem; }
+            .hero { padding: 1.75rem 1.25rem; }
+            .feature-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .feature-grid { grid-template-columns: 1fr; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 1.4rem; }
+            .subpage-return-btn { font-size: 0.775rem; padding: 0.35rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="subpage-return-bar" id="subpage-return-bar">
+    <a href="../index.html" class="subpage-return-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        返回主頁
+    </a>
+    <span style="font-family: var(--font-mono, monospace); font-size: 0.75rem; color: var(--text-muted, #918579);">發想路線規格指南</span>
+</div>
+<script>
+    if (window.self !== window.top) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const bar = document.getElementById('subpage-return-bar');
+            if (bar) bar.style.display = 'none';
+        });
+    }
+</script>
+
+<div class="container">
+    <header>
+        <div class="spec-badge-row">
+            <span class="spec-badge">SPEC // CV-TRPG</span>
+            <span class="spec-badge" style="background: rgba(172, 159, 138, 0.2); border-color: var(--color-peijiu);">PoC VERIFIED</span>
+        </div>
+        <h1>影像辨識 TRPG 輔助系統 (CV-TRPG)<br>工程落地與架構指南</h1>
+        <p class="lead-text">將電腦視覺 (Computer Vision) 引入傳統實體桌遊 (D&D, CoC)。自動化處理移動步數計算、動態視線判定 (LoS) 與戰術迷霧揭露，同時保留實體棋子與擲骰的手感體驗。</p>
+    </header>
+
+    <!-- 1. 核心應用功能模組 -->
+    <h2>1. 核心應用功能模組 (Core System Modules)</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>🎯 戰局自動化 (Tactical & FoW)</h3>
+            <ul>
+                <li><b>自動步數與移動邊界：</b>追蹤棋子底座，計算移動距離（如 30 呎/6 格），超越限制時紅框提示。</li>
+                <li><b>動態戰略迷霧：</b>依據角色棋子座標與視線 (LoS)，即時揭露投影地圖的未知區域。</li>
+                <li><b>掩體與視線判定：</b>自動繪製棋子射線與牆壁障礙求交點，判定半/全掩蔽。</li>
+                <li><b>威脅範圍判定：</b>敵方棋子離開角色控制格時觸發借機攻擊提示。</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h3>🃏 實體道具與手勢 (Props & Gestures)</h3>
+            <ul>
+                <li><b>道具卡與卷軸感應：</b>感應區辨識實體裝備卡/藥水瓶，自動播放背景法術與吟唱音效。</li>
+                <li><b>手勢法術繪製：</b>結合手部關鍵點偵測 (Hand Tracking)，玩家在空中劃出指定符文軌跡即可觸發高階法術。</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h3>🎲 擲骰結果結算 (Dice Automation)</h3>
+            <ul>
+                <li><b>多骰面自動識別：</b>自動偵測托盤內骰子種類 (d4~d20) 與頂面點數。</li>
+                <li><b>自動加成計算：</b>讀取數位角色卡，自動加總力量/敏捷修正值並顯示判定結果。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 2. 系統技術架構 (SVG Flowchart) -->
+    <h2>2. 系統技術架構與視覺拓撲 (Architecture Topology)</h2>
+    <div class="arch-flow-container">
+        <svg class="arch-svg" viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Hardware Tier -->
+            <rect x="20" y="20" width="760" height="50" rx="8" fill="#e6d1c5" stroke="#c6b8b1"/>
+            <text x="40" y="50" fill="#3d352b" font-family="JetBrains Mono" font-size="12" font-weight="700">硬體裝備層</text>
+            <text x="180" y="50" fill="#6e6255" font-family="Inter" font-size="12">[ 頂置 1080p 鏡頭 / IR 補光燈 ]  ➔  [ 實體 ArUco 標籤棋子 ]  ➔  [ 桌面投影機 ]</text>
+
+            <!-- Arrow Down -->
+            <path d="M400 70 V 95" stroke="#ac9f8a" stroke-width="2" stroke-dasharray="4 4"/>
+            <polygon points="400,100 395,90 405,90" fill="#ac9f8a"/>
+
+            <!-- Vision Processing Tier -->
+            <rect x="20" y="105" width="760" height="50" rx="8" fill="#f9f8f6" stroke="#ac9f8a" stroke-width="1.5"/>
+            <text x="40" y="135" fill="#3d352b" font-family="JetBrains Mono" font-size="12" font-weight="700">影像處理層</text>
+            <text x="180" y="135" fill="#3d352b" font-family="Inter" font-size="12">OpenCV (透視校正 / 降噪)  ──>  ArUco / YOLOv11 (目標追蹤解碼)  ──>  MediaPipe (手勢點位)</text>
+
+            <!-- Arrow Down -->
+            <path d="M400 155 V 180" stroke="#ac9f8a" stroke-width="2" stroke-dasharray="4 4"/>
+            <polygon points="400,185 395,175 405,175" fill="#ac9f8a"/>
+
+            <!-- Application Tier -->
+            <rect x="20" y="190" width="760" height="40" rx="8" fill="#e6d1c5" stroke="#c6b8b1"/>
+            <text x="40" y="215" fill="#3d352b" font-family="JetBrains Mono" font-size="12" font-weight="700">邏輯與呈現層</text>
+            <text x="180" y="215" fill="#6e6255" font-family="Inter" font-size="12">Godot 4 / Unity (戰速邏輯/視線算術)  <== WebSocket ==>  GM 主控台 / 數位角色卡</text>
+        </svg>
+    </div>
+
+    <!-- Tech Table -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>功能模組</th>
+                    <th>推薦技術 Stack</th>
+                    <th>工程選用理由</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>影像預處理</b></td>
+                    <td>OpenCV Python / C++</td>
+                    <td>執行單應性矩陣 (Homography) 透視校正、區域裁切 (ROI)、光線降噪。</td>
+                </tr>
+                <tr>
+                    <td><b>棋子 / 標籤定位</b></td>
+                    <td>ArUco Markers / AprilTag</td>
+                    <td><b>極推薦。</b>算力需求極低（單板機即可跑滿 60 FPS），能精準獲取 ID、座標與角度。</td>
+                </tr>
+                <tr>
+                    <td><b>無標籤物件辨識</b></td>
+                    <td>YOLOv8 / YOLOv11 Nano</td>
+                    <td>用於辨識骰子點數、客製化未貼標籤的怪獸模型。</td>
+                </tr>
+                <tr>
+                    <td><b>手勢與符文識別</b></td>
+                    <td>MediaPipe Hand Landmarker</td>
+                    <td>即時抓取手部 21 個關鍵點，輕量且機能穩定。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 3. 工程挑戰 -->
+    <h2>3. 關鍵工程挑戰與解決方案 (Engineering Challenges)</h2>
+
+    <div class="challenge-box">
+        <h4>🛠️ 挑戰一：玩家手部遮擋導致棋子「閃爍/消失」(Occlusion)</h4>
+        <ul>
+            <li><b>狀態機設計：</b>為棋子建立 <code>Active</code> (活躍)、<code>Occluded</code> (被遮擋)、<code>Removed</code> (已移出) 三種狀態。</li>
+            <li><b>緩衝平滑化：</b>標籤消失時轉為 <code>Occluded</code>，啟動 1.5 秒 Debounce Timer。利用卡爾曼過濾器 (Kalman Filter) 預測位置，維持地圖畫面穩定。</li>
+            <li><b>終點鎖定：</b>標籤消失超過 1.5 秒且無手部輪廓時才判定為 <code>Removed</code>。</li>
+        </ul>
+    </div>
+
+    <div class="challenge-box" style="border-left-color: var(--color-ink-dark);">
+        <h4>🛠️ 挑戰二：桌面投影光線干擾影像辨識 (Optical Feedback Loop)</h4>
+        <ul>
+            <li><b>硬體隔離解法：</b>使用 <b>850nm 紅外線 LED 補光燈</b> 照射桌面，鏡頭加裝 <b>850nm Narrowband Pass Filter</b>。</li>
+            <li><b>光學原理：</b>投影機發出的可見光無法穿過 850nm 濾鏡，動態彩色地圖在鏡頭中完全隱形，只保留清晰的 ArUco 黑白標籤。</li>
+        </ul>
+    </div>
+
+    <!-- 4. 實作範例 -->
+    <h2>4. 基礎開發實作範例 (OpenCV + ArUco 定位)</h2>
+    <div class="code-container">
+        <button class="copy-btn" onclick="copyCode()">複製 Code</button>
+        <pre class="code-block" id="code-snippet"><code>import cv2
+import cv2.aruco as aruco
+import json
+import time
+
+# 初始化 ArUco 字典與檢測器
+aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
+parameters = aruco.DetectorParameters()
+
+# 增強低光環境下的檢測能力
+parameters.adaptiveThreshWinSizeMin = 3
+parameters.adaptiveThreshWinSizeMax = 23
+parameters.adaptiveThreshWinSizeStep = 10
+
+detector = aruco.ArucoDetector(aruco_dict, parameters)
+cap = cv2.VideoCapture(0)
+
+print("[CV-TRPG] 棋子追蹤系統啟動中...")
+
+while True:
+    ret, frame = cap.read()
+    if not ret: break
+
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    corners, ids, rejected = detector.detectMarkers(gray)
+    tracking_data = []
+
+    if ids is not None:
+        aruco.drawDetectedMarkers(frame, corners, ids)
+        for i, marker_id in enumerate(ids):
+            c = corners[i][0]
+            center_x = int((c[0][0] + c[2][0]) / 2)
+            center_y = int((c[0][1] + c[2][1]) / 2)
+            
+            tracking_data.append({
+                "id": int(marker_id[0]),
+                "x": center_x,
+                "y": center_y,
+                "timestamp": time.time()
+            })
+
+    cv2.imshow("CV-TRPG Tracker View", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'): break
+
+cap.release()
+cv2.destroyAllWindows()</code></pre>
+    </div>
+
+    <footer>
+        CV-TRPG Specification &copy; 2026. Built with finesse-ui Traditional 4-Color Standard (縞羽/香皮/雲母/佩玖).
+    </footer>
+</div>
+
+<script>
+function copyCode() {
+    const text = document.getElementById('code-snippet').innerText;
+    navigator.clipboard.writeText(text);
+    alert('程式碼已成功複製至剪貼簿！');
+}
+</script>
+
+</body>
+</html>
