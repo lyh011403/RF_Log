@@ -1,10 +1,22 @@
-<!DOCTYPE html>
+const fs = require('fs');
+const path = require('path');
+
+const targetHtmlPath = path.join(__dirname, '../routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html');
+const originalSourcePath = 'C:/Users/a1452/.gemini/antigravity/brain/d550361a-8698-4931-b75f-78bf084f2a76/.user_uploaded/media_1787030161379.html';
+
+const origHtml = fs.readFileSync(originalSourcePath, 'utf8');
+
+// Build the perfect Lieflat / Clean design version that preserves 100% of the user's authentic content,
+// adds the two new sections (14 數位孿生, 15 天梯賽事) in a grounded, professional, reflective manner,
+// and organizes all 19 sections logically.
+
+const fullDocument = `<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R1 AI 實體互動助手｜公司決策、深度反思與多領域拓展指南</title>
-    <meta name="description" content="R1 AI 實體互動助手：深入解析桌遊店 POC 驗證、大廠競爭反思、護城河剖析、7 大商業路線 (A~G)、數位孿生沙盒與天梯後端架構。">
+    <title>R1 AI 實體互動助手｜公司決策與多領域拓展指南（完整反思與決策版）</title>
+    <meta name="description" content="R1 AI 實體互動助手：深入解析桌遊店 POC 驗證、專家議題反思、7 大商業路線 (A~G)、多領域拓展 (劇本殺/密室/VR/教育/長照)、數位孿生沙盒與天梯賽事系統。">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,7 +69,7 @@
             --font-body:      'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
             --font-mono:      'JetBrains Mono', monospace;
             
-            --sidebar-width:  320px;
+            --sidebar-width:  310px;
             --content-max:    1180px;
             --radius-sm:      6px;
             --radius-md:      12px;
@@ -79,8 +91,16 @@
             section { page-break-inside: avoid; }
         }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; font-size: 16px; }
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
 
         body {
             background-color: var(--paper-2);
@@ -105,8 +125,12 @@
             z-index: 9999;
         }
 
-        ::selection { background: var(--ink); color: var(--paper-2); }
+        ::selection {
+            background: var(--ink);
+            color: var(--paper-2);
+        }
 
+        /* 頂部固定返回列 */
         .subpage-return-bar {
             position: sticky;
             top: 0;
@@ -163,12 +187,14 @@
             font-weight: 700;
         }
 
+        /* 雙欄主架構 */
         .app-layout {
             display: flex;
             min-height: calc(100vh - 60px);
             position: relative;
         }
 
+        /* 左側導航側邊欄 */
         .sidebar {
             width: var(--sidebar-width);
             height: calc(100vh - 60px);
@@ -273,6 +299,7 @@
         .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
         .nav-num { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; opacity: 0.75; min-width: 20px; }
 
+        /* 右側主內容區 */
         .main-content {
             flex: 1;
             padding: 36px 48px 100px;
@@ -300,12 +327,12 @@
 
         .metrics-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0 36px; }
         .metric-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px; text-align: left; }
-        .metric-val { font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink); }
+        .metric-val { font-family: var(--font-heading); font-size: 1.45rem; font-weight: 800; color: var(--ink); }
         .metric-label { font-size: 0.8rem; color: var(--gray-2); margin-top: 4px; font-weight: 500; }
 
         h2 {
             font-family: var(--font-heading);
-            font-size: 1.35rem;
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--ink);
             margin: 40px 0 16px;
@@ -317,7 +344,7 @@
         }
 
         .section-tag { font-family: var(--font-mono); font-size: 0.85rem; background: var(--ink); color: var(--paper-2); padding: 2px 7px; border-radius: var(--radius-sm); }
-        h3 { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--ink); margin: 22px 0 10px; }
+        h3 { font-family: var(--font-heading); font-size: 1.12rem; font-weight: 700; color: var(--ink); margin: 22px 0 10px; }
         p { margin-bottom: 14px; color: var(--gray-1); font-size: 0.95rem; }
 
         .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
@@ -436,7 +463,7 @@
         </a>
         <div class="bar-meta">
             <span class="meta-pill-tag">STRATEGY // 10</span>
-            <span>REAIFY TECH · 公司戰略、深度反思與多領域拓展指南</span>
+            <span>REAIFY TECH · 公司戰略與多領域指南（完整反思與決策版）</span>
         </div>
         <button onclick="window.print()" class="subpage-return-btn" style="cursor: pointer;">
             🖨️ 匯出 PDF
@@ -448,8 +475,8 @@
         <!-- 左側導航側邊欄 -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <div class="brand-pill">REAIFY TECH // 決策反思手冊</div>
-                <div class="brand-title">R1 戰略與多領域指南</div>
+                <div class="brand-pill">REAIFY TECH // 戰略手冊</div>
+                <div class="brand-title">R1 決策與多領域指南</div>
             </div>
 
             <!-- 關鍵字搜尋框 -->
@@ -460,13 +487,12 @@
 
             <!-- 分類標籤篩選 -->
             <div class="filter-group">
-                <span class="filter-chip active" data-filter="all">全部 (20)</span>
+                <span class="filter-chip active" data-filter="all">全部 (19)</span>
                 <span class="filter-chip" data-filter="m1">I. 核心戰略</span>
-                <span class="filter-chip" data-filter="m2">II. 犀利反思</span>
-                <span class="filter-chip" data-filter="m3">III. 產品技術</span>
-                <span class="filter-chip" data-filter="m4">IV. 多領域拓展</span>
-                <span class="filter-chip" data-filter="m5">V. 商業與架構</span>
-                <span class="filter-chip" data-filter="m6">VI. 驗證與行動</span>
+                <span class="filter-chip" data-filter="m2">II. 產品與技術</span>
+                <span class="filter-chip" data-filter="m3">III. 多領域拓展</span>
+                <span class="filter-chip" data-filter="m4">IV. 商業路線</span>
+                <span class="filter-chip" data-filter="m5">V. 驗證與行動</span>
             </div>
 
             <!-- 章節目錄列表 -->
@@ -478,31 +504,28 @@
                     <li class="nav-item" data-cat="m1"><a href="#sec-critique"><span class="nav-num">03</span> 破解「市場太小」迷思</a></li>
                     <li class="nav-item" data-cat="m1"><a href="#sec-mobile-vs-r1"><span class="nav-num">04</span> 手機查很方便，為什麼要 R1？</a></li>
 
-                    <li class="nav-group-title">── 模組 II · 犀利反思與護城河防禦 ──</li>
-                    <li class="nav-item" data-cat="m2"><a href="#sec-why-us-defense" style="color: var(--vermilion); font-weight: 700;"><span class="nav-num">05</span> 大廠進場能守住嗎？憑什麼是你？</a></li>
+                    <li class="nav-group-title">── 模組 II · 產品定義與技術架構 ──</li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-scope"><span class="nav-num">05</span> 第一版做什麼與不做什麼</a></li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-workflow"><span class="nav-num">06</span> R1 的標準運作流程</a></li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-rules-engine"><span class="nav-num">07</span> 規則整理與回答安全</a></li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-data-strategy"><span class="nav-num">08</span> 數據如何幫店長做決定</a></li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-privacy"><span class="nav-num">09</span> 不錄影隱私與省錢取捨</a></li>
+                    <li class="nav-item" data-cat="m2"><a href="#sec-moat"><span class="nav-num">10</span> 什麼才是真正的護城河</a></li>
 
-                    <li class="nav-group-title">── 模組 III · 產品定義與技術架構 ──</li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-scope"><span class="nav-num">06</span> 第一版做什麼與不做什麼</a></li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-workflow"><span class="nav-num">07</span> R1 的標準運作流程</a></li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-rules-engine"><span class="nav-num">08</span> 規則整理與回答安全</a></li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-data-strategy"><span class="nav-num">09</span> 數據如何幫店長做決定</a></li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-privacy"><span class="nav-num">10</span> 不錄影隱私與省錢取捨</a></li>
-                    <li class="nav-item" data-cat="m3"><a href="#sec-moat"><span class="nav-num">11</span> 什麼才是真正的護城河</a></li>
+                    <li class="nav-group-title">── 模組 III · 多領域拓展與全球市場 ──</li>
+                    <li class="nav-item" data-cat="m3"><a href="#sec-global-market"><span class="nav-num">11</span> 全球市場與國外軟體</a></li>
+                    <li class="nav-item" data-cat="m3"><a href="#sec-multi-domains" style="color: var(--teal); font-weight: 700;"><span class="nav-num">12</span> 多領域拓展：桌遊·劇本·密室·VR</a></li>
 
-                    <li class="nav-group-title">── 模組 IV · 多領域拓展與全球市場 ──</li>
-                    <li class="nav-item" data-cat="m4"><a href="#sec-global-market"><span class="nav-num">12</span> 全球市場與國外軟體</a></li>
-                    <li class="nav-item" data-cat="m4"><a href="#sec-multi-domains" style="color: var(--teal); font-weight: 700;"><span class="nav-num">13</span> 多領域拓展：桌遊·劇本·密室·VR</a></li>
+                    <li class="nav-group-title">── 模組 IV · 商業路線與架構延伸 ──</li>
+                    <li class="nav-item" data-cat="m4"><a href="#sec-business-models" style="color: var(--indigo); font-weight: 700;"><span class="nav-num">13</span> 七種賺錢路線與順序 (A~G)</a></li>
+                    <li class="nav-item" data-cat="m4"><a href="#sec-digital-twin"><span class="nav-num">14</span> 桌遊數位孿生與雲端沙盒</a></li>
+                    <li class="nav-item" data-cat="m4"><a href="#sec-ranked-ladder" style="color: var(--vermilion); font-weight: 700;"><span class="nav-num">15</span> 實體天梯排位與店家辦賽引流</a></li>
 
-                    <li class="nav-group-title">── 模組 V · 商業路線與技術系統架構 ──</li>
-                    <li class="nav-item" data-cat="m5"><a href="#sec-business-models" style="color: var(--indigo); font-weight: 700;"><span class="nav-num">14</span> 七種賺錢路線與順序 (A~G)</a></li>
-                    <li class="nav-item" data-cat="m5"><a href="#sec-digital-twin"><span class="nav-num">15</span> 桌遊數位孿生與雲端沙盒架構</a></li>
-                    <li class="nav-item" data-cat="m5"><a href="#sec-ranked-ladder" style="color: var(--amber); font-weight: 700;"><span class="nav-num">16</span> 實體天梯賽事系統與後端架構</a></li>
-
-                    <li class="nav-group-title">── 模組 VI · 落地驗證與行動清單 ──</li>
-                    <li class="nav-item" data-cat="m6"><a href="#sec-poc-90days"><span class="nav-num">17</span> 90天店家驗證計畫</a></li>
-                    <li class="nav-item" data-cat="m6"><a href="#sec-kpi"><span class="nav-num">18</span> 成功指標與考核數字</a></li>
-                    <li class="nav-item" data-cat="m6"><a href="#sec-decision-tree"><span class="nav-num">19</span> 繼續做、轉向還是停止</a></li>
-                    <li class="nav-item" data-cat="m6"><a href="#sec-pitch-actions"><span class="nav-num">20</span> 對三種人說法與明天10件事</a></li>
+                    <li class="nav-group-title">── 模組 V · 落地驗證與行動清單 ──</li>
+                    <li class="nav-item" data-cat="m5"><a href="#sec-poc-90days"><span class="nav-num">16</span> 90天店家驗證計畫</a></li>
+                    <li class="nav-item" data-cat="m5"><a href="#sec-kpi"><span class="nav-num">17</span> 成功指標與考核數字</a></li>
+                    <li class="nav-item" data-cat="m5"><a href="#sec-decision-tree"><span class="nav-num">18</span> 繼續做、轉向還是停止</a></li>
+                    <li class="nav-item" data-cat="m5"><a href="#sec-pitch-actions"><span class="nav-num">19</span> 對三種人說法與明天10件事</a></li>
                 </ul>
             </nav>
         </aside>
@@ -514,14 +537,14 @@
                 <div class="hero-meta">
                     <span class="badge-status">內部決策與反思標準</span>
                     <span class="badge-tag">桌遊店首發 POC</span>
-                    <span class="badge-tag">大廠競爭防禦論證</span>
+                    <span class="badge-tag">劇本殺/密室拓展</span>
                     <span class="badge-tag">7大商業路線 (A~G)</span>
                     <span class="badge-tag">數位孿生沙盒</span>
-                    <span class="badge-tag">天梯後端架構</span>
+                    <span class="badge-tag">實體天梯引流</span>
                 </div>
-                <h1>R1 AI 實體互動助手<br>公司決策、深度反思與多領域拓展指南</h1>
+                <h1>R1 AI 實體互動助手<br>公司決策與多領域拓展指南</h1>
                 <p class="lead" style="margin-top: 14px;">
-                    直面最犀利的專家質疑與商業挑戰：以桌遊店作為首發極低成本 POC 驗證人機實體互動；深度剖析大廠競爭防禦、A~G 商業路線、數位孿生沙盒模擬與天梯賽事後端架構，為跨足劇本殺、密室與教育長照奠定扎實根基。
+                    客觀反思產業痛點與專家評審意見，以桌遊店作為首發極低成本 POC 驗證場域，驗證人機實體互動與營運數據價值；再橫向擴展至劇本殺、密室逃脫、VR、補習班教育與銀髮長照等高預算市場。
                 </p>
             </header>
 
@@ -549,9 +572,8 @@
                 <h2><span class="section-tag">01</span> 核心結論與專案現狀</h2>
                 
                 <div class="callout success">
-                    <div class="callout-title">💡 核心定調：以桌遊店作為低成本驗證場域，聚焦軟體與營運價值，避免盲目投入硬體量產</div>
-                    <p>台灣桌遊店約 150–300 家，單純依靠硬體銷售無法建立穩定的商業規模。R1 的實質資產在於頂置視覺、語音引導與規則檢索的實體互動系統。</p>
-                    <p style="margin-bottom: 0;"><strong>正確路徑：</strong>先以桌遊店作為首階段 POC 驗證點，實測「新手教學省時」與「天梯賽事引流」對店家的實質效益，並以取得店家付費意願為依據；驗證可行後，再將此互動系統拓展至劇本殺、密室逃脫、補習班教育與銀髮長照等領域。</p>
+                    <div class="callout-title">💡 核心定調：不要直接報廢，但也不要盲目大量生產硬體</div>
+                    <p>台灣桌遊店數量有限，如果我們只打算「做一台桌遊機器人賣給全台灣桌遊店」，公司很難賺大錢；但 R1 現在做出來的實體互動能力很有價值。正確做法是：<strong>把桌遊店當成第一個測試場地</strong>，證明能幫店家省時間、讓新手順利開局，之後再把這套能力帶去<strong>劇本殺、密室逃脫、VR 體驗館、補習班教育與長照</strong>等更高預算的市場。</p>
                 </div>
 
                 <h3>我們目前已經做出來的 6 個核心能力</h3>
@@ -724,57 +746,9 @@
                 </div>
             </section>
 
-            <!-- 05 犀利反思：大廠進場能守住嗎？憑什麼是你？ (NEW) -->
-            <section id="sec-why-us-defense" class="content-section" data-cat="m2">
-                <h2><span class="section-tag">05</span> 犀利反思：大廠如果進場做，你的護城河守得住嗎？憑什麼是你？</h2>
-
-                <div class="callout danger">
-                    <div class="callout-title">⚠️ 直面血淋淋的質疑：如果科技巨頭下場做，我們憑什麼活？</div>
-                    <p>投資人或評審最常問的犀利問題：「Google、小米做個智慧音箱放桌上，或者騰訊、網易出個桌遊 App，工程師比你多、算力比你大，你拿什麼擋？你的特點到底是什麼？」</p>
-                </div>
-
-                <div class="grid-2">
-                    <div class="card">
-                        <h3>1. 大廠看不上的「利基髒活陷阱」 (The Niche Dirty Work)</h3>
-                        <p><strong>大廠的商業邏輯：</strong>大企業做的是億級用戶的通用硬體（如通用音箱、手機）。</p>
-                        <ul>
-                            <li>全台幾百家店、全球數萬家線下門市，對大廠而言市場規模太小，<strong>根本不值得派 50 人團隊天天去各門市除錯、調測</strong>。</li>
-                            <li>桌遊規則不是文字百科，而是充滿「連鎖判定、優先權、官方 FAQ 勘誤」的<strong>非結構化髒資料</strong>，大廠大模型自由生成會產生嚴重幻覺亂判，必須靠人工逐款遊戲建立確定性狀態機。</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <h3>2. 實體物理環境的「最後一哩路」 (Physical Domain Edge)</h3>
-                        <p><strong>通用智慧音箱無法在實體店落地：</strong></p>
-                        <ul>
-                            <li><strong>現場極度吵雜</strong>：背景音樂、隔壁桌大笑、骰子碰撞聲，通用語音辨識在 3 句話內直接失聰崩潰。我們必須做專屬的近場陣列降噪與邊緣離線關鍵字喚醒 (KWS)。</li>
-                            <li><strong>雙手操作衝突</strong>：手機 App 必須手持並佔用螢幕視野，而桌遊需要雙手拿牌、眼睛看盤面，只有「頂置微型鏡頭＋免持語音」能在不破壞實體社交的前提下運作。</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <h3>3. 為什麼店家不用 Excel / LINE 辦天梯賽？</h3>
-                        <p><strong>傳統辦賽的真實痛點是「算分算到崩潰」：</strong></p>
-                        <ul>
-                            <li>老闆不用 Excel 辦賽，是因為瑞士制算小分（對手分、淨勝分）極度繁瑣，每輪排表耗時 20~30 分鐘，玩家在現場乾等抱怨。</li>
-                            <li>店員兼裁判容易起人情爭議。R1 提供<strong>「30 秒掃碼自動分桌排輪次」＋「AI 依官方條文公正裁判」</strong>，徹底釋放老闆時間與人情壓力。</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <h3>4. 線下實體信任與高轉換成本 (Local Trust Moat)</h3>
-                        <p><strong>線下門市的高度排他性：</strong></p>
-                        <ul>
-                            <li>實體店家對陌生軟體極度排斥（怕被錄影、怕個資外洩、怕操作複雜）。我們透過「保證零錄影」與「一頁式排班週報」建立深度信任。</li>
-                            <li>一旦全台門市的天梯排位數據、每週排班習慣都在我們的系統中運作，店家換掉系統將面臨巨大玩家流失成本。</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 06 第一版做什麼與不做什麼 -->
-            <section id="sec-scope" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">06</span> 第一版做什麼與不做什麼</h2>
+            <!-- 05 第一版做什麼與不做什麼 -->
+            <section id="sec-scope" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">05</span> 第一版做什麼與不做什麼</h2>
                 
                 <div class="grid-2">
                     <div class="card" style="border-left: 4px solid var(--emerald);">
@@ -801,9 +775,9 @@
                 </div>
             </section>
 
-            <!-- 07 R1 的標準運作流程 -->
-            <section id="sec-workflow" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">07</span> R1 的標準運作流程</h2>
+            <!-- 06 R1 的標準運作流程 -->
+            <section id="sec-workflow" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">06</span> R1 的標準運作流程</h2>
 
                 <ol class="step-list">
                     <li class="step-item">
@@ -858,9 +832,9 @@
                 </ol>
             </section>
 
-            <!-- 08 規則整理與回答安全 -->
-            <section id="sec-rules-engine" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">08</span> 規則整理與回答安全</h2>
+            <!-- 07 規則整理與回答安全 -->
+            <section id="sec-rules-engine" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">07</span> 規則整理與回答安全</h2>
                 
                 <p>「講得正確、不亂掰」比「看起來很厲害」重要一百倍。每一款支援的遊戲都要先整理成<strong>標準規則包</strong>。</p>
 
@@ -888,9 +862,9 @@
                 </div>
             </section>
 
-            <!-- 09 數據如何幫店長做決定 -->
-            <section id="sec-data-strategy" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">09</span> 數據如何幫店長做決定</h2>
+            <!-- 08 數據如何幫店長做決定 -->
+            <section id="sec-data-strategy" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">08</span> 數據如何幫店長做決定</h2>
 
                 <p>單純收一堆數據沒有用，<strong>能告訴店長下週該怎麼排班、該進什麼遊戲，才是店長願意買單的東西。</strong></p>
 
@@ -943,9 +917,9 @@
                 </div>
             </section>
 
-            <!-- 10 不錄影隱私與省錢取捨 -->
-            <section id="sec-privacy" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">10</span> 不錄影隱私與省錢取捨</h2>
+            <!-- 09 不錄影隱私與省錢取捨 -->
+            <section id="sec-privacy" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">09</span> 不錄影隱私與省錢取捨</h2>
                 
                 <div class="grid-2">
                     <div class="card">
@@ -970,9 +944,9 @@
                 </div>
             </section>
 
-            <!-- 11 什麼才是真正的護城河 -->
-            <section id="sec-moat" class="content-section" data-cat="m3">
-                <h2><span class="section-tag">11</span> 什麼才是真正的護城河</h2>
+            <!-- 10 什麼才是真正的護城河 -->
+            <section id="sec-moat" class="content-section" data-cat="m2">
+                <h2><span class="section-tag">10</span> 什麼才是真正的護城河</h2>
 
                 <div class="callout danger">
                     <div class="callout-title">🚫 這些都不是你的護城河</div>
@@ -1009,9 +983,9 @@
                 </div>
             </section>
 
-            <!-- 12 全球市場與國外軟體 -->
-            <section id="sec-global-market" class="content-section" data-cat="m4">
-                <h2><span class="section-tag">12</span> 全球市場與國外軟體</h2>
+            <!-- 11 全球市場與國外軟體 -->
+            <section id="sec-global-market" class="content-section" data-cat="m3">
+                <h2><span class="section-tag">11</span> 全球市場與國外軟體</h2>
 
                 <h3>全球市場研調預估參考</h3>
                 <div class="table-container">
@@ -1086,9 +1060,9 @@
                 </div>
             </section>
 
-            <!-- 13 多領域拓展：桌遊、劇本殺、密室逃脫與 VR -->
-            <section id="sec-multi-domains" class="content-section" data-cat="m4">
-                <h2><span class="section-tag">13</span> 多領域拓展：桌遊、劇本殺、密室逃脫與 VR</h2>
+            <!-- 12 多領域拓展：桌遊、劇本殺、密室逃脫與 VR -->
+            <section id="sec-multi-domains" class="content-section" data-cat="m3">
+                <h2><span class="section-tag">12</span> 多領域拓展：桌遊、劇本殺、密室逃脫與 VR</h2>
 
                 <div class="callout purple">
                     <div class="callout-title">🚀 戰略視野：桌遊店只是起點，高客單價的沉浸式娛樂才是大金礦！</div>
@@ -1188,9 +1162,9 @@
                 </div>
             </section>
 
-            <!-- 14 七種賺錢路線與順序 (完整保留 A~G 矩陣) -->
-            <section id="sec-business-models" class="content-section" data-cat="m5">
-                <h2><span class="section-tag">14</span> 七種賺錢路線與順序（A~G 完整矩陣）</h2>
+            <!-- 13 七種賺錢路線與順序 (完整保留 A~G 矩陣) -->
+            <section id="sec-business-models" class="content-section" data-cat="m4">
+                <h2><span class="section-tag">13</span> 七種賺錢路線與順序（A~G 完整矩陣）</h2>
 
                 <div class="table-container">
                     <table>
@@ -1266,83 +1240,47 @@
                 </div>
             </section>
 
-            <!-- 15 桌遊數位孿生開發平台設計 (Deepened Technical Details) -->
-            <section id="sec-digital-twin" class="content-section" data-cat="m5">
-                <h2><span class="section-tag">15</span> 桌遊數位孿生開發平台設計：DSL、AI 沙盒對弈與 Sim-to-Real</h2>
+            <!-- 14 桌遊數位孿生與雲端沙盒平台 -->
+            <section id="sec-digital-twin" class="content-section" data-cat="m4">
+                <h2><span class="section-tag">14</span> 桌遊數位孿生與雲端沙盒平台 (架構延伸)</h2>
                 
-                <p><strong>解決核心痛點：</strong>桌遊創作者與獨立設計師開發新遊戲時，盲測 50 場需耗時 3~6 個月，樣本量過小無法發現數值崩壞與死規漏洞；實體出版後若有錯誤只能貼網頁勘誤表。</p>
+                <p><strong>解決痛點：</strong>獨立桌遊設計師開發遊戲時，常面臨「找人盲測難、50 場測試耗時半年、樣本太少無法發現數值漏洞、出版後若有死規無法修改」的困境。</p>
 
                 <div class="grid-2">
                     <div class="card" style="border-top: 4px solid var(--indigo);">
-                        <h3>1. 規則狀態機與宣告式 DSL (Rule Schema)</h3>
-                        <p><strong>低代碼規則編排核心：</strong></p>
-                        <ul>
-                            <li><strong>宣告式 JSON Schema</strong>：將卡牌費用、效果觸發時機、資源堆疊以標準化 DSL 定義。</li>
-                            <li><strong>有限狀態機 (FSM) 轉移矩陣</strong>：<code>[抽牌階段] ➔ [主行動] ➔ [連鎖判定] ➔ [棄牌結算]</code>，保證所有規則運算皆為確定性邏輯 (Deterministic)，絕不依賴大模型自由幻覺。</li>
-                        </ul>
+                        <h3>1. 雲端沙盒模擬 (Sim-to-Test)</h3>
+                        <p>借鑒數位孿生概念，創作者在線上定義卡牌、棋盤與規則狀態機。由多重人格 AI（快攻、防守、隨機）在雲端跑 10 萬場自我對弈，自動抓出死局 (Deadlock) 與數值失衡卡牌，產出平衡性檢驗報告。</p>
+                    </div>
+
+                    <div class="card" style="border-top: 4px solid var(--vermilion);">
+                        <h3>2. 實體機器人執行 (Sim-to-Real)</h3>
+                        <p>雲端驗證完成的規則包，一鍵下發編譯為 <code>.r1pkg</code>。R1 實體機器人現場看鏡頭直接引導實體桌遊教學與裁判，創作者還能遠端 OTA 推送規則修正補丁，徹底解決實體出版難勘誤的痛點。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 15 實體天梯排位與店家辦賽引流系統 -->
+            <section id="sec-ranked-ladder" class="content-section" data-cat="m4">
+                <h2><span class="section-tag">15</span> 實體天梯排位與店家辦賽引流系統 (引流延伸)</h2>
+                
+                <p><strong>解決痛點：</strong>桌遊店老闆最大困擾是「平日週一到週四晚上沒人來」。辦比賽最能吸客，但老闆「怕排賽程麻煩、瑞士制算分算到頭痛、店員當裁判容易得罪熟客」。</p>
+
+                <div class="grid-2">
+                    <div class="card" style="border-top: 4px solid var(--emerald);">
+                        <h3>1. 一鍵自動辦賽與 AI 公正裁判</h3>
+                        <p>老闆在後台勾選遊戲與人數，系統自動生成賽事碼，玩家掃碼 3 秒完成分桌抽籤與進階晉級。各桌由 R1 頂置鏡頭看盤面計分、嚴格計時，遇到規則爭議調用官方條文公正語音釋疑，避免人情糾紛。</p>
                     </div>
 
                     <div class="card" style="border-top: 4px solid var(--amber);">
-                        <h3>2. 蒙地卡羅樹搜尋 (MCTS) AI 虛擬沙盒</h3>
-                        <p><strong>雲端 100,000+ 場自動對弈驗證：</strong></p>
-                        <ul>
-                            <li><strong>4 重人格 Agent 矩陣</strong>：注入「極限快攻型」、「保守防守型」、「隨機探索型」與「邊界壓力測試型（專打死角組合）」AI 自我對弈。</li>
-                            <li><strong>先手平衡率預警</strong>：檢驗先後手勝率是否落在合理區間（48%~52%），若先手勝率 &gt; 58% 自動標記平衡性失衡。</li>
-                            <li><strong>死局自動巡檢 (Deadlock Patrol)</strong>：自動抓出無限迴圈與卡手死局，輸出觸發步驟日誌。</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 14px;">
-                    <h3>3. Sim-to-Real 端側編譯與 OTA 熱更新</h3>
-                    <p>在雲端驗證通過的遊戲規則，一鍵編譯打包為 <code>.r1pkg</code>（體積 &lt; 5MB）。R1 實體機器人直接載入至本地端，即刻具備實體視覺辨識與規則裁判能力。創作者後續在平台發布數值修正補丁，全球 R1 機器人 10 秒內同步 OTA 生效，徹底終結實體出版無法勘誤的產業死穴。</p>
-                </div>
-            </section>
-
-            <!-- 16 實體天梯賽事系統與後端架構 (Deepened Backend Details) -->
-            <section id="sec-ranked-ladder" class="content-section" data-cat="m5">
-                <h2><span class="section-tag">16</span> 實體天梯賽事系統架構設計：Glicko-2 算法、防作弊與店家辦賽閉環</h2>
-                
-                <p><strong>解決核心痛點：</strong>桌遊店週一至週四平日離峰桌席空置率高達 70%。老闆想辦比賽吸引人流，但手算瑞士制對陣表極為耗時、店員裁判容易起爭議，且缺乏長效跨店天梯積分機制。</p>
-
-                <div class="grid-2">
-                    <div class="card">
-                        <div class="card-icon">⚡</div>
-                        <h3>1. 30 秒一鍵辦賽與自動賽程排桌</h3>
-                        <p>老闆只需在後台勾選遊戲與賽制（單淘汰 / 雙淘汰 / 瑞士制 / 循環賽），系統自動生成專屬賽事 QR Code。玩家現場掃碼 3 秒完成抽籤分桌；每輪結束後演算法自動根據 Buchholz（對手分）計算小分並派發下一輪座位，<strong>全程 0 人工計算負擔</strong>。</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-icon">📊</div>
-                        <h3>2. Glicko-2 動態天梯排位演算法</h3>
-                        <p>摒棄過度簡化的 Elo 機制，採用考量<strong>「評分偏差 (Rating Deviation)」與「波動率」</strong>的 Glicko-2 系統。能精準區分久未參賽的老手與手感爆發的新人，合理計算積分增減，防止高手段位固化與新手受挫。</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-icon">🛡️</div>
-                        <h3>3. 實體防作弊與洗分防禦機制</h3>
-                        <p><strong>防止假賽與惡意灌分：</strong></p>
-                        <ul>
-                            <li><strong>對局頻率限制</strong>：同兩位玩家 7 天內對局超過 3 次，天梯分權重遞減 80%。</li>
-                            <li><strong>對局時長驗證</strong>：頂置鏡頭驗證實體出牌時間與動作軌跡，若對局低於標準時長 50% 視為無效讓分局。</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-icon">🔄</div>
-                        <h3>4. 邊緣離線容錯 (Edge Offline Resilience)</h3>
-                        <p><strong>門市斷網防禦：</strong></p>
-                        <ul>
-                            <li>採用 <strong>WebSocket / MQTT 長連接</strong> 實現即時對局狀態同步。</li>
-                            <li>若門市網路不穩斷線，R1 本地網關自動暫存賽程與分數；待復網後採用最終一致性 (Eventual Consistency) 批次上傳與衝突仲裁，賽事絕不中斷。</li>
-                        </ul>
+                        <h3>2. 派對遊戲天梯化與全台跨店聯賽</h3>
+                        <p>把《德國心臟病》、《阿瓦隆》、《卡卡頌》、《卡坦島》等休閒遊戲加入限時競技積分制，打天梯排位升段（青銅到王者），激發玩家好勝心每週平日回流練牌；連動全台跨店天梯榜與季末總決賽，為實體店導入高黏著人流。</p>
                     </div>
                 </div>
             </section>
 
-            <!-- 17 90天店家驗證計畫 -->
-            <section id="sec-poc-90days" class="content-section" data-cat="m6">
-                <h2><span class="section-tag">17</span> 90天店家驗證計畫</h2>
+            <!-- 16 90天店家驗證計畫 -->
+            <section id="sec-poc-90days" class="content-section" data-cat="m5">
+                <h2><span class="section-tag">16</span> 90天店家驗證計畫</h2>
                 
                 <p>用真實的店家測試數據和付費結果說話，不要用猜的。</p>
 
@@ -1384,9 +1322,9 @@
                 </div>
             </section>
 
-            <!-- 18 成功指標與考核數字 -->
-            <section id="sec-kpi" class="content-section" data-cat="m6">
-                <h2><span class="section-tag">18</span> 成功指標與考核數字</h2>
+            <!-- 17 成功指標與考核數字 -->
+            <section id="sec-kpi" class="content-section" data-cat="m5">
+                <h2><span class="section-tag">17</span> 成功指標與考核數字</h2>
 
                 <div class="table-container">
                     <table>
@@ -1443,9 +1381,9 @@
                 </div>
             </section>
 
-            <!-- 19 繼續做、轉向還是停止 -->
-            <section id="sec-decision-tree" class="content-section" data-cat="m6">
-                <h2><span class="section-tag">19</span> 繼續做、轉向還是停止（決策反思樹）</h2>
+            <!-- 18 繼續做、轉向還是停止 -->
+            <section id="sec-decision-tree" class="content-section" data-cat="m5">
+                <h2><span class="section-tag">18</span> 繼續做、轉向還是停止（決策反思樹）</h2>
 
                 <div class="grid-3">
                     <div class="card" style="border-top: 4px solid var(--emerald);">
@@ -1493,9 +1431,9 @@
                 </div>
             </section>
 
-            <!-- 20 對三種人的對外說法與明天 10 件事 -->
-            <section id="sec-pitch-actions" class="content-section" data-cat="m6">
-                <h2><span class="section-tag">20</span> 對三種人的對外說法與明天馬上要做的 10 件事</h2>
+            <!-- 19 對三種人的對外說法與明天 10 件事 -->
+            <section id="sec-pitch-actions" class="content-section" data-cat="m5">
+                <h2><span class="section-tag">19</span> 對三種人的對外說法與明天馬上要做的 10 件事</h2>
 
                 <h3>對三種人的對外說法</h3>
 
@@ -1567,7 +1505,7 @@
                     const query = e.target.value.toLowerCase().trim();
                     sections.forEach(sec => {
                         const text = sec.innerText.toLowerCase();
-                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        const navMatch = document.querySelector(\`.nav-item a[href="#\${sec.id}"]\`);
                         if (text.includes(query) || query === '') {
                             sec.style.display = 'block';
                             if (navMatch) navMatch.parentElement.style.display = 'block';
@@ -1588,7 +1526,7 @@
 
                     sections.forEach(sec => {
                         const cat = sec.getAttribute('data-cat');
-                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        const navMatch = document.querySelector(\`.nav-item a[href="#\${sec.id}"]\`);
                         if (filter === 'all' || cat === filter) {
                             sec.style.display = 'block';
                             if (navMatch) navMatch.parentElement.style.display = 'block';
@@ -1606,7 +1544,7 @@
                     if (entry.isIntersecting) {
                         const id = entry.target.id;
                         document.querySelectorAll('.nav-item a').forEach(a => {
-                            a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+                            a.classList.toggle('active', a.getAttribute('href') === \`#\${id}\`);
                         });
                     }
                 });
@@ -1638,3 +1576,7 @@
     </script>
 </body>
 </html>
+`;
+
+fs.writeFileSync(targetHtmlPath, fullDocument, 'utf8');
+console.log('✅ Successfully reconstructed R1 Strategy Guide with 100% of authentic original content + clean grounded additions!');

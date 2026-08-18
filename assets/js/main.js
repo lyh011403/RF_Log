@@ -12,7 +12,7 @@ const CATEGORIES = [
     { id: "StrategyHandbook", name: "公司戰略 (STRATEGY)" },
     { id: "FieldInterview", name: "市場調研與訪談 (INTERVIEW)" },
     { id: "FutureRoute", name: "未來發想 (FUTURE)" },
-    { id: "Troubleshooting", name: "疑難排解 (TROUBLESHOOTING)" },
+    { id: "Troubleshooting", name: "疑難排解MD (TROUBLESHOOTING)" },
     { id: "LegacyRoute", name: "舊方案規格 (LEGACY)" },
     { id: "LearningActivity", name: "學習與營運 (LEARNING)" }
 ];
@@ -23,7 +23,8 @@ const TREE_BRANCHES = [
         name: "公司戰略手冊",
         code: "STRATEGY",
         children: [
-            { name: "R1 決策與多領域指南", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html", routeId: "r1-strategy-guide" }
+            { name: "R1 決策與多領域指南", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html", routeId: "r1-strategy-guide" },
+            { name: "戰略手冊撰寫標準書 (MD)", path: "routes/strategy_handbooks/戰略手冊撰寫規格標準書.html", routeId: "strategy-doc-standard-md" }
         ]
     },
     {
@@ -46,11 +47,10 @@ const TREE_BRANCHES = [
     },
     {
         id: "Troubleshooting",
-        name: "疑難排解手冊",
+        name: "疑難排解MD",
         code: "TROUBLE",
         children: [
-            { name: "PI4 手勢辨識排解", path: "routes/troubleshooting/PI4手不辨識遇到難題.html", routeId: "pi4-hand-troubleshooting" },
-            { name: "馬達 (MG90S) 追蹤整理", path: "routes/troubleshooting/馬達(MG90S)手部追蹤整理.html", routeId: "mg90s-motor-tracking" }
+            { name: "Pi4 全模組技術整合手冊", path: "routes/troubleshooting/PI4_嵌入式全模組技術與疑難排解整合手冊.html", routeId: "pi4-master-hub" }
         ]
     },
     {
@@ -74,17 +74,17 @@ const TREE_BRANCHES = [
 ];
 
 const ALL_PROJECTS_MAP = {
-    "r1-strategy-guide": { id: "r1-strategy-guide", category: "StrategyHandbook", typeLabel: "STRATEGY", code: "10", title: "R1 AI 實體互動助手｜公司決策與多領域拓展指南", subtitle: "桌遊、劇本殺、密室逃脫與 VR 落地商模與 90 天驗證計畫", description: "白話深度解析實體互動助手落地策略。涵蓋 4 大線下娛樂場景對比、手機 vs R1 本質差異、7 種盈利模式與 18 條決策方針。", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html" },
+    "r1-strategy-guide": { id: "r1-strategy-guide", category: "StrategyHandbook", typeLabel: "STRATEGY", code: "10", title: "R1 AI 實體互動助手｜公司決策與多領域拓展指南", subtitle: "桌遊店 POC 驗證、7 大商業路線 (A~G)、多領域拓展與決策反思", description: "客觀反思產業痛點與專家評審意見。以桌遊店作為首發極低成本 POC 驗證場景，涵蓋 7 大商業路線矩陣 (A~G)、劇本殺/密室/VR 多領域拓展、數位孿生與實體天梯賽事系統。", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html" },
+    "strategy-doc-standard-md": { id: "strategy-doc-standard-md", category: "StrategyHandbook", typeLabel: "STRATEGY", code: "13", title: "戰略手冊撰寫規範標準書 (SDSS v1.0)", subtitle: "5 大撰寫原則、8 大標準模組架構與驗證規則", description: "公司戰略手冊與商業計劃書之最高準則。包含 BLUF 結論先行、數據口徑、防禦論證、單位經濟模型與審查規則。附原檔 MD 下載。", path: "routes/strategy_handbooks/戰略手冊撰寫規格標準書.html" },
     "crazy-boardgame-interview": { id: "crazy-boardgame-interview", category: "FieldInterview", typeLabel: "INTERVIEW", code: "11", title: "瘋桌遊實地訪談紀錄與產品分析總結", subtitle: "店長痛點剖析、NT$600-800月租定價與派對天梯賽事系統調研", description: "第一線訪談瘋桌遊連鎖店長。深度剖析法官缺席痛點、一體機規格、平價/高階版本商模對照、派對遊戲天梯化辦賽策略與三大業界通路建議。", path: "routes/field_interviews/瘋桌遊實地訪談與天梯賽事系統調研.html" },
     "trpg-vision": { id: "trpg-vision", category: "FutureRoute", typeLabel: "FUTURE", code: "01", title: "TRPG 主打影像輔助系統", subtitle: "電腦視覺 (CV) 戰術追蹤與工程落地指南", description: "將頂置 CV (ArUco / YOLOv11) 引入實體桌遊。自動算數、測距與戰略迷霧判定。", path: "routes/future_routes/TRPG_主打影像.html" },
     "trpg-voice-vision": { id: "trpg-voice-vision", category: "FutureRoute", typeLabel: "FUTURE", code: "02", title: "TRPG 主打語音輔助影像", subtitle: "AI 上帝版 Co-DM 語音演繹與 NFC 藍圖", description: "Voice-First 架構。AI 多角色變聲、動態 BGM 混合器與雙軌實體 NFC 角色卡。", path: "routes/future_routes/TRPG_主打語音輔助影像.html" },
     "pi4-pi5-spec": { id: "pi4-pi5-spec", category: "FutureRoute", typeLabel: "FUTURE", code: "03", title: "PI4 & PI5 開發路線對照", subtitle: "樹莓派 4B/5 雙平台硬體對照與雲端 AI 規格", description: "Pi 4 1GB 量產可行性、第二代 3D 模型展台與 Faster-Whisper + Qwen3.5 串流模型。", path: "routes/future_routes/PI4&PI5開發路線.html" },
-    "pi4-hand-troubleshooting": { id: "pi4-hand-troubleshooting", category: "Troubleshooting", typeLabel: "TROUBLE", code: "04", title: "Pi 4 MediaPipe 手勢辨識 排解手冊", subtitle: "Python 3.13 踩坑、SSD Anchors 解碼與 AES 誤判", description: "實戰記錄 Pi 4 手勢辨識卡關根因排查。包含 6 步診斷流程圖與 Tasks API 替代方案。", path: "routes/troubleshooting/PI4手不辨識遇到難題.html" },
-    "mg90s-motor-tracking": { id: "mg90s-motor-tracking", category: "Troubleshooting", typeLabel: "TROUBLE", code: "05", title: "Pi 4B 手部置中與 MG90S 馬達除錯", subtitle: "pigpio DMA PWM、連續旋轉馬達校準與 4 大 Bug 處方", description: "完整剖析 Pi 4B + pigpio DMA PWM + MG90S 360° 馬達手部追蹤系統與零點校準 SOP。", path: "routes/troubleshooting/馬達(MG90S)手部追蹤整理.html" },
-    "maixcam-aibox-legacy": { id: "maixcam-aibox-legacy", category: "LegacyRoute", typeLabel: "LEGACY", code: "06", title: "MAIXCAM AI BOX 舊方案手冊", subtitle: "第一代外觀實體圖展、雙核架構與 PCB EDA 原理圖", description: "完整收錄《Aldrich Fief 獵巫鎮》AI BOX 舊版架構、NFC 7-byte 硬體防盜與 PCB 規範。", path: "routes/legacy_routes/MAIXCAM_AIBOX舊方案整合.html" },
-    "consultative-selling": { id: "consultative-selling", category: "LearningActivity", typeLabel: "LEARNING", code: "07", title: "顧問式銷售與攻心影響力指南", subtitle: "SPARK 需求診斷、SPIN 痛點開挖與高價值成交", description: "將產品導向轉化為客戶價值的終極實戰架構。涵蓋需求洞察與成交閉環。", path: "routes/learning_activities/顧問銷售整合指南.html" },
-    "edge-ai-security": { id: "edge-ai-security", category: "LearningActivity", typeLabel: "LEARNING", code: "08", title: "Edge AI 企業安全與部署手冊", subtitle: "企業級 Edge AI 自主智慧體與縱深安全防線 v3", description: "整合 NemoClaw、OpenShell、NeMo Guardrails、AI Gateway 與 Palo Alto AIRS 架構。", path: "routes/learning_activities/Edge AI 企業安全與部署手冊.html" },
-    "digblock-startup": { id: "digblock-startup", category: "LearningActivity", typeLabel: "LEARNING", code: "09", title: "DIGBLOCK 青創與 SBIR 計畫", subtitle: "創業機會、115 年 SBIR 補助懶人包與雙軸轉型", description: "深入解析創業四大商機、2026 雙軸轉型綠色溢價與 SBIR 150 萬~3000 萬補助攻略。", path: "routes/learning_activities/digblock青創活動.html" }
+    "pi4-master-hub": { id: "pi4-master-hub", category: "Troubleshooting", typeLabel: "TROUBLE", code: "04", title: "Pi4 嵌入式全模組技術與疑難排解整合手冊", subtitle: "包含 7 份技術 Markdown 檔案下載、舵機/手勢/語音/NFC/STT/標定旗艦 Hub", description: "深度整合 Raspberry Pi 4 (1GB) 嵌入式全模組避坑指南。提供 7 份技術 MD 原始檔下載、在線即時預覽、一鍵打包 ZIP 與相機標定 SOP。", path: "routes/troubleshooting/PI4_嵌入式全模組技術與疑難排解整合手冊.html" },
+    "maixcam-aibox-legacy": { id: "maixcam-aibox-legacy", category: "LegacyRoute", typeLabel: "LEGACY", code: "07", title: "MAIXCAM AI BOX 舊方案手冊", subtitle: "第一代外觀實體圖展、雙核架構與 PCB EDA 原理圖", description: "完整收錄《Aldrich Fief 獵巫鎮》AI BOX 舊版架構、NFC 7-byte 硬體防盜與 PCB 規範。", path: "routes/legacy_routes/MAIXCAM_AIBOX舊方案整合.html" },
+    "consultative-selling": { id: "consultative-selling", category: "LearningActivity", typeLabel: "LEARNING", code: "08", title: "顧問式銷售與攻心影響力指南", subtitle: "SPARK 需求診斷、SPIN 痛點開挖與高價值成交", description: "將產品導向轉化為客戶價值的終極實戰架構。涵蓋需求洞察與成交閉環。", path: "routes/learning_activities/顧問銷售整合指南.html" },
+    "edge-ai-security": { id: "edge-ai-security", category: "LearningActivity", typeLabel: "LEARNING", code: "09", title: "Edge AI 企業安全與部署手冊", subtitle: "企業級 Edge AI 自主智慧體與縱深安全防線 v3", description: "整合 NemoClaw、OpenShell、NeMo Guardrails、AI Gateway 與 Palo Alto AIRS 架構。", path: "routes/learning_activities/Edge AI 企業安全與部署手冊.html" },
+    "digblock-startup": { id: "digblock-startup", category: "LearningActivity", typeLabel: "LEARNING", code: "12", title: "DIGBLOCK 青創與 SBIR 計畫", subtitle: "創業機會、115 年 SBIR 補助懶人包與雙軸轉型", description: "深入解析創業四大商機、2026 雙軸轉型綠色溢價與 SBIR 150 萬~3000 萬補助攻略。", path: "routes/learning_activities/digblock青創活動.html" }
 };
 
 const ROUTES_DATA = Object.values(ALL_PROJECTS_MAP);
@@ -124,6 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeCategory = "All";
     let searchQuery = "";
     let clockT = 0;
+    let spawnT = 0;
+    const SPAWN_DUR = 1.6;
 
     // 1. GPU Mouse Glow Cursor
     setupOptimizedMouseGlow();
@@ -266,6 +268,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!fullName) return "";
         const trimmed = fullName.trim();
         if (trimmed.includes("PI4") && trimmed.includes("PI5")) return "PI4/5";
+        if (trimmed.includes("標準書") || trimmed.includes("撰寫標準")) return "戰略標準";
+        if (trimmed.includes("手部追蹤") || trimmed.includes("舵機控制")) return "手部舵機";
+        if (trimmed.includes("語音喚醒") || trimmed.includes("KWS")) return "KWS喚醒";
+        if (trimmed.includes("雲端AI") || trimmed.includes("TTS")) return "雲端TTS";
+        if (trimmed.includes("NFC") || trimmed.includes("ST7789")) return "NFC螢幕";
+        if (trimmed.includes("STT") || trimmed.includes("VAD")) return "STT辨識";
+        if (trimmed.includes("去畸變") || trimmed.includes("相機鏡頭") || trimmed.includes("標定")) return "相機標定";
         if (trimmed.includes("Edge AI")) return "EdgeAI";
         if (trimmed.includes("DIGBLOCK")) return "SBIR";
         if (trimmed.includes("R1") || trimmed.includes("戰略")) return "R1戰略";
@@ -583,9 +592,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return { nodes, nodeEls };
     }
 
-
-    let spawnT = 0;
-    const SPAWN_DUR = 1.6;
 
     // 🌊 Main Ink Wash Tech Tree Physics Loop
     function startInkWashEngineLoop(nodes, nodeEls) {

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰略手冊撰寫規範標準書 (SDSS v1.0)｜公司戰略手冊</title>
+    <meta name="description" content="Strategic Document Standard Specification (SDSS v1.0)：公司戰略手冊、商業計劃與產品發展路徑之最高準則。包含 5 大核心撰寫原則、8 大標準模組架構與填寫驗證規則。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper:          #ECEAE3;
+            --paper-2:        #F4F3EE;
+            --paper-3:        #E2E0D8;
+            --ink:            #16161A;
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --line:           #CFCCC2;
+            
+            --teal:           #0F8B8D;
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --vermilion:      #C34A36;
+            --amber:          #D97706;
+            --emerald:        #059669;
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .download-md-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+        .brand-pill { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--gray-2); }
+        .brand-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--gray-2); text-decoration: none; font-size: 0.83rem; font-weight: 500;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 36px 34px;
+            margin-bottom: 32px;
+        }
+
+        .badge-pill {
+            background: var(--emerald-bg); color: var(--emerald); font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill);
+        }
+
+        h1 { font-family: var(--font-heading); font-size: 2.1rem; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+        .lead { font-size: 1.05rem; color: var(--gray-1); }
+
+        h2 {
+            font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink);
+            margin-top: 44px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1.5px solid var(--line);
+        }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
+        .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 18px; }
+
+        .step-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+        .step-item { display: flex; gap: 12px; background: var(--paper); border: 1px solid var(--line); padding: 12px 14px; border-radius: var(--radius-md); }
+        .step-num { width: 24px; height: 24px; background: var(--ink); color: var(--paper-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800; font-size: 0.75rem; flex-shrink: 0; }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">&larr; 返回全景首頁</a>
+        <span class="badge-pill">戰略手冊撰寫規格標準書.md</span>
+        <button onclick="downloadMd('戰略手冊撰寫規格標準書.md')" class="download-md-btn">📥 下載原始 MD 檔案</button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">公司戰略 // 規格標準書</div>
+                <div class="brand-title">戰略手冊撰寫標準</div>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="#principles" class="active">壹、核心撰寫原則</a></li>
+                    <li class="nav-item"><a href="#schema">貳、8 大核心模組</a></li>
+                    <li class="nav-item"><a href="#rules">參、填寫與驗證規則</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero-banner">
+                <div class="badge-pill">SDSS v1.0 標準規範</div>
+                <h1>戰略手冊撰寫規範標準書 (SDSS v1.0)</h1>
+                <p class="lead">本規範書為未來所有「公司戰略手冊」、「專案商業計劃」、「產品發展路徑」之最高準則。所有後續產出文件必須嚴格依循本規格之架構、資料深度與驗證邏輯。</p>
+            </div>
+
+            <!-- 核心原則 -->
+            <section id="principles">
+                <h2>壹、 核心撰寫原則 (Core Principles)</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <strong>1. 結論先行 (BLUF)</strong>
+                        <p>每章第一段必須在 3 句話內給出結論、決策方向或量化數據，禁止鋪墊冗長背景。</p>
+                    </div>
+                    <div class="card">
+                        <strong>2. 數據背書與口徑拆解</strong>
+                        <p>禁止模糊語句。所有市場規模與財務預估明列「數據來源」與「悲觀/中立/樂觀」區間。</p>
+                    </div>
+                    <div class="card">
+                        <strong>3. 主動防禦反對論點</strong>
+                        <p>主動包含「專家質疑」與「手機/替代品威脅」，給出硬性邏輯反駁。</p>
+                    </div>
+                    <div class="card">
+                        <strong>4. 單位經濟與回收期閉環</strong>
+                        <p>拆解至單店/單機的 LTV、CAC、BOM 成本、月運維與回收期 (Payback Period)。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8 大模組 -->
+            <section id="schema">
+                <h2>貳、 標準架構與 8 大核心模組 (Standard Schema)</h2>
+                <div class="step-list">
+                    <div class="step-item"><div class="step-num">01</div><div><strong>執行摘要與核心定位 (Executive Summary & Positioning)</strong>：一句話定位、核心矛盾與決策結論表。</div></div>
+                    <div class="step-item"><div class="step-num">02</div><div><strong>產品與技術能力矩陣 (Product & Tech Matrix)</strong>：現有能力、核心壁壘與「明確不做清單」。</div></div>
+                    <div class="step-item"><div class="step-num">03</div><div><strong>市場實態與真實 TAM/SAM/SOM (Market Reality)</strong>：真實痛點、多口徑市場對比與 POC 沙盒。</div></div>
+                    <div class="step-item"><div class="step-num">04</div><div><strong>致命質疑與防禦論證 (Critical Counter-Arguments)</strong>：小眾市場破局、手機/替代品差異化。</div></div>
+                    <div class="step-item"><div class="step-num">05</div><div><strong>商業模式與單位經濟模型 (Unit Economics)</strong>：營收組合、BOM成本、客戶 ROI 與階梯定價。</div></div>
+                    <div class="step-item"><div class="step-num">06</div><div><strong>階段執行藍圖 (Phased Roadmap)</strong>：0-90天 POC、90-180天標準化、180-360天規模化。</div></div>
+                    <div class="step-item"><div class="step-num">07</div><div><strong>風險矩陣與停損預案 (Risk & Kill Triggers)</strong>：風險評估與專案停損指標。</div></div>
+                    <div class="step-item"><div class="step-num">08</div><div><strong>決策清單與即刻行動項 (Action Items)</strong>：Go/No-Go 查核點與 14 天衝刺清單。</div></div>
+                </div>
+            </section>
+
+            <!-- 驗證規則 -->
+            <section id="rules">
+                <h2>參、 各模組驗證規則 (Field Rules)</h2>
+                <div class="card">
+                    <p><strong>• 執行摘要驗證：</strong>若未能在單一表格內呈現全案核心結論，退回重寫。</p>
+                    <p><strong>• 市場規模驗證：</strong>嚴禁將總體大市場直接當作第一年市場，必須以實體店鋪數/台數由下而上 (Bottom-Up) 推估。</p>
+                    <p><strong>• 單位經濟驗證：</strong>毛利率低於 40% 或回本期超過 18 個月需額外提出風險補償策略。</p>
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 40px; background: var(--paper); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);">
+                <h3>📥 下載原始 Markdown 檔案</h3>
+                <button onclick="downloadMd('戰略手冊撰寫規格標準書.md')" class="download-md-btn" style="margin-top: 10px;">
+                    📥 下載 戰略手冊撰寫規格標準書.md (8.4 KB)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const MD_TEXT = "# 戰略手冊撰寫規範標準書 (Strategic Document Standard Specification, SDSS v1.0)\n\n本規範書為未來所有「公司戰略手冊」、「專案商業計劃」、「產品發展路徑」之最高準則。所有後續產出文件必須嚴格依循本規格之架構、資料深度與驗證邏輯。\n\n---\n\n## 壹、核心撰寫原則 (Core Principles)\n\n1. **結論先行 (BLUF - Bottom Line Up Front)**：\n   每個章節的第一段必須在 3 句話內給出核心結論、決策方向或量化數據，禁止鋪墊冗長背景。\n2. **數據背書與口徑拆解 (Data-Backed & Scoped)**：\n   禁止使用「市場潛力巨大」、「成本極低」等模糊語句。所有市場規模、財務預估必須明確標記「數據來源」、「統計口徑」與「悲觀/基準/樂觀」區間。\n3. **主動防禦反對論點 (Devil's Advocate Integration)**：\n   文檔必須主動包含「專家質疑」、「競品威脅」與「替代方案（如手機/開源替代）」，並給出硬性邏輯反駁，不迴避致命弱點。\n4. **財務與單位經濟閉環 (Unit Economics Viability)**：\n   任何產品策略必須拆解至單點（單店/單機/單用戶）的 LTV、CAC、BOM 成本、月運維成本與回收期（Payback Period）。\n5. **模組化與可執行性 (Actionable Phasing)**：\n   戰略必須拆解為具體時限（如 30/60/90 天里程碑）、交付物（Deliverables）與負責角色，且具備明確的「終止/轉向停損指標（Kill Switch）」。\n\n---\n\n## 貳、標準架構與模組規範 (Standard Module Schema)\n\n所有戰略文檔一律由以下 **8 大核心模組** 組成，順序不得任意調換：\n\n```\n[Module 01] 執行摘要與核心定位 (Executive Summary & Positioning)\n    ├── 1.1 一句話定位 (One-Sentence Value Proposition)\n    ├── 1.2 核心矛盾與戰略破局點 (Core Conflict & Breakthrough)\n    └── 1.3 核心決策結論表 (Key Decisions Summary Table)\n\n[Module 02] 產品與技術能力矩陣 (Product & Tech Matrix)\n    ├── 2.1 現有能力清單 (Current Assets & Tech Stack)\n    ├── 2.2 核心壁壘與非對稱優勢 (Moats & Asymmetric Advantage)\n    └── 2.3 技術邊界與不做清單 (Technical Boundaries & \"What We DON'T Do\")\n\n[Module 03] 市場實態與真實 TAM/SAM/SOM (Market Reality)\n    ├── 3.1 目標場域真實痛點 (Field Pains: 營運/人力/成本)\n    ├── 3.2 市場規模多口徑對比 (Market Sizing: 悲觀/中立/樂觀)\n    └── 3.3 POC 場域 vs 終極市場 (Beachhead vs End Game)\n\n[Module 04] 致命質疑與防禦論證 (Critical Counter-Arguments)\n    ├── 4.1 「市場過小/小眾」質疑之拆解與破局\n    ├── 4.2 「通用替代品 (如手機/平板/軟體)」之差異化壁壘\n    └── 4.3 商業轉換摩擦力 (採購意願、安裝門檻、維護負擔)\n\n[Module 05] 商業模式與單位經濟模型 (Unit Economics & Monetization)\n    ├── 5.1 營收來源組合 (Hardware / Subscriptions / Services / Data)\n    ├── 5.2 單點成本拆解 (BOM + Logistics + On-site Support + Cloud API)\n    ├── 5.3 客戶投資回報 (Customer ROI & Payback Calculation)\n    └── 5.4 定價策略與階梯方案 (Tiered Pricing Strategy)\n\n[Module 06] 階段執行藍圖 (Phased Execution Roadmap)\n    ├── 6.1 Phase 1 (0-90天)：POC 驗證與關鍵指標\n    ├── 6.2 Phase 2 (90-180天)：產品標準化與種子客戶擴張\n    └── 6.3 Phase 3 (180-360天)：規模化、異業合作或技術授權\n\n[Module 07] 風險矩陣與應變預案 (Risk Management & Kill Triggers)\n    ├── 7.1 風險等級評估表 (機率 x 衝擊程度 x 緩解方案)\n    └── 7.2 停損/轉向指標 (Project Pivot / Kill Criteria)\n\n[Module 08] 決策清單與即刻行動項 (Immediate Action Items)\n    ├── 8.1 關鍵決策核決 (Go/No-Go Checkpoints)\n    └── 8.2 責任人分工與 14 天衝刺清單 (Sprint Backlog)\n```\n\n---\n\n## 參、各模組詳細填寫規格與驗證規則 (Field Rules)\n\n### Module 01: 執行摘要 (Executive Summary)\n* **必備元素**：\n  * **一句話價值主張**：`為 [目標客群] 解決 [核心痛點]，透過 [關鍵技術/方法]，達成 [量化商業價值]`。\n  * **戰略定位演進**：清楚標明「當前破局點（Beachhead）」與「遠期延伸市場（Expand Market）」。\n* **驗證規則**：若未能在單一表格內呈現全案核心結論，退回重寫。\n\n### Module 02: 產品與技術能力矩陣 (Product & Tech Matrix)\n* **必備元素**：\n  * 技術狀態標籤：明確標註各功能為 `[已實裝] / [開發中] / [評估中] / [明確不做]`。\n  * **「明確不做清單（Not-to-do List）」**：防止專案範圍蔓延（Scope Creep）。例如：「不做自由對話聊天機器人」、「不使用需要繁瑣認證之射頻模組」。\n* **驗證規則**：嚴禁僅列出技術名詞（如 AI, LLM），必須說明在特定場景下之輸入、處理與輸出成果。\n\n### Module 03: 市場實態 (Market Reality)\n* **必備元素**：\n  * 將痛點拆分為「經濟層面（租金/人事）」、「運營層面（排班/尖離峰）」與「體驗層面（教學/上手）」。\n  * 數據表格必須採用多維度對照，明列統計來源與口徑限制。\n* **驗證規則**：嚴禁將總體大市場（如全球桌遊百億市場）直接當作公司第一年可獲得市場。必須以實體店鋪數/設備台數做底層由下而上（Bottom-Up）推估。\n\n### Module 04: 致命質疑與防禦論證 (Critical Counter-Arguments)\n* **必備元素**：\n  * **手機/既有方案對決表**：必須逐項列出「使用手機的代價」vs「使用專用硬體/一體機的價值」。\n  * **小眾市場破局邏輯**：說明為何小眾場域能作為最快產生現金流與技術數據沉澱的 POC 沙盒。\n* **驗證規則**：若未列出至少 2 個最嚴厲的外部質疑（如投資人、導師、競爭者視角），視為無效文檔。\n\n### Module 05: 商業模式與單位經濟 (Unit Economics)\n* **必備元素**：\n  * **單店/單台硬體損益模型**：\n    $\\text{淨回本週期 (月)} = \\frac{\\text{單機硬體成本 (BOM) + 獲客成本 (CAC)}}{\\text{每月訂閱收入} - \\text{每月雲端與運維成本}}$\n  * 必須包含客戶端 ROI 計算（例如：為店家每月節省多少工時/增加多少翻桌率）。\n* **驗證規則**：所有金額必須具備明確幣別（如 TWD / USD），毛利率低於 40% 或回本期超過 18 個月需額外提出風險補償策略。\n\n### Module 06 & 07: 執行藍圖與風險矩陣 (Roadmap & Risk)\n* **必備元素**：\n  * POC 驗證必須給出「可量化指標」（例如：單週穩定開機時數 > 20 小時、故障率 < 2%）。\n  * 停損指標（Kill Switch）：例如「若 90 天內無法取得 3 家付費意向書，即終止硬體生產並轉向軟體授權」。\n* **驗證規則**：沒有停損觸發條件的路線圖視為無效路線圖。\n\n---\n\n## 肆、格式規範與排版標準 (Formatting & Presentation Standard)\n\n1. **視覺層次與標籤化**：\n   * 採用階層式標題（H1 篇章 -> H2 模組 -> H3 核心議題 -> H4 實施細則）。\n   * 善用高亮標籤：`[現狀]`、`[決策]`、`[警告]`、`[量化指標]`。\n2. **比較表格化**：\n   * 凡涉及方案評估、競品分析、財務預測，一律使用 Markdown 或 HTML 表格呈現，禁止大段純文字描述。\n3. **程式碼與交付格式**：\n   * 文檔主檔：標準 Markdown (`.md`)。\n   * 呈現與匯報版：自適應、自包含單一 HTML 檔案（含夜間/日間模式、列印 CSS 優化、目錄側邊欄跳轉）。\n\n---\n\n## 伍、戰略手冊優化檢核清單 (Strategy Audit Checklist)\n\n在文檔定稿發布前，必須通過以下 6 項審查：\n\n- [ ] **1. 去除廢話**：是否刪除「顯而易見」、「眾所周知」、「具有重大意義」等無資訊增益之修飾詞？\n- [ ] **2. 責任明確**：每個執行項目是否均指定了交付物與時程？\n- [ ] **3. 數字校驗**：財務模型與市場規模數字是否前後一致、可被反推？\n- [ ] **4. 防禦充分**：是否正面回答了「為什麼不能用手機做」與「市場小怎麼辦」？\n- [ ] **5. 邊界清晰**：是否明確定義了「現階段堅決不做什麼」？\n- [ ] **6. 停損健全**：是否設定了客觀的專案終止/轉向機制？\n";
+        function downloadMd(fileName) {
+            const blob = new Blob([MD_TEXT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName || '戰略手冊撰寫規格標準書.md';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+    </script>
+
+    <script>
+        const EMBEDDED_MD_CONTENT = "# 戰略手冊撰寫規範標準書 (Strategic Document Standard Specification, SDSS v1.0)\n\n本規範書為未來所有「公司戰略手冊」、「專案商業計劃」、「產品發展路徑」之最高準則。所有後續產出文件必須嚴格依循本規格之架構、資料深度與驗證邏輯。\n\n---\n\n## 壹、核心撰寫原則 (Core Principles)\n\n1. **結論先行 (BLUF - Bottom Line Up Front)**：\n   每個章節的第一段必須在 3 句話內給出核心結論、決策方向或量化數據，禁止鋪墊冗長背景。\n2. **數據背書與口徑拆解 (Data-Backed & Scoped)**：\n   禁止使用「市場潛力巨大」、「成本極低」等模糊語句。所有市場規模、財務預估必須明確標記「數據來源」、「統計口徑」與「悲觀/基準/樂觀」區間。\n3. **主動防禦反對論點 (Devil's Advocate Integration)**：\n   文檔必須主動包含「專家質疑」、「競品威脅」與「替代方案（如手機/開源替代）」，並給出硬性邏輯反駁，不迴避致命弱點。\n4. **財務與單位經濟閉環 (Unit Economics Viability)**：\n   任何產品策略必須拆解至單點（單店/單機/單用戶）的 LTV、CAC、BOM 成本、月運維成本與回收期（Payback Period）。\n5. **模組化與可執行性 (Actionable Phasing)**：\n   戰略必須拆解為具體時限（如 30/60/90 天里程碑）、交付物（Deliverables）與負責角色，且具備明確的「終止/轉向停損指標（Kill Switch）」。\n\n---\n\n## 貳、標準架構與模組規範 (Standard Module Schema)\n\n所有戰略文檔一律由以下 **8 大核心模組** 組成，順序不得任意調換：\n\n```\n[Module 01] 執行摘要與核心定位 (Executive Summary & Positioning)\n    ├── 1.1 一句話定位 (One-Sentence Value Proposition)\n    ├── 1.2 核心矛盾與戰略破局點 (Core Conflict & Breakthrough)\n    └── 1.3 核心決策結論表 (Key Decisions Summary Table)\n\n[Module 02] 產品與技術能力矩陣 (Product & Tech Matrix)\n    ├── 2.1 現有能力清單 (Current Assets & Tech Stack)\n    ├── 2.2 核心壁壘與非對稱優勢 (Moats & Asymmetric Advantage)\n    └── 2.3 技術邊界與不做清單 (Technical Boundaries & \"What We DON'T Do\")\n\n[Module 03] 市場實態與真實 TAM/SAM/SOM (Market Reality)\n    ├── 3.1 目標場域真實痛點 (Field Pains: 營運/人力/成本)\n    ├── 3.2 市場規模多口徑對比 (Market Sizing: 悲觀/中立/樂觀)\n    └── 3.3 POC 場域 vs 終極市場 (Beachhead vs End Game)\n\n[Module 04] 致命質疑與防禦論證 (Critical Counter-Arguments)\n    ├── 4.1 「市場過小/小眾」質疑之拆解與破局\n    ├── 4.2 「通用替代品 (如手機/平板/軟體)」之差異化壁壘\n    └── 4.3 商業轉換摩擦力 (採購意願、安裝門檻、維護負擔)\n\n[Module 05] 商業模式與單位經濟模型 (Unit Economics & Monetization)\n    ├── 5.1 營收來源組合 (Hardware / Subscriptions / Services / Data)\n    ├── 5.2 單點成本拆解 (BOM + Logistics + On-site Support + Cloud API)\n    ├── 5.3 客戶投資回報 (Customer ROI & Payback Calculation)\n    └── 5.4 定價策略與階梯方案 (Tiered Pricing Strategy)\n\n[Module 06] 階段執行藍圖 (Phased Execution Roadmap)\n    ├── 6.1 Phase 1 (0-90天)：POC 驗證與關鍵指標\n    ├── 6.2 Phase 2 (90-180天)：產品標準化與種子客戶擴張\n    └── 6.3 Phase 3 (180-360天)：規模化、異業合作或技術授權\n\n[Module 07] 風險矩陣與應變預案 (Risk Management & Kill Triggers)\n    ├── 7.1 風險等級評估表 (機率 x 衝擊程度 x 緩解方案)\n    └── 7.2 停損/轉向指標 (Project Pivot / Kill Criteria)\n\n[Module 08] 決策清單與即刻行動項 (Immediate Action Items)\n    ├── 8.1 關鍵決策核決 (Go/No-Go Checkpoints)\n    └── 8.2 責任人分工與 14 天衝刺清單 (Sprint Backlog)\n```\n\n---\n\n## 參、各模組詳細填寫規格與驗證規則 (Field Rules)\n\n### Module 01: 執行摘要 (Executive Summary)\n* **必備元素**：\n  * **一句話價值主張**：`為 [目標客群] 解決 [核心痛點]，透過 [關鍵技術/方法]，達成 [量化商業價值]`。\n  * **戰略定位演進**：清楚標明「當前破局點（Beachhead）」與「遠期延伸市場（Expand Market）」。\n* **驗證規則**：若未能在單一表格內呈現全案核心結論，退回重寫。\n\n### Module 02: 產品與技術能力矩陣 (Product & Tech Matrix)\n* **必備元素**：\n  * 技術狀態標籤：明確標註各功能為 `[已實裝] / [開發中] / [評估中] / [明確不做]`。\n  * **「明確不做清單（Not-to-do List）」**：防止專案範圍蔓延（Scope Creep）。例如：「不做自由對話聊天機器人」、「不使用需要繁瑣認證之射頻模組」。\n* **驗證規則**：嚴禁僅列出技術名詞（如 AI, LLM），必須說明在特定場景下之輸入、處理與輸出成果。\n\n### Module 03: 市場實態 (Market Reality)\n* **必備元素**：\n  * 將痛點拆分為「經濟層面（租金/人事）」、「運營層面（排班/尖離峰）」與「體驗層面（教學/上手）」。\n  * 數據表格必須採用多維度對照，明列統計來源與口徑限制。\n* **驗證規則**：嚴禁將總體大市場（如全球桌遊百億市場）直接當作公司第一年可獲得市場。必須以實體店鋪數/設備台數做底層由下而上（Bottom-Up）推估。\n\n### Module 04: 致命質疑與防禦論證 (Critical Counter-Arguments)\n* **必備元素**：\n  * **手機/既有方案對決表**：必須逐項列出「使用手機的代價」vs「使用專用硬體/一體機的價值」。\n  * **小眾市場破局邏輯**：說明為何小眾場域能作為最快產生現金流與技術數據沉澱的 POC 沙盒。\n* **驗證規則**：若未列出至少 2 個最嚴厲的外部質疑（如投資人、導師、競爭者視角），視為無效文檔。\n\n### Module 05: 商業模式與單位經濟 (Unit Economics)\n* **必備元素**：\n  * **單店/單台硬體損益模型**：\n    $\\text{淨回本週期 (月)} = \\frac{\\text{單機硬體成本 (BOM) + 獲客成本 (CAC)}}{\\text{每月訂閱收入} - \\text{每月雲端與運維成本}}$\n  * 必須包含客戶端 ROI 計算（例如：為店家每月節省多少工時/增加多少翻桌率）。\n* **驗證規則**：所有金額必須具備明確幣別（如 TWD / USD），毛利率低於 40% 或回本期超過 18 個月需額外提出風險補償策略。\n\n### Module 06 & 07: 執行藍圖與風險矩陣 (Roadmap & Risk)\n* **必備元素**：\n  * POC 驗證必須給出「可量化指標」（例如：單週穩定開機時數 > 20 小時、故障率 < 2%）。\n  * 停損指標（Kill Switch）：例如「若 90 天內無法取得 3 家付費意向書，即終止硬體生產並轉向軟體授權」。\n* **驗證規則**：沒有停損觸發條件的路線圖視為無效路線圖。\n\n---\n\n## 肆、格式規範與排版標準 (Formatting & Presentation Standard)\n\n1. **視覺層次與標籤化**：\n   * 採用階層式標題（H1 篇章 -> H2 模組 -> H3 核心議題 -> H4 實施細則）。\n   * 善用高亮標籤：`[現狀]`、`[決策]`、`[警告]`、`[量化指標]`。\n2. **比較表格化**：\n   * 凡涉及方案評估、競品分析、財務預測，一律使用 Markdown 或 HTML 表格呈現，禁止大段純文字描述。\n3. **程式碼與交付格式**：\n   * 文檔主檔：標準 Markdown (`.md`)。\n   * 呈現與匯報版：自適應、自包含單一 HTML 檔案（含夜間/日間模式、列印 CSS 優化、目錄側邊欄跳轉）。\n\n---\n\n## 伍、戰略手冊優化檢核清單 (Strategy Audit Checklist)\n\n在文檔定稿發布前，必須通過以下 6 項審查：\n\n- [ ] **1. 去除廢話**：是否刪除「顯而易見」、「眾所周知」、「具有重大意義」等無資訊增益之修飾詞？\n- [ ] **2. 責任明確**：每個執行項目是否均指定了交付物與時程？\n- [ ] **3. 數字校驗**：財務模型與市場規模數字是否前後一致、可被反推？\n- [ ] **4. 防禦充分**：是否正面回答了「為什麼不能用手機做」與「市場小怎麼辦」？\n- [ ] **5. 邊界清晰**：是否明確定義了「現階段堅決不做什麼」？\n- [ ] **6. 停損健全**：是否設定了客觀的專案終止/轉向機制？\n";
+        const EMBEDDED_MD_FILENAME = "戰略手冊撰寫規格標準書.md";
+        function downloadSingleMd() {
+            const blob = new Blob([EMBEDDED_MD_CONTENT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = EMBEDDED_MD_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+        // Also support any inline function call to downloadMd
+        function downloadMd(fn) { downloadSingleMd(); }
+    </script>
+</body>
+</html>

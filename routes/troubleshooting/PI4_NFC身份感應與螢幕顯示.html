@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi4 NFC 身份感應與 ST7789 螢幕中文繪製指南｜疑難排解MD</title>
+    <meta name="description" content="Raspberry Pi 4 (Pi4) PN532 NFC 晶片感應非阻塞讀取、I2C 超時保護、ST7789 邊緣螢幕 PIL (Pillow) 動態 TrueType 中文字型渲染。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper:          #ECEAE3;
+            --paper-2:        #F4F3EE;
+            --paper-3:        #E2E0D8;
+            --ink:            #16161A;
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --line:           #CFCCC2;
+            
+            --teal:           #0F8B8D;
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --vermilion:      #C34A36;
+            --amber:          #D97706;
+            --emerald:        #059669;
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .download-md-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+        .brand-pill { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--gray-2); }
+        .brand-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--gray-2); text-decoration: none; font-size: 0.83rem; font-weight: 500;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 36px 34px;
+            margin-bottom: 32px;
+        }
+
+        .badge-pill {
+            background: var(--emerald-bg); color: var(--emerald); font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill);
+        }
+
+        h1 { font-family: var(--font-heading); font-size: 2.1rem; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+        .lead { font-size: 1.05rem; color: var(--gray-1); }
+
+        h2 {
+            font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink);
+            margin-top: 44px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1.5px solid var(--line);
+        }
+
+        .code-wrap { position: relative; margin: 16px 0 20px; }
+        pre {
+            background: #1c1c22; color: #f1f5f9; padding: 16px 18px; border-radius: var(--radius-md);
+            overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.6;
+        }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.15);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 3px 8px;
+            border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;
+        }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: var(--paper-3); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+
+        .callout {
+            margin: 16px 0; padding: 14px 18px; border-left: 4px solid var(--ink);
+            border-radius: var(--radius-md); background: var(--paper-3);
+        }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">&larr; 返回全景首頁</a>
+        <span class="badge-pill">PI4_NFC.md</span>
+        <button onclick="downloadSingleMd()" class="download-md-btn">📥 下載原始 MD 檔案</button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">疑難排解MD // 硬體與通訊</div>
+                <div class="brand-title">NFC 感應與螢幕顯示</div>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="#prompt" class="active">🤖 超級 Prompt 範本</a></li>
+                    <li class="nav-item"><a href="#code">🏆 黃金代碼實現</a></li>
+                    <li class="nav-item"><a href="#troubleshoot">🛠️ 實戰故障排除表</a></li>
+                    <li class="nav-item"><a href="#rules">🛡️ 防踩坑黃金法則</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero-banner">
+                <div class="badge-pill">PN532 I2C + ST7789 PIL</div>
+                <h1>Pi4 NFC 身份感應與 ST7789 螢幕中文繪製指南</h1>
+                <p class="lead">包含 PN532 NFC 晶片非阻塞感應 (timeout=0.1s)、I2C 匯流排防鎖死、ST7789 小螢幕 PIL TrueType 動態中文字型繪製。</p>
+            </div>
+
+            <!-- 超級 Prompt -->
+            <section id="prompt">
+                <h2>🤖 一、 給 AI 下達的超級 Prompt 範本</h2>
+                <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyText('prompt3')">📋 複製 Prompt</button>
+                    <pre><code id="prompt3">你是一位專精於 Raspberry Pi (Pi4) 邊緣硬體介面 (I2C/SPI)、PN532 NFC 感應與 LCD 螢幕顯示驅動的高級嵌入式工程師。
+
+請協助我開發一個「Pi4 PN532 NFC 讀卡與 ST7789 中文繪製顯示模組 (NFCDisplayModule)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範：
+
+1. PN532 I2C 匯流排非阻塞讀取與超時保護：
+   - 嚴禁使用無限阻塞讀取 (read_passive_target)，卡片長置時會鎖死 I2C 匯流排。
+   - 必須設定 timeout=0.1 秒超時保護，未感應立即釋放 I2C 控制權。
+
+2. ST7789 小螢幕 PIL 中文繪製驅動：
+   - 禁止直接發送原始 ASCII 中文字串（造成 LCD 缺字問號）。
+   - 使用 PIL (Pillow) 引入 .ttf 中文字型檔，在記憶體中繪製 240x240 RGB 圖片再送入驅動。</code></pre>
+                </div>
+            </section>
+
+            <!-- 黃金代碼實現 -->
+            <section id="code">
+                <h2>🏆 二、 黃金標準參考代碼 (DisplayModule)</h2>
+                <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyText('code3')">📋 複製代碼</button>
+                    <pre><code id="code3">import os
+from PIL import Image, ImageDraw, ImageFont
+from loguru import logger
+
+class DisplayModule:
+    def __init__(self, font_path: str = "NotoSansTC-Regular.ttf", width: int = 240, height: int = 240):
+        self.width = width
+        self.height = height
+        self.font_path = font_path
+
+        # 載入 TrueType 中文字型
+        try:
+            self.font_title = ImageFont.truetype(font_path, 20)
+            self.font_text  = ImageFont.truetype(font_path, 16)
+        except Exception:
+            self.font_title = ImageFont.load_default()
+            self.font_text  = ImageFont.load_default()
+            logger.warning("[Display] 未找到中文字型檔，退回預設字型")
+
+    def render_player_ui(self, player_name: str, status_text: str) -> Image.Image:
+        """在記憶體中繪製包含中文字型之 RGBA Bitmap"""
+        img = Image.new("RGB", (self.width, self.height), color=(15, 23, 42)) # 暗藍色背景
+        draw = ImageDraw.Draw(img)
+
+        # 繪製 UI 框架與中文
+        draw.rectangle([10, 10, self.width - 10, 50], outline=(59, 130, 246), width=2)
+        draw.text((20, 20), f"玩家: {player_name}", font=self.font_title, fill=(255, 255, 255))
+        draw.text((20, 70), f"狀態: {status_text}", font=self.font_text, fill=(6, 182, 212))
+
+        return img # 直接傳送給 st7789.display(img)</code></pre>
+                </div>
+            </section>
+
+            <!-- 排障表 -->
+            <section id="troubleshoot">
+                <h2>🛠️ 三、 實戰故障排除手冊</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>故障現象</th>
+                                <th>根本原因</th>
+                                <th>快速排查與標準修復方式</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>卡片放在感應區，整個程式卡死</strong></td>
+                                <td>PN532 進入無超時阻塞輪詢，鎖死 I2C 匯流排。</td>
+                                <td>調用 <code>read_passive_target(timeout=0.1)</code> 加上非阻塞超時保護。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ST7789 螢幕中文字顯示為 □□□ 方塊</strong></td>
+                                <td>邊緣 LCD 原生驅動缺字。</td>
+                                <td>使用 PIL Pillow 動態 TrueType 圖片繪製後再送入螢幕。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>刷一次卡卻觸發了 5 次進入房間</strong></td>
+                                <td>未做刷卡冷卻時間去抖動。</td>
+                                <td>加入 <code>0.5s</code> 去抖動機制與 UID 比對。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 防踩坑 -->
+            <section id="rules">
+                <h2>🛡️ 四、 未來開發防踩坑黃金法則</h2>
+                <div class="callout">
+                    <strong>1. PN532 I2C 訊號干擾防範：</strong>
+                    I2C 訊號線 (SDA/SCL) 長度盡量控制在 15cm 以內，並於必要時並聯 4.7kΩ 上拉電阻以確保訊號邊緣完整。
+                </div>
+                <div class="callout">
+                    <strong>2. SPI 螢幕背光控制：</strong>
+                    ST7789 BL 腳位可連接至 GPIO 進行 PWM 調光，待機 30 秒自動休眠降低功耗。
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 40px; background: var(--paper); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);">
+                <h3>📥 下載原始 Markdown 檔案</h3>
+                <button onclick="downloadSingleMd()" class="download-md-btn" style="margin-top: 10px;">
+                    📥 下載 PI4_NFC.md (4.4 KB)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function copyText(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            navigator.clipboard.writeText(el.innerText).then(() => alert('已複製至剪貼簿！'));
+        }
+    </script>
+
+    <script>
+        const EMBEDDED_MD_CONTENT = "# NFC 身份感應與 ST7789 中文繪製螢幕：AI 指令範本、黃金代碼與避坑指南\n\n本文件包含 Raspberry Pi 4 (Pi4) 上 **PN532 NFC 晶片感應非阻塞讀取、I2C 超時保護、ST7789 邊緣螢幕 PIL (Pillow) 動態 TrueType 中文字型渲染** 的完整技術細節與黃金標準參考代碼 (Golden Reference Code)。可以直接複製給任何 AI (如 ChatGPT, Claude, Cursor, Antigravity 等) 作為 Prompt 範本。\n\n---\n\n## 一、 給 AI 下達的超級 Prompt 範本（帶黃金參考代碼，直接複製）\n\n> 使用方式：將以下框內的文字完全複製並貼給 AI 作為 Prompt。框內包含 I2C 鎖死與 SPI 中文字型繪製防踩坑規則與完整黃金範例代碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4) 邊緣硬體介面 (I2C/SPI)、PN532 NFC 感應與 LCD 螢幕顯示驅動的高級嵌入式工程師。\n\n請協助我開發一個「Pi4 PN532 NFC 讀卡與 ST7789 中文繪製顯示模組 (NFCDisplayModule)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考下方提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. PN532 I2C 匯流排非阻塞讀取與超時保護\n- **嚴禁使用無限阻塞讀取 (read_passive_target)**：當玩家卡片長置於感應區時，PN532 會鎖死 I2C 匯流排，導致主程式卡死崩潰。\n- **必須設定 timeout=0.1 秒超時保護**：每次讀取若未在 100ms 內響應，自動拋出或回傳 None，釋放 I2C 控制權。\n\n### 2. ST7789 小螢幕 PIL 中文繪製驅動\n- **禁止直接向 LCD 驅動發送原始 ASCII 中文字串**：邊緣 LCD 原生驅動缺字，會顯示為方塊 □□□ 或問號。\n- **使用 PIL (Pillow) 動態 TrueType 圖片繪製**：引入 `.ttf` 中文字型檔，先在記憶體中繪製 240x240 RGB 圖片，再將 Complete Image 陣列傳送給 ST7789 驅動繪製，徹底解決中文字型缺字問題。\n\n---\n\n### 黃金標準參考代碼框架 (Golden Reference Implementation)\n\n請嚴格參考並採用以下架構編寫核心 DisplayModule 類別：\n\n```python\nimport os\nfrom PIL import Image, ImageDraw, ImageFont\nfrom loguru import logger\n\nclass DisplayModule:\n    def __init__(self, font_path: str = \"NotoSansTC-Regular.ttf\", width: int = 240, height: int = 240):\n        self.width = width\n        self.height = height\n        self.font_path = font_path\n\n        # 載入 TrueType 中文字型\n        try:\n            self.font_title = ImageFont.truetype(font_path, 20)\n            self.font_text  = ImageFont.truetype(font_path, 16)\n        except Exception:\n            self.font_title = ImageFont.load_default()\n            self.font_text  = ImageFont.load_default()\n            logger.warning(\"[Display] 未找到中文字型檔，退回預設字型\")\n\n    def render_player_ui(self, player_name: str, status_text: str) -> Image.Image:\n        \"\"\"在記憶體中繪製包含中文字型之 RGBA Bitmap\"\"\"\n        img = Image.new(\"RGB\", (self.width, self.height), color=(15, 23, 42)) # 暗藍色背景\n        draw = ImageDraw.Draw(img)\n\n        # 繪製 UI 框架與中文\n        draw.rectangle([10, 10, self.width - 10, 50], outline=(59, 130, 246), width=2)\n        draw.text((20, 20), f\"玩家: {player_name}\", font=self.font_title, fill=(255, 255, 255))\n        draw.text((20, 70), f\"狀態: {status_text}\", font=self.font_text, fill=(6, 182, 212))\n\n        return img # 直接傳送給 st7789.display(img)\n```\n```\n\n---\n\n## 二、 實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. NFC 讀卡時主程式突然卡死** | PN532 底層 I2C 進行無限超時等待。 | 呼叫 `read_passive_target(timeout=0.1)` 設定非阻塞。 |\n| **2. 螢幕顯示中文字顯示為 □□□** | 液晶螢幕原生驅動缺少中文字庫。 | 使用 PIL `ImageDraw` 搭配中文字型檔案 (.ttf) 先繪圖再輸出。 |\n| **3. 螢幕畫面出現雜訊斜線或閃爍** | SPI 傳輸頻率設定過高 (超出杜邦線承載)。 | 將 SPI 頻率限制在 `24MHz` 以內。 |\n\n---\n\n## 三、 未來開發防踩坑預警 (Future Avoidance Checklist)\n\n1. **⚠️ SPI 頻率穩定控制 (24MHz)**：\n   * *防範機制*：樹莓派外接杜邦線訊號易受干擾，SPI 頻率設定超過 32MHz 易產生畫面線條雜訊，設定為 `24MHz` 能確保 100% 穩定輸出。\n";
+        const EMBEDDED_MD_FILENAME = "PI4_NFC.md";
+        function downloadSingleMd() {
+            const blob = new Blob([EMBEDDED_MD_CONTENT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = EMBEDDED_MD_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+        // Also support any inline function call to downloadMd
+        function downloadMd(fn) { downloadSingleMd(); }
+    </script>
+</body>
+</html>

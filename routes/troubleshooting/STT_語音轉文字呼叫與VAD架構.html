@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>樹莓派語音互動系統 (KWS/STT/LLM/TTS) 與 VAD 架構指南｜疑難排解MD</title>
+    <meta name="description" content="Raspberry Pi 4 (1GB RAM) 邊緣語音互動系統開發歷程：離線 KWS、動態能量 VAD 收音、Gemini 3.0+ Flash 多模態 Base64 直傳與 ALSA 混音死鎖徹底修復。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper:          #ECEAE3;
+            --paper-2:        #F4F3EE;
+            --paper-3:        #E2E0D8;
+            --ink:            #16161A;
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --line:           #CFCCC2;
+            
+            --teal:           #0F8B8D;
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --vermilion:      #C34A36;
+            --vermilion-bg:   rgba(195, 74, 54, 0.08);
+            --amber:          #D97706;
+            --emerald:        #059669;
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .download-md-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+        .brand-pill { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--gray-2); }
+        .brand-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--gray-2); text-decoration: none; font-size: 0.83rem; font-weight: 500;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 36px 34px;
+            margin-bottom: 32px;
+        }
+
+        .badge-pill {
+            background: var(--emerald-bg); color: var(--emerald); font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill);
+        }
+
+        h1 { font-family: var(--font-heading); font-size: 2.1rem; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+        .lead { font-size: 1.05rem; color: var(--gray-1); }
+
+        h2 {
+            font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink);
+            margin-top: 44px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1.5px solid var(--line);
+        }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: var(--paper-3); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+
+        .callout {
+            margin: 16px 0; padding: 14px 18px; border-left: 4px solid var(--ink);
+            border-radius: var(--radius-md); background: var(--paper-3);
+        }
+
+        .step-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+        .step-item { display: flex; gap: 12px; background: var(--paper); border: 1px solid var(--line); padding: 14px; border-radius: var(--radius-md); }
+        .step-num { width: 26px; height: 26px; background: var(--ink); color: var(--paper-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800; font-size: 0.8rem; flex-shrink: 0; }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">&larr; 返回全景首頁</a>
+        <span class="badge-pill">STT_呼叫.md</span>
+        <button onclick="downloadSingleMd()" class="download-md-btn">📥 下載原始 MD 檔案</button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">疑難排解MD // 語音與辨識</div>
+                <div class="brand-title">STT 語音辨識與 VAD</div>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="#goals" class="active">📌 核心架構目標</a></li>
+                    <li class="nav-item"><a href="#issues">🚨 5 大核心困境</a></li>
+                    <li class="nav-item"><a href="#solutions">💡 最終解決方案矩陣</a></li>
+                    <li class="nav-item"><a href="#flow">🔄 系統運作流程</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero-banner">
+                <div class="badge-pill">Gemini Base64 + VAD</div>
+                <h1>樹莓派語音互動系統 (KWS/STT/LLM/TTS) 開發歷程與技術總結</h1>
+                <p class="lead">記錄在 Raspberry Pi 4 (1GB RAM) 邊緣硬體下，建構語音助理從離線喚醒 (KWS)、動態語音辨識 (STT)、大語言模型 (LLM) 到語音合成 (TTS) 的完整踩坑與解決方案。</p>
+            </div>
+
+            <!-- 核心目標 -->
+            <section id="goals">
+                <h2>📌 一、 核心架構目標</h2>
+                <ul style="margin-left: 20px;">
+                    <li><strong>邊緣低延遲喚醒</strong>：1GB RAM 資源受限環境下，使用輕量離線引擎常駐監聽關鍵字「阿萬」。</li>
+                    <li><strong>動態智慧收音 (VAD)</strong>：告別固定秒數錄音，開口自動錄、說完自動停（靜音超時截止）。</li>
+                    <li><strong>雲端多模態直傳</strong>：對接 Gemini 3.0+ Flash 系列模型完成語音辨識與角色扮演。</li>
+                    <li><strong>高容錯降級保護</strong>：斷網時避免無窮報錯與誤觸動相機/舵機。</li>
+                </ul>
+            </section>
+
+            <!-- 5 大困境 -->
+            <section id="issues">
+                <h2>🚨 二、 開發過程中遇到的 5 大核心困境</h2>
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div>
+                            <strong>本地離線模型缺失與虛擬端點斷線</strong>
+                            <p>虛擬端點拋出 <code>[Errno -2] Name or service not known</code>，且本地 STT 缺少模型檔案導致連環報錯。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div>
+                            <strong>ALSA 硬體獨占衝突 (`Device or resource busy`)</strong>
+                            <p>前台錄音與背景 KWS 搶佔 <code>plughw:1,0</code> 聲卡，導致 Exit Code 255 無窮死循環。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div>
+                            <strong>固定秒數錄音導致體驗不佳與語音截斷</strong>
+                            <p>固定錄製 3.5 秒使短句需乾等、長句後半段被截斷。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <div>
+                            <strong>背景 Thread 與 Asyncio Event Loop 衝突</strong>
+                            <p>KWS 背景執行緒呼叫 <code>asyncio.run()</code> 與 FastAPI 主迴圈衝突引發崩潰。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">5</div>
+                        <div>
+                            <strong>Gemini API 版本演進與 403/404 報錯</strong>
+                            <p>舊版模型名稱引發 404，預設金鑰配額被封鎖引發 403。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 解決方案 -->
+            <section id="solutions">
+                <h2>💡 三、 最終架構與技術解決方案</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>核心維度</th>
+                                <th>解決方案與實作細節</th>
+                                <th>關鍵檔案</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>STT 架構選型</strong></td>
+                                <td><strong>Gemini 多模態 Base64 直傳</strong>：錄音轉換為 Base64 透過 REST API 送給 Gemini 3.0+ 模型辨識，節省本地記憶體。</td>
+                                <td><code>cloud_ai_client.py</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>ALSA 衝突修復</strong></td>
+                                <td><strong>強制釋放與 0.3s 冷卻</strong>，並自動備援 <code>default</code> 與 <code>dsnoop:1,0</code> 混音模式。</td>
+                                <td><code>wake_word_module.py</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>動態 VAD 收音</strong></td>
+                                <td>以 <code>pyaudio</code> + <code>audioop.rms</code> 監測說話能量（閾值 350），靜音 1.5s 自動截止。</td>
+                                <td><code>audio_module.py</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>執行緒與事件安全</strong></td>
+                                <td>使用 <code>asyncio.new_event_loop()</code> 建立獨立 loop 執行非同步流程。</td>
+                                <td><code>main.py</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>金鑰與模型管理</strong></td>
+                                <td>支援 <code>gemini-3.7-flash</code> 與 <code>gemini-3.5-flash-lite</code>，並透過 <code>.env</code> 管理。</td>
+                                <td><code>.env</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 40px; background: var(--paper); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);">
+                <h3>📥 下載原始 Markdown 檔案</h3>
+                <button onclick="downloadSingleMd()" class="download-md-btn" style="margin-top: 10px;">
+                    📥 下載 STT_呼叫.md (6.2 KB)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const EMBEDDED_MD_CONTENT = "# 樹莓派語音互動系統 (KWS / STT / LLM / TTS) 開發歷程與技術總結\n\n本文件記錄了在 **Raspberry Pi 4 (1GB RAM)** 邊緣硬體環境下，建構「阿萬語音助理」從**離線喚醒 (KWS)**、**動態語音辨識 (STT)**、**大語言模型思考 (LLM)** 到 **語音合成 (TTS)** 過程中遇到的核心困境與最終解決方案。\n\n---\n\n## 📌 一、 核心架構目標\n\n1. **邊緣低延遲喚醒**：在樹莓派 1GB RAM 資源受限環境下，使用極輕量離線引擎常駐監聽關鍵字「嘿 阿萬」。\n2. **動態智慧收音 (VAD)**：告別固定秒數錄音，實現開口自動錄、說完自動停（靜音超時截止）。\n3. **雲端高精準度辨識與對話**：對接 Google Gemini 3.0+ Flash 系列模型，完成多模態語音轉文字與語音助理角色扮演。\n4. **高容錯降級保護**：避免網路或音訊裝置異常時產生無窮報錯或誤觸動硬體（如相機/舵機）。\n\n---\n\n## 🚨 二、 開發過程中遇到的 5 大核心困境\n\n### 1. 本地離線模型缺失與雲端虛擬端點斷線\n* **現象**：\n  * 原程式碼嘗試呼叫預設虛擬端點 `http://your-cloud-ai-server.com/api/v1/stt/transcribe`，拋出 `[Errno -2] Name or service not known`。\n  * 降級嘗試本地離線 `sherpa-onnx` Paraformer STT 時，發現樹莓派端僅安裝了 KWS 模型，**缺少 STT 模型檔案**（`model.int8.onnx`、`silero_vad.onnx`），導致辨識報錯。\n  * STT 失敗時，系統誤將 `（雲端 STT 連線中斷）` 當成使用者自訂指令，引發瘋狂播放音效並誤開啟相機辨識。\n\n### 2. ALSA 硬體獨占衝突 (`Device or resource busy`)\n* **現象**：\n  * Linux ALSA 的 `plughw:1,0` 為硬體獨佔模式。\n  * 喚醒成功後啟動前台錄音，背景的 KWS 進程若未即時徹底釋放裝置，或錄音結束後 KWS 搶著重啟，會導致聲卡被鎖死，拋出 `Unable to open: plughw:1,0. Device or resource busy` 並產生 Exit Code 255 的無窮死循環。\n\n### 3. 固定秒數錄音導致體驗不佳與語音截斷\n* **現象**：\n  * 早期採用 `arecord -d 3.5` 固定錄製 3.5 秒。使用者講話短時需被迫等待；講話稍長或思考停頓時語音後半段直接被截斷。\n  * 喚醒問候音長達 2.5 秒，造成喚醒與開口說話之間的時間差嚴重脫節。\n\n### 4. 背景 Thread 與 Asyncio Event Loop 衝突\n* **現象**：\n  * KWS 離線喚醒是在獨立背景執行緒中運行，當觸發 `on_wake_callback` 時直接呼叫 `asyncio.run()`，導致與 FastAPI/Uvicorn 主執行緒的 Event Loop 發生衝突，丟出 `asyncio is not defined` 或參數不匹配等異常。\n\n### 5. Gemini API 版本演進與 403 / 404 報錯\n* **現象**：\n  * 舊版模型名稱（如 1.5 系列）在部分新端點中引發 `404 Not Found`。\n  * 舊的預設金鑰配額被封鎖，拋出 `403 Forbidden: Your project has been denied access`。\n\n---\n\n## 💡 三、 最終架構與技術解決方案\n\n| 核心維度 | 解決方案與實作細節 | 關鍵檔案 |\n| :--- | :--- | :--- |\n| **STT 架構選型** | **放棄本地笨重模型，改採 Gemini 多模態 Base64 直傳**<br>直接將錄音音訊轉換為 Base64 透過 REST API 送給 Gemini 3.0+ 模型辨識，大幅節省 Pi4 記憶體開銷與維護成本。 | [`modules/cloud_ai_client.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/cloud_ai_client.py) |\n| **ALSA 衝突修復** | **1. 強制釋放與冷卻等待（0.3s）**：確保切換前裝置控制權完全釋放。<br>**2. 裝置自動備援**：支援自動輪詢 `default` 與 `dsnoop:1,0`（共享混音模式），避免死鎖。 | [`modules/wake_word_module.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/wake_word_module.py) |\n| **動態 VAD 收音** | **實作動態能量感測錄音（`record_with_vad`）**：<br>• 使用 `pyaudio` + `audioop.rms` 即時監測說話能量（閾值 350）。<br>• 偵測到說話開始寫入，靜音超過 1.5 秒自動截止（上限 12 秒）。<br>• 換用極短提示音 `Call.mp3`（0.3s），隨點隨錄。 | [`modules/audio_module.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/audio_module.py)<br>[`main.py`](file:///d:/Desktop/Company%20Project/pi4_1g/main.py) |\n| **執行緒與事件安全** | **專屬 Event Loop 隔離**：<br>在喚醒回調中透過 `asyncio.new_event_loop()` 建立獨立 loop 執行非同步對話流程，徹底解決與 Uvicorn 的事件衝突。 | [`main.py`](file:///d:/Desktop/Company%20Project/pi4_1g/main.py) |\n| **金鑰與模型管理** | **1. 支援最新 Gemini 3.0+ 模型清單**（`gemini-3.7-flash`, `gemini-3.5-flash-lite`）。<br>**2. 建立 `.env` 檔案管理**，透過 `python-dotenv` 模組安全載入獨立金鑰。 | [`.env`](file:///d:/Desktop/Company%20Project/pi4_1g/.env)<br>[`.gitignore`](file:///d:/Desktop/Company%20Project/pi4_1g/.gitignore) |\n\n---\n\n## 🔄 四、 最終穩定運作流程圖\n\n```mermaid\nflowchart TD\n    A[使用者口述: 嘿 阿萬] --> B[本地離線 KWS 喚醒]\n    B --> C[暫停 KWS 並釋放 ALSA 聲卡 0.3s]\n    C --> D[播放短促提示音 Call.mp3]\n    D --> E[VAD 動態能量錄音]\n    E -- 說完靜音 1.5s / 最長 12s -- --> F[音訊 Base64 編碼]\n    F --> G[Gemini 3.0+ 語音轉文字 STT]\n    G --> H[Gemini 3.0+ 阿萬大腦思考 LLM]\n    H --> I[TTS 雲端語音合成與本地快取]\n    I --> J[喇叭播放阿萬語音回答]\n    J --> K[無縫恢復常駐 KWS 離線監聽]\n```\n\n---\n\n## 🛠️ 五、 維護與部署指令指引\n\n### 1. 核心檔案同步至樹莓派\n```powershell\nscp \"main.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/\nscp \"modules/audio_module.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \"modules/cloud_ai_client.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \"modules/wake_word_module.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \".env\" rf@<Pi_IP>:~/RF_project/pi4_1g/\n```\n\n### 2. 樹莓派端依賴安裝與啟動\n```bash\n# 確保系統庫與 Python 套件完整\nsudo apt-get update && sudo apt-get install -y portaudio19-dev\ncd ~/RF_project/pi4_1g\n./venv/bin/pip install pyaudio python-dotenv\n\n# 啟動邊緣控制系統服務\n./venv/bin/python main.py\n```\n";
+        const EMBEDDED_MD_FILENAME = "STT_呼叫.md";
+        function downloadSingleMd() {
+            const blob = new Blob([EMBEDDED_MD_CONTENT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = EMBEDDED_MD_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+        // Also support any inline function call to downloadMd
+        function downloadMd(fn) { downloadSingleMd(); }
+    </script>
+</body>
+</html>

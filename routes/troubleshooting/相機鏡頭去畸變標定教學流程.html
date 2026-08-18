@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相機鏡頭去畸變棋盤格標定教學流程 SOP｜疑難排解MD</title>
+    <meta name="description" content="手部追蹤與視覺鏡頭在真實環境使用前的一次性標定流程：解決廣角/魚眼鏡頭邊緣壓縮變形問題、9x6 棋盤格拍照規範、OpenCV 內參標定腳本與 camera_calib.npz 儲存。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper:          #ECEAE3;
+            --paper-2:        #F4F3EE;
+            --paper-3:        #E2E0D8;
+            --ink:            #16161A;
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --line:           #CFCCC2;
+            
+            --teal:           #0F8B8D;
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --vermilion:      #C34A36;
+            --amber:          #D97706;
+            --emerald:        #059669;
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .download-md-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+        .brand-pill { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--gray-2); }
+        .brand-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--gray-2); text-decoration: none; font-size: 0.83rem; font-weight: 500;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 36px 34px;
+            margin-bottom: 32px;
+        }
+
+        .badge-pill {
+            background: var(--emerald-bg); color: var(--emerald); font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill);
+        }
+
+        h1 { font-family: var(--font-heading); font-size: 2.1rem; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+        .lead { font-size: 1.05rem; color: var(--gray-1); }
+
+        h2 {
+            font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink);
+            margin-top: 44px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1.5px solid var(--line);
+        }
+
+        .code-wrap { position: relative; margin: 16px 0 20px; }
+        pre {
+            background: #1c1c22; color: #f1f5f9; padding: 16px 18px; border-radius: var(--radius-md);
+            overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.6;
+        }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.15);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 3px 8px;
+            border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;
+        }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: var(--paper-3); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+
+        .step-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+        .step-item { display: flex; gap: 12px; background: var(--paper); border: 1px solid var(--line); padding: 14px; border-radius: var(--radius-md); }
+        .step-num { width: 26px; height: 26px; background: var(--ink); color: var(--paper-2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800; font-size: 0.8rem; flex-shrink: 0; }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">&larr; 返回全景首頁</a>
+        <span class="badge-pill">相機棋盤格標定教學流程.md</span>
+        <button onclick="downloadSingleMd()" class="download-md-btn">📥 下載原始 MD 檔案</button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">疑難排解MD // 電腦視覺</div>
+                <div class="brand-title">相機鏡頭標定 SOP</div>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="#prep" class="active">📋 前置準備</a></li>
+                    <li class="nav-item"><a href="#rules">📸 拍攝規則表</a></li>
+                    <li class="nav-item"><a href="#script">💻 標定 Python 程式</a></li>
+                    <li class="nav-item"><a href="#integration">🔌 主程式整合去畸變</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero-banner">
+                <div class="badge-pill">OpenCV 內參標定</div>
+                <h1>相機鏡頭去畸變棋盤格標定教學流程 SOP</h1>
+                <p class="lead">適用於手部追蹤鏡頭在真實環境使用前的一次性標定，解決廣角/魚眼鏡頭邊緣壓縮與座標變形問題。</p>
+            </div>
+
+            <!-- 前置準備 -->
+            <section id="prep">
+                <h2>📋 一、 前置準備</h2>
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div>
+                            <strong>下載棋盤格圖案</strong>
+                            <p>從 OpenCV 官方下載標準棋盤格（黑白格）圖案，推薦使用 9×6 內角點版本。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div>
+                            <strong>列印並固定於硬板</strong>
+                            <p>用 A4 紙列印並貼在平整硬紙板或木板上，確保完全平整，不能有翹曲或摺痕。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div>
+                            <strong>確認內角點數量</strong>
+                            <p>注意是「內角點」數量，非格子數（例如 10×7 格的棋盤格，內角點為 9×6）。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 拍攝規則 -->
+            <section id="rules">
+                <h2>📸 二、 拍攝規則表</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>項目</th>
+                                <th>要求與規範</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>拍攝環境</strong></td>
+                                <td>任意平坦、光線充足的地方即可。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>使用鏡頭</strong></td>
+                                <td>必須使用實際要部署的那顆攝影機（換鏡頭需重新標定）。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>解析度設定</strong></td>
+                                <td>跟正式程式的 <code>frame_width</code> / <code>frame_height</code> 完全一致（如 320x240 或 640x480）。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>拍攝張數</strong></td>
+                                <td>15~25 張。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>位置分佈</strong></td>
+                                <td>棋盤格需出現在畫面左上、右上、左下、右下與中央，包含正拍、傾斜與遠近。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 標定程式 -->
+            <section id="script">
+                <h2>💻 三、 執行標定程式 (Python)</h2>
+                <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyText('calibCode')">📋 複製 Python 代碼</button>
+                    <pre><code id="calibCode">import cv2
+import numpy as np
+import glob
+
+CHECKERBOARD = (9, 6)  # (列, 欄) 內角點數
+SQUARE_SIZE = 2.5       # 每格實際邊長 (cm)
+
+objp = np.zeros((CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
+objp[:, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
+objp *= SQUARE_SIZE
+
+objpoints, imgpoints = [], []
+images = glob.glob("calib_images/*.jpg")
+
+for fname in images:
+    img = cv2.imread(fname)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, None)
+
+    if ret:
+        objpoints.append(objp)
+        corners_refined = cv2.cornerSubPix(
+            gray, corners, (11, 11), (-1, -1),
+            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+        )
+        imgpoints.append(corners_refined)
+
+ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+    objpoints, imgpoints, gray.shape[::-1], None, None
+)
+
+print(f"標定完成！重投影誤差 (RMS): {ret:.4f} 像素")
+np.savez("camera_calib.npz", mtx=mtx, dist=dist)
+print("已儲存相機參數至 camera_calib.npz")</code></pre>
+                </div>
+            </section>
+
+            <!-- 主程式整合 -->
+            <section id="integration">
+                <h2>🔌 四、 主程式去畸變整合</h2>
+                <p>在正式追蹤程式中載入 <code>camera_calib.npz</code>，在每幀影像讀取後呼叫 <code>cv2.undistort</code>：</p>
+                <div class="code-wrap">
+                    <pre><code>calib = np.load("camera_calib.npz")
+mtx, dist = calib["mtx"], calib["dist"]
+
+# 在主相機迴圈中：
+ret, frame = cap.read()
+frame_undistorted = cv2.undistort(frame, mtx, dist)</code></pre>
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 40px; background: var(--paper); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);">
+                <h3>📥 下載原始 Markdown 檔案</h3>
+                <button onclick="downloadSingleMd()" class="download-md-btn" style="margin-top: 10px;">
+                    📥 下載 相機棋盤格標定教學流程.md (4.9 KB)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function copyText(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            navigator.clipboard.writeText(el.innerText).then(() => alert('已複製至剪貼簿！'));
+        }
+    </script>
+
+    <script>
+        const EMBEDDED_MD_CONTENT = "# 相機鏡頭去畸變標定教學流程\n\n適用於：手部追蹤鏡頭在真實環境使用前的一次性標定（解決廣角/魚眼鏡頭邊緣壓縮變形問題）。\n\n---\n\n## 前置準備\n\n1. **下載棋盤格圖案**：從 OpenCV 官方文件下載標準棋盤格（黑白格）圖案，例如 9×6 內角點的版本。\n2. **列印並固定**：用 A4 紙印出來，貼在硬紙板或木板上,確保完全平整、格線是直線，不能有翹曲或摺痕。\n3. **記錄內角點數**：注意是「內角點」數量，不是格子數（例如 10×7 格的棋盤格，內角點是 9×6）。之後程式要對應輸入這個數字。\n\n---\n\n## 拍攝規則\n\n| 項目 | 要求 |\n|---|---|\n| 拍攝環境 | 任意平坦、光線充足的地方即可，不用是正式部署的桌遊桌 |\n| 使用鏡頭 | 必須用實際要部署的那顆攝影機，換鏡頭要重新標定 |\n| 解析度設定 | 跟正式程式的 `frame_width` / `frame_height` 完全一致 |\n| 拍攝張數 | 15~25 張 |\n| 位置分佈 | 棋盤格要出現在畫面**各個角落**（左上、右上、左下、右下、中央都要有），只拍中央沒用 |\n| 角度變化 | 正拍、左右傾斜、上下傾斜、拉近拉遠都要各拍幾張，不能每張角度都一樣 |\n| 對焦 | 確保每張棋盤格都清晰對焦，模糊的照片會讓標定結果失準 |\n\n拍攝方式兩種都可以：棋盤格固定不動、拿鏡頭移動拍；或鏡頭固定、拿棋盤格移動拍。效果相同。\n\n---\n\n## 執行標定程式\n\n```python\nimport cv2\nimport numpy as np\nimport glob\n\n# ── 設定：填你的棋盤格內角點數 ─────────────────────\nCHECKERBOARD = (9, 6)  # (列, 欄) 內角點數，依實際棋盤格調整\nSQUARE_SIZE = 2.5       # 每格實際邊長（公分），影響外參尺度，不影響去畸變本身\n\n# 準備世界座標系的角點座標 (z=0 平面)\nobjp = np.zeros((CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)\nobjp[:, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)\nobjp *= SQUARE_SIZE\n\nobjpoints = []  # 世界座標點\nimgpoints = []  # 對應的影像座標點\n\nimages = glob.glob(\"calib_images/*.jpg\")  # 拍好的照片放這個資料夾\n\nfor fname in images:\n    img = cv2.imread(fname)\n    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\n    ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, None)\n\n    if ret:\n        objpoints.append(objp)\n        corners_refined = cv2.cornerSubPix(\n            gray, corners, (11, 11), (-1, -1),\n            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)\n        )\n        imgpoints.append(corners_refined)\n        print(f\"[OK] {fname} 偵測到棋盤格\")\n    else:\n        print(f\"[跳過] {fname} 未偵測到棋盤格，檢查是否模糊或角度太斜\")\n\n# 執行標定\nret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(\n    objpoints, imgpoints, gray.shape[::-1], None, None\n)\n\nprint(\"標定完成，重投影誤差（越接近 0 越好）:\", ret)\nprint(\"Camera Matrix:\\n\", camera_matrix)\nprint(\"Distortion Coefficients:\\n\", dist_coeffs)\n\n# 存檔，正式運行時直接載入，不用每次重新標定\nnp.savez(\"camera_calib.npz\", camera_matrix=camera_matrix, dist_coeffs=dist_coeffs)\n```\n\n**檢查標定品質**：`ret` 是重投影誤差（reprojection error），數值越接近 0 代表標定越準，一般建議在 0.5 以內算合格。如果誤差偏高，通常是某幾張照片模糊或棋盤格沒對齊，可以刪掉誤差大的那幾張重跑。\n\n---\n\n## 正式運行時套用\n\n```python\nimport numpy as np\nimport cv2\n\ncalib = np.load(\"camera_calib.npz\")\ncamera_matrix = calib[\"camera_matrix\"]\ndist_coeffs = calib[\"dist_coeffs\"]\n\n# 每一幀做去畸變（在原本 process_frame 最前面加這行）\ndef undistort_frame(frame):\n    return cv2.undistort(frame, camera_matrix, dist_coeffs, None, camera_matrix)\n```\n\n放在 `process_frame()` 一開始、`cv2.flip()` 之前執行，之後所有的手部偵測、offset 計算都會基於已經校正過的畫面，不再受廣角邊緣壓縮影響。\n\n---\n\n## 什麼時候需要重新標定\n\n- 換了不同的攝影機/鏡頭\n- 改變了程式裡設定的解析度（`frame_width`/`frame_height`）\n- 手動調整過鏡頭的變焦/對焦環（如果鏡頭可調焦距）\n\n只要上述三項都沒變，這組 `camera_calib.npz` 可以一直沿用，不用每次開機重跑。\n\n---\n\n## 與後續步驟的關係\n\n此教學只處理**鏡頭本身的光學畸變**。下一步的「桌面透視校正（homography 攤平）」是另一個獨立階段，需要在正式安裝好的環境量測桌子四個角的像素座標，跟這次的鏡頭標定不是同一件事，也不需要同時做。建議順序：先完成這份鏡頭標定 → 確認去畸變效果 → 再進行桌面透視校正。\n";
+        const EMBEDDED_MD_FILENAME = "相機棋盤格標定教學流程.md";
+        function downloadSingleMd() {
+            const blob = new Blob([EMBEDDED_MD_CONTENT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = EMBEDDED_MD_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+        // Also support any inline function call to downloadMd
+        function downloadMd(fn) { downloadSingleMd(); }
+    </script>
+</body>
+</html>

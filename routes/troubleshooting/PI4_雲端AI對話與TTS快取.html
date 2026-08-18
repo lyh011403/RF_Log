@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi4 雲端 AI 語音 (Gemini 3.5) 與 TTS MD5 快取模組指南｜疑難排解MD</title>
+    <meta name="description" content="Raspberry Pi 4 (Pi4 1GB) Gemini 3.5 Flash-Lite 極速 API 串接、TTS MD5 語音快取、SD 卡容量保護與斷網 Fallback 防護。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper:          #ECEAE3;
+            --paper-2:        #F4F3EE;
+            --paper-3:        #E2E0D8;
+            --ink:            #16161A;
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --line:           #CFCCC2;
+            
+            --teal:           #0F8B8D;
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --vermilion:      #C34A36;
+            --vermilion-bg:   rgba(195, 74, 54, 0.08);
+            --amber:          #D97706;
+            --amber-bg:       rgba(217, 119, 6, 0.08);
+            --emerald:        #059669;
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .download-md-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar {
+            width: 280px;
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand { padding-bottom: 14px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+        .brand-pill { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--gray-2); }
+        .brand-title { font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--ink); margin-top: 2px; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item a {
+            display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm);
+            color: var(--gray-2); text-decoration: none; font-size: 0.83rem; font-weight: 500;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 36px 34px;
+            margin-bottom: 32px;
+        }
+
+        .badge-pill {
+            background: var(--emerald-bg); color: var(--emerald); font-family: var(--font-mono); font-size: 0.75rem;
+            font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill);
+        }
+
+        h1 { font-family: var(--font-heading); font-size: 2.1rem; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+        .lead { font-size: 1.05rem; color: var(--gray-1); }
+
+        h2 {
+            font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--ink);
+            margin-top: 44px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1.5px solid var(--line);
+        }
+
+        .code-wrap { position: relative; margin: 16px 0 20px; }
+        pre {
+            background: #1c1c22; color: #f1f5f9; padding: 16px 18px; border-radius: var(--radius-md);
+            overflow-x: auto; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.6;
+        }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.15);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 3px 8px;
+            border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;
+        }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: var(--paper-3); padding: 12px 14px; border-bottom: 1px solid var(--line); }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+
+        .callout {
+            margin: 16px 0; padding: 14px 18px; border-left: 4px solid var(--ink);
+            border-radius: var(--radius-md); background: var(--paper-3);
+        }
+
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">&larr; 返回全景首頁</a>
+        <span class="badge-pill">PI4_雲端.md</span>
+        <button onclick="downloadSingleMd()" class="download-md-btn">📥 下載原始 MD 檔案</button>
+    </header>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">疑難排解MD // 雲端與快取</div>
+                <div class="brand-title">雲端 AI 與 TTS 快取</div>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="#prompt" class="active">🤖 超級 Prompt 範本</a></li>
+                    <li class="nav-item"><a href="#code">🏆 黃金代碼實現</a></li>
+                    <li class="nav-item"><a href="#troubleshoot">🛠️ 實戰故障排除表</a></li>
+                    <li class="nav-item"><a href="#rules">🛡️ 防踩坑黃金法則</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hero-banner">
+                <div class="badge-pill">Gemini 3.5 Flash-Lite</div>
+                <h1>Pi4 雲端 AI 語音與 TTS MD5 快取模組指南</h1>
+                <p class="lead">包含 Gemini 3.5 Flash-Lite 極速 API 串接、文字 MD5 哈希語音快取（0 延遲播報）、SD 卡容量保護與斷網 Fallback 防護。</p>
+            </div>
+
+            <!-- 超級 Prompt -->
+            <section id="prompt">
+                <h2>🤖 一、 給 AI 下達的超級 Prompt 範本</h2>
+                <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyText('prompt2')">📋 複製 Prompt</button>
+                    <pre><code id="prompt2">你是一位專精於 Raspberry Pi (Pi4 1GB) 雲端 AI 串接、多模態大模型 API 與語音系統優化的高級工程師。
+
+請協助我開發一個「Pi4 高效能雲端 AI 語音對話與 TTS MD5 快取模組 (CloudAIClient)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範：
+
+1. 本地大模型禁忌與 Gemini 3.5 Flash-Lite 切換：
+   - 嚴禁在 Pi4 1GB 上執行本地 Ollama/Qwen7B 模型（觸發 OOM 崩潰）。
+   - 全線切換至 gemini-3.5-flash-lite 雲端 API，記憶體佔用 < 20MB，回應時間 < 0.5s。
+
+2. TTS MD5 語音快取機制 (0 秒延遲播報)：
+   - 先計算文字的 MD5 Hash 值，若快取目錄下已存在 {hash}.mp3，直接傳回本地路徑。
+
+3. SD 卡容量防護與自動清理：
+   - 設定快取上限 100MB，超過上限自動依 mtime 刪除最舊音訊，防止 SD 卡爆滿。
+
+4. 斷網 Fallback 防護與非阻塞規範：
+   - 雲端 HTTP 請求設定 timeout=5.0s，並於獨立背景執行緒中執行，禁止阻塞主相機迴圈。</code></pre>
+                </div>
+            </section>
+
+            <!-- 黃金代碼實現 -->
+            <section id="code">
+                <h2>🏆 二、 黃金標準參考代碼 (CloudAIClient)</h2>
+                <div class="code-wrap">
+                    <button class="copy-btn" onclick="copyText('code2')">📋 複製代碼</button>
+                    <pre><code id="code2">import os, hashlib, json, time, requests
+from pathlib import Path
+from loguru import logger
+
+class CloudAIClient:
+    def __init__(self, cache_dir: str = "/tmp/tts_cache", max_cache_mb: int = 100):
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.max_cache_bytes = max_cache_mb * 1024 * 1024
+        self.api_key = os.getenv("GOOGLE_API_KEY", "")
+        self.model = "gemini-3.5-flash-lite"
+
+    def _cleanup_cache_if_needed(self):
+        """自動清理過期快取，保護容量上限"""
+        try:
+            files = list(self.cache_dir.glob("*.mp3"))
+            total_size = sum(f.stat().st_size for f in files)
+            if total_size > self.max_cache_bytes:
+                files.sort(key=lambda f: f.stat().st_mtime)
+                for f in files[:len(files)//2]:
+                    f.unlink(missing_ok=True)
+                logger.info("[CloudAI] 快取超越上限，已清理最舊之語音快取檔案")
+        except Exception as e:
+            logger.warning(f"[CloudAI] 快取清理失敗: {e}")
+
+    def text_to_speech_cached(self, text: str) -> str:
+        """帶 MD5 快取之 TTS 播報路徑獲取"""
+        text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
+        cache_path = self.cache_dir / f"{text_hash}.mp3"
+
+        if cache_path.exists():
+            return str(cache_path) # 直接讀取快取
+
+        self._cleanup_cache_if_needed()
+        # 雲端 TTS 請求邏輯
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+            # 發起請求並寫入 cache_path
+            return str(cache_path)
+        except Exception as e:
+            logger.error(f"[CloudAI] TTS 請求失敗: {e}")
+            return ""</code></pre>
+                </div>
+            </section>
+
+            <!-- 排障表 -->
+            <section id="troubleshoot">
+                <h2>🛠️ 三、 實戰故障排除手冊</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>故障現象</th>
+                                <th>根本原因</th>
+                                <th>快速排查與標準修復方式</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Pi4 突然卡死，SSH 斷開</strong></td>
+                                <td>本地執行大模型導致記憶體 OOM 崩潰。</td>
+                                <td>移除本地大模型，切換至 <code>gemini-3.5-flash-lite</code> 雲端 API。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TTS 語音播報有 1.5 秒延遲</strong></td>
+                                <td>每次固定語音都重新請求 API。</td>
+                                <td>開啟 <code>text_to_speech_cached()</code> MD5 語音快取。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>樹莓派跳出 No space left</strong></td>
+                                <td>TTS 音訊快取無限寫入爆滿。</td>
+                                <td>限制快取 100MB 並自動清理最舊音訊，或掛載至 <code>/tmp</code>。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>網路斷線時視覺串流卡死</strong></td>
+                                <td>API 請求在主迴圈中同步等待超時。</td>
+                                <td>設定 <code>timeout=5.0</code>，並放入背景 Thread / Asyncio 執行。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 防踩坑 -->
+            <section id="rules">
+                <h2>🛡️ 四、 未來開發防踩坑黃金法則</h2>
+                <div class="callout">
+                    <strong>1. 快取目錄掛載至 `/tmp` (tmpfs 記憶體磁碟)：</strong>
+                    將快取資料夾設為 <code>/tmp/tts_cache</code>，利用樹莓派 RAM 模擬磁碟，<strong>避免頻繁寫入實體 SD 卡縮短卡片壽命</strong>。
+                </div>
+                <div class="callout">
+                    <strong>2. 嚴禁將 API Key 硬編碼提交至 Git：</strong>
+                    所有 Key 統一由外部 <code>.env</code> 讀取，並確保 <code>.env</code> 已列入 <code>.gitignore</code>。
+                </div>
+            </section>
+
+            <div style="text-align: center; margin-top: 40px; background: var(--paper); padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-md);">
+                <h3>📥 下載原始 Markdown 檔案</h3>
+                <button onclick="downloadSingleMd()" class="download-md-btn" style="margin-top: 10px;">
+                    📥 下載 PI4_雲端.md (5.5 KB)
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function copyText(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            navigator.clipboard.writeText(el.innerText).then(() => alert('已複製至剪貼簿！'));
+        }
+    </script>
+
+    <script>
+        const EMBEDDED_MD_CONTENT = "# 雲端 AI 語音 (Gemini 3.5) 與 TTS MD5 快取：AI 指令範本、黃金代碼與避坑指南\n\n本文件包含 Raspberry Pi 4 (Pi4) 上 **Gemini 3.5 Flash-Lite 極速 API 串接、TTS MD5 語音快取、SD 卡容量保護與斷網 Fallback 防護** 的完整技術細節與黃金標準參考代碼 (Golden Reference Code)。可以直接複製給任何 AI (如 ChatGPT, Claude, Cursor, Antigravity 等) 作為 Prompt 範本。\n\n---\n\n## 一、 給 AI 下達的超級 Prompt 範本（帶黃金參考代碼，直接複製）\n\n> 使用方式：將以下框內的文字完全複製並貼給 AI 作為 Prompt。框內包含記憶體防 OOM 與 API 快取防踩坑規則與完整黃金範例代碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4 1GB) 雲端 AI 串接、多模態大模型 API 與語音系統優化的高級工程師。\n\n請協助我開發一個「Pi4 高效能雲端 AI 語音對話與 TTS MD5 快取模組 (CloudAIClient)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考下方提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. 本地大模型禁忌與 Gemini 3.5 Flash-Lite 切換\n- **嚴禁在 Pi4 1GB 上執行本地 Ollama/Qwen7B 模型**：會直接觸發 Linux OOM Killer 導致系統崩潰。\n- **全線切換至 gemini-3.5-flash-lite 雲端 API**：記憶體佔用 < 20MB，回應時間縮短至 0.5 秒內。\n\n### 2. TTS MD5 語音快取機制 (0 秒延遲播報)\n- **文字 MD5 哈希快取**：在向雲端請求 TTS 語音前，先計算語音文字的 MD5 Hash 值。若快取目錄下已存在 `{hash}.mp3`，直接傳回本地路徑，達到 0 延遲零網路請求播報。\n\n### 3. SD 卡容量防護與自動清理\n- **設定快取上限 (例如 100MB)**：每次寫入新快取前，檢查快取資料夾總容量。若超過上限，自動依檔案最後修改時間 (mtime) 刪除最舊的快取音訊，防止 SD 卡爆滿。\n\n### 4. 斷網 Fallback 防護與非阻塞規範\n- **非阻塞背景 Thread 請求**：所有雲端 HTTP 請求必須設定 `timeout=5.0` 秒，並於獨立背景執行緒中執行，禁止阻塞主 UI 與相機視覺迴圈。\n- **例外降級防護**：網路瞬斷時自動捕獲例外，切換至預設提示音效，確保主程式連續運作。\n\n---\n\n### 黃金標準參考代碼框架 (Golden Reference Implementation)\n\n請嚴格參考並採用以下架構編寫核心 CloudAIClient 類別：\n\n```python\nimport os, hashlib, json, time, requests\nfrom pathlib import Path\nfrom loguru import logger\n\nclass CloudAIClient:\n    def __init__(self, cache_dir: str = \"/tmp/tts_cache\", max_cache_mb: int = 100):\n        self.cache_dir = Path(cache_dir)\n        self.cache_dir.mkdir(parents=True, exist_ok=True)\n        self.max_cache_bytes = max_cache_mb * 1024 * 1024\n        self.api_key = os.getenv(\"GOOGLE_API_KEY\", \"\")\n        self.model = \"gemini-3.5-flash-lite\"\n\n    def _cleanup_cache_if_needed(self):\n        \"\"\"自動清理過期快取，保護容量上限\"\"\"\n        try:\n            files = list(self.cache_dir.glob(\"*.mp3\"))\n            total_size = sum(f.stat().st_size for f in files)\n            if total_size > self.max_cache_bytes:\n                files.sort(key=lambda f: f.stat().st_mtime)\n                for f in files[:len(files)//2]:\n                    f.unlink(missing_ok=True)\n                logger.info(\"[CloudAI] 快取超越上限，已清理最舊之語音快取檔案\")\n        except Exception as e:\n            logger.warning(f\"[CloudAI] 快取清理失敗: {e}\")\n\n    def text_to_speech_cached(self, text: str) -> str:\n        \"\"\"帶 MD5 快取之 TTS 播報路徑獲取\"\"\"\n        text_hash = hashlib.md5(text.encode(\"utf-8\")).hexdigest()\n        cache_path = self.cache_dir / f\"{text_hash}.mp3\"\n\n        if cache_path.exists():\n            return str(cache_path) # 直接讀取快取\n\n        self._cleanup_cache_if_needed()\n        # 雲端 TTS 請求邏輯 (簡示)\n        try:\n            url = f\"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}\"\n            # ... 發起請求並寫入 cache_path ...\n            return str(cache_path)\n        except Exception as e:\n            logger.error(f\"[CloudAI] TTS 請求失敗: {e}\")\n            return \"\"\n```\n```\n\n---\n\n## 二、 實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. Pi4 突然卡死，SSH 斷開** | 本地執行大模型導致記憶體 OOM 崩潰。 | 移除本地大模型，切換至 `gemini-3.5-flash-lite` 雲端 API。 |\n| **2. TTS 語音播報有 1.5 秒延遲** | 每次固定語音都重新請求 API。 | 開啟 `text_to_speech_cached()` MD5 語音快取。 |\n| **3. 樹莓派跳出 No space left** | TTS 音訊快取無限寫入爆滿。 | 限制快取 100MB 並自動清理最舊音訊，或掛載至 `/tmp`。 |\n| **4. 網路斷線時視覺串流卡死** | API 請求在主迴圈中同步等待超時。 | 設定 `timeout=5.0`，並放入背景 Thread / Asyncio 執行。 |\n\n---\n\n## 三、 未來開發防踩坑預警 (Future Avoidance Checklist)\n\n1. **⚠️ 快取目錄掛載至 `/tmp` (tmpfs 記憶體磁碟)**：\n   * *防範機制*：將快取資料夾設為 `/tmp/tts_cache`，利用樹莓派 RAM 模擬磁碟，**避免頻繁寫入實體 SD 卡縮短卡片壽命**。\n2. **⚠️ 嚴禁將 API Key 硬編碼提交至 Git**：\n   * *防範機制*：所有 Key 統一由外部 `.env` 讀取，並確保 `.env` 已列入 `.gitignore`。\n";
+        const EMBEDDED_MD_FILENAME = "PI4_雲端.md";
+        function downloadSingleMd() {
+            const blob = new Blob([EMBEDDED_MD_CONTENT], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = EMBEDDED_MD_FILENAME;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+        // Also support any inline function call to downloadMd
+        function downloadMd(fn) { downloadSingleMd(); }
+    </script>
+</body>
+</html>

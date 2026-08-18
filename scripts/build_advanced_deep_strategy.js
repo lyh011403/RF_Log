@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+const fs = require('fs');
+const path = require('path');
+
+const targetHtmlPath = path.join(__dirname, '../routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html');
+
+const fullDocument = `<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
     <meta charset="utf-8">
@@ -549,9 +554,8 @@
                 <h2><span class="section-tag">01</span> 核心結論與專案現狀</h2>
                 
                 <div class="callout success">
-                    <div class="callout-title">💡 核心定調：以桌遊店作為低成本驗證場域，聚焦軟體與營運價值，避免盲目投入硬體量產</div>
-                    <p>台灣桌遊店約 150–300 家，單純依靠硬體銷售無法建立穩定的商業規模。R1 的實質資產在於頂置視覺、語音引導與規則檢索的實體互動系統。</p>
-                    <p style="margin-bottom: 0;"><strong>正確路徑：</strong>先以桌遊店作為首階段 POC 驗證點，實測「新手教學省時」與「天梯賽事引流」對店家的實質效益，並以取得店家付費意願為依據；驗證可行後，再將此互動系統拓展至劇本殺、密室逃脫、補習班教育與銀髮長照等領域。</p>
+                    <div class="callout-title">💡 核心定調：不要直接報廢，但也不要盲目大量生產硬體</div>
+                    <p>台灣桌遊店數量有限，如果我們只打算「做一台桌遊機器人賣給全台灣桌遊店」，公司很難賺大錢；但 R1 現在做出來的實體互動能力很有價值。正確做法是：<strong>把桌遊店當成第一個測試場地</strong>，證明能幫店家省時間、讓新手順利開局，之後再把這套能力帶去<strong>劇本殺、密室逃脫、VR 體驗館、補習班教育與長照</strong>等更高預算的市場。</p>
                 </div>
 
                 <h3>我們目前已經做出來的 6 個核心能力</h3>
@@ -1567,7 +1571,7 @@
                     const query = e.target.value.toLowerCase().trim();
                     sections.forEach(sec => {
                         const text = sec.innerText.toLowerCase();
-                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        const navMatch = document.querySelector(\`.nav-item a[href="#\${sec.id}"]\`);
                         if (text.includes(query) || query === '') {
                             sec.style.display = 'block';
                             if (navMatch) navMatch.parentElement.style.display = 'block';
@@ -1588,7 +1592,7 @@
 
                     sections.forEach(sec => {
                         const cat = sec.getAttribute('data-cat');
-                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        const navMatch = document.querySelector(\`.nav-item a[href="#\${sec.id}"]\`);
                         if (filter === 'all' || cat === filter) {
                             sec.style.display = 'block';
                             if (navMatch) navMatch.parentElement.style.display = 'block';
@@ -1606,7 +1610,7 @@
                     if (entry.isIntersecting) {
                         const id = entry.target.id;
                         document.querySelectorAll('.nav-item a').forEach(a => {
-                            a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+                            a.classList.toggle('active', a.getAttribute('href') === \`#\${id}\`);
                         });
                     }
                 });
@@ -1638,3 +1642,7 @@
     </script>
 </body>
 </html>
+`;
+
+fs.writeFileSync(targetHtmlPath, fullDocument, 'utf8');
+console.log('✅ Advanced Strategy Handbook with 20 sections, brutal self-critique, and technical backend architectures generated!');

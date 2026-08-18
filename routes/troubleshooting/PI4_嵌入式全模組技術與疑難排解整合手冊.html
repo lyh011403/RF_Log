@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi4 嵌入式全模組技術與疑難排解整合手冊｜旗艦 Hub</title>
+    <meta name="description" content="Raspberry Pi 4 (1GB) 嵌入式全模組深度技術整合手冊：包含伺服馬達 DMA PWM、MediaPipe 25FPS 手勢追蹤、離線 KWS 語音喚醒、雲端 AI 串流、PN532 NFC、STT 呼叫、相機棋盤格標定等 7 大模組技術與原始 Markdown 檔案下載中心。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- JSZip (一鍵打包下載全部 MD) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <style>
+        :root {
+            /* Mono / Lieflat 東方水墨與宣紙質感設計系統 Tokens */
+            --paper:          #ECEAE3;  /* 基準宣紙灰 */
+            --paper-2:        #F4F3EE;  /* 明亮紙白 */
+            --paper-3:        #E2E0D8;  /* 沉積紙灰 */
+            
+            --ink:            #16161A;  /* 極暗濃墨 */
+            --ink-soft:       #26262A;  /* 松煙淡墨 */
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --gray-3:         #94938E;
+            --line:           #CFCCC2;
+            
+            /* 東方典雅輔助色 */
+            --teal:           #0F8B8D;  /* 銅綠/石青 */
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --teal-bd:        rgba(15, 139, 141, 0.3);
+            
+            --vermilion:      #C34A36;  /* 硃砂紅 */
+            --vermilion-bg:   rgba(195, 74, 54, 0.08);
+            --vermilion-bd:   rgba(195, 74, 54, 0.3);
+            
+            --amber:          #D97706;  /* 金石拓黃 */
+            --amber-bg:       rgba(217, 119, 6, 0.08);
+            --amber-bd:       rgba(217, 119, 6, 0.3);
+            
+            --emerald:        #059669;  /* 翠玉綠 */
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+            --emerald-bd:     rgba(5, 150, 105, 0.3);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            
+            --sidebar-width:  290px;
+            --content-max:    1140px;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.8% Fine Grain Noise Layer */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* 頂部固定返回列 */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.22s var(--ease-smooth);
+            min-height: 40px;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--ink);
+            color: var(--paper-2);
+            border-color: var(--ink);
+        }
+
+        .bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .download-zip-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            border: 1px solid var(--ink);
+            padding: 0.45rem 1.15rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .download-zip-btn:hover {
+            background: var(--gray-1);
+        }
+
+        /* 雙欄主架構 */
+        .app-layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            padding: 20px 16px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 12px;
+        }
+
+        .brand-pill {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--gray-2);
+        }
+
+        .brand-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-top: 2px;
+        }
+
+        .search-box { margin-bottom: 12px; position: relative; }
+        .search-input {
+            width: 100%;
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            padding: 8px 12px 8px 32px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .search-input:focus { border-color: var(--ink); }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--gray-3); }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .filter-chip {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            color: var(--gray-2);
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+        }
+        .filter-chip.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+
+        .nav-list { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            color: var(--gray-2);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.18s ease;
+        }
+        .nav-item a:hover { background: var(--paper-3); color: var(--ink); }
+        .nav-item a.active { background: var(--ink); color: var(--paper-2); font-weight: 700; }
+        .nav-num { font-family: var(--font-mono); font-size: 0.75rem; min-width: 18px; opacity: 0.75; }
+
+        /* 主要內容區 */
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: var(--content-max);
+            margin: 0 auto;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 38px 36px;
+            margin-bottom: 34px;
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .badge-status {
+            background: var(--emerald-bg);
+            border: 1px solid var(--emerald-bd);
+            color: var(--emerald);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        .badge-tag {
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            color: var(--gray-1);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 3.2vw, 2.35rem);
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        p.lead {
+            font-size: 1.08rem;
+            color: var(--gray-1);
+            line-height: 1.7;
+        }
+
+        /* 儀表盤指標 */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .metric-card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            border-left: 4px solid var(--ink);
+        }
+
+        .metric-val {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .metric-label { font-size: 0.83rem; color: var(--gray-2); margin-top: 3px; }
+
+        h2 {
+            font-family: var(--font-heading);
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-top: 48px;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1.5px solid var(--line);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 .tag {
+            background: var(--ink);
+            color: var(--paper-2);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.12rem;
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--ink);
+        }
+
+        p { margin-bottom: 12px; color: var(--gray-1); font-size: 0.95rem; }
+        strong { color: var(--ink); font-weight: 700; }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.86em;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        pre {
+            background: #1c1c22;
+            color: #f1f5f9;
+            padding: 15px 18px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            line-height: 1.6;
+            margin: 12px 0 16px;
+            border: 1px solid var(--line);
+        }
+
+        pre code { background: transparent; color: inherit; padding: 0; border: none; }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+
+        .card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(22, 22, 26, 0.05); }
+
+        /* MD 下載卡片 */
+        .md-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 14px;
+            margin: 18px 0 28px;
+        }
+
+        .md-card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+        }
+
+        .md-card:hover {
+            border-color: var(--ink);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(22, 22, 26, 0.06);
+        }
+
+        .md-badge {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: var(--radius-pill);
+            background: var(--paper-3);
+            color: var(--gray-1);
+            align-self: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .md-title {
+            font-family: var(--font-heading);
+            font-size: 1.02rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .md-desc { font-size: 0.83rem; color: var(--gray-2); margin-bottom: 10px; flex: 1; line-height: 1.55; }
+
+        .md-actions { display: flex; gap: 8px; margin-top: 10px; }
+        .md-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: var(--paper-2);
+            color: var(--ink);
+            min-height: 34px;
+        }
+
+        .md-btn:hover { background: var(--ink); color: var(--paper-2); border-color: var(--ink); }
+        .md-btn.primary { background: var(--ink); color: var(--paper-2); border-color: var(--ink); }
+        .md-btn.primary:hover { background: var(--gray-1); }
+
+        .callout {
+            margin: 18px 0;
+            padding: 16px 18px;
+            background: var(--paper-3);
+            border-left: 4px solid var(--ink);
+            border-radius: var(--radius-md);
+            border-top: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .callout.warning { background: var(--amber-bg); border-left-color: var(--amber); border-color: var(--amber-bd); }
+        .callout.success { background: var(--emerald-bg); border-left-color: var(--emerald); border-color: var(--emerald-bd); }
+
+        .table-wrap { width: 100%; overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: var(--paper-3); padding: 12px 14px; border-bottom: 1.5px solid var(--line); text-align: left; }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+
+        .code-wrap { position: relative; margin: 14px 0 20px; }
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(255, 255, 255, 0.15);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); padding: 3px 8px;
+            border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer;
+        }
+
+        /* 模態彈窗 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(22, 22, 26, 0.65);
+            backdrop-filter: blur(6px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--paper-2); border: 1px solid var(--line); border-radius: var(--radius-lg);
+            width: 100%; max-width: 880px; max-height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden;
+        }
+        .modal-head { padding: 14px 20px; background: var(--paper-3); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: var(--font-mono); font-weight: 800; font-size: 1rem; color: var(--ink); }
+        .modal-close { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray-2); }
+        .modal-body { padding: 18px; overflow-y: auto; flex: 1; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.65; white-space: pre-wrap; background: var(--paper); }
+        .modal-foot { padding: 12px 18px; background: var(--paper-2); border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; }
+
+        ul, ol { padding-left: 20px; margin: 10px 0 14px; }
+        li { margin-bottom: 5px; color: var(--gray-1); }
+        section { scroll-margin-top: 75px; margin-bottom: 40px; }
+
+        @media (max-width: 1024px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; top: 0; }
+            .main-content { padding: 24px 20px 60px; }
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .hero-banner { padding: 24px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部固定返回全景導覽列 -->
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">
+            &larr; 返回研發全景首頁
+        </a>
+        <div class="bar-actions">
+            <span class="badge-status">SPEC // 04 · 旗艦整合 HUB</span>
+            <button onclick="downloadAllZip()" class="download-zip-btn">
+                📦 一鍵打包全部 MD
+            </button>
+        </div>
+    </header>
+
+    <div class="app-layout">
+        
+        <!-- 左側側邊欄 -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">REAIFY TECH // 疑難排解MD</div>
+                <div class="brand-title">Pi4 全模組整合手冊</div>
+            </div>
+
+            <!-- 關鍵字搜尋框 -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="sectionSearch" class="search-input" placeholder="搜尋排障技術關鍵字..." aria-label="搜尋章節">
+            </div>
+
+            <!-- 快速分類篩選 -->
+            <div class="filter-group">
+                <span class="filter-chip active" data-filter="all">全部</span>
+                <span class="filter-chip" data-filter="download">📥MD下載</span>
+                <span class="filter-chip" data-filter="motor">馬達舵機</span>
+                <span class="filter-chip" data-filter="vision">手勢視覺</span>
+                <span class="filter-chip" data-filter="voice">語音喚醒</span>
+                <span class="filter-chip" data-filter="cloud">雲端AI</span>
+                <span class="filter-chip" data-filter="nfc">NFC螢幕</span>
+                <span class="filter-chip" data-filter="calib">相機標定</span>
+            </div>
+
+            <!-- 目錄 -->
+            <nav style="overflow-y: auto; flex: 1;">
+                <ul class="nav-list" id="navList">
+                    <li class="nav-item" data-cat="download"><a href="#sec-download" class="active" style="color:var(--teal); font-weight:700;"><span class="nav-num">01</span> 📥 技術 MD 檔案下載中心</a></li>
+                    <li class="nav-item" data-cat="motor"><a href="#sec-boundary"><span class="nav-num">02</span> 1. 硬體邊界與環境限制</a></li>
+                    <li class="nav-item" data-cat="motor"><a href="#sec-servo"><span class="nav-num">03</span> 2. 伺服馬達與舵機控制 (DMA PWM)</a></li>
+                    <li class="nav-item" data-cat="vision"><a href="#sec-vision"><span class="nav-num">04</span> 3. 電腦視覺與手勢追蹤 (25 FPS)</a></li>
+                    <li class="nav-item" data-cat="voice"><a href="#sec-wake"><span class="nav-num">05</span> 4. 離線 KWS 語音喚醒與音訊驅動</a></li>
+                    <li class="nav-item" data-cat="cloud"><a href="#sec-cloud"><span class="nav-num">06</span> 5. 雲端 AI 語音與對話快取</a></li>
+                    <li class="nav-item" data-cat="nfc"><a href="#sec-nfc"><span class="nav-num">07</span> 6. NFC 身份感應與 ST7789 螢幕</a></li>
+                    <li class="nav-item" data-cat="cloud"><a href="#sec-stt"><span class="nav-num">08</span> 7. STT 語音辨識與 VAD 動態收音</a></li>
+                    <li class="nav-item" data-cat="calib"><a href="#sec-calib"><span class="nav-num">09</span> 8. 相機鏡頭棋盤格去畸變標定</a></li>
+                    <li class="nav-item" data-cat="motor"><a href="#sec-rules"><span class="nav-num">10</span> 9. 未來開發防踩坑黃金法則</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主要內容區 -->
+        <main class="main-content">
+            <div class="hero-banner" id="overview">
+                <div class="hero-meta">
+                    <span class="badge-status">全模組旗艦整合 · 附 7 份原檔下載</span>
+                    <span class="badge-tag">Pi4 1GB 邊緣極限</span>
+                    <span class="badge-tag">DMA PWM 硬體時脈</span>
+                    <span class="badge-tag">MediaPipe Lite 25FPS</span>
+                    <span class="badge-tag">Gemini Base64 直傳</span>
+                </div>
+                <h1>Raspberry Pi 4 嵌入式全模組技術與疑難排解整合手冊</h1>
+                <p class="lead">
+                    一站式整合 Raspberry Pi 4 (1GB RAM) 從底層硬體驅動、連續舵機追蹤、MediaPipe 手勢辨識、離線喚醒詞、NFC 讀卡到相機棋盤格標定的完整避坑指南，並提供 <strong>7 份技術 Markdown 原檔下載與在線即時預覽</strong>！
+                </p>
+            </div>
+
+            <!-- 核心指標 -->
+            <div class="metrics-bar">
+                <div class="metric-card">
+                    <div class="metric-val">7 份 MD</div>
+                    <div class="metric-label">包含原檔下載、Prompt 範本與 Python 代碼</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">&lt; 1μs 精度</div>
+                    <div class="metric-label">pigpio DMA 硬體時脈 · 徹底消除抽搐</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">25+ FPS</div>
+                    <div class="metric-label">MediaPipe Lite + 5點質心 + 一歐元濾波</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">0 阻塞鎖死</div>
+                    <div class="metric-label">PN532 I2C 0.1s 超時 · ALSA 聲卡混音安全</div>
+                </div>
+            </div>
+
+            <!-- 01 📥 技術 Markdown 檔案下載中心 -->
+            <section id="sec-download" class="content-section" data-cat="download">
+                <h2><span class="tag">01</span> 📥 技術 Markdown 原始檔案下載中心</h2>
+                
+                <div class="callout success">
+                    <strong>💡 模組化技術資源庫：</strong>
+                    您可以依需求單獨下載原始 <code>.md</code> 檔案、點擊「👁️ 在線預覽」快速複製 Prompt 範本，或點擊右上角「📦 一鍵打包全部 MD」將全套資源打包為 ZIP 下載！
+                </div>
+
+                <div class="md-grid">
+                    <!-- 1. 手部追蹤與舵機控制 -->
+                    <div class="md-card">
+                        <span class="md-badge">馬達與視覺 · 核心控制</span>
+                        <div class="md-title">PI4_手部追蹤與舵機控制.md</div>
+                        <div class="md-desc">DMA PWM 硬體時脈、0μs 斷電放鬆防發燙、CW/CCW 獨立起步門檻、雙門檻遲滯、MediaPipe 25FPS 與雙手 1~99 數字辨識。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('PI4_手部追蹤與舵機控制.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('PI4_手部追蹤與舵機控制.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. 語音喚醒 -->
+                    <div class="md-card">
+                        <span class="md-badge">語音與音訊 · 離線KWS</span>
+                        <div class="md-title">PI4_語音喚醒.md</div>
+                        <div class="md-desc">Sherpa-onnx 離線喚醒詞（「阿萬」）、ALSA /etc/asound.conf 軟體混音器防鎖死、TTS 播報 300ms 迴音防自激與麥克風增益。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('PI4_語音喚醒.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('PI4_語音喚醒.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. 雲端 AI -->
+                    <div class="md-card">
+                        <span class="md-badge">雲端AI · 串流與快取</span>
+                        <div class="md-title">PI4_雲端.md</div>
+                        <div class="md-desc">Gemini 3.5 Flash-Lite 極速 API 串接、文字 MD5 哈希語音快取（0 秒播報）、tmpfs 記憶體磁碟自動清理與斷網 Fallback 防護。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('PI4_雲端.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('PI4_雲端.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. NFC 與螢幕 -->
+                    <div class="md-card">
+                        <span class="md-badge">硬體通訊 · I2C與SPI</span>
+                        <div class="md-title">PI4_NFC.md</div>
+                        <div class="md-desc">PN532 I2C 非阻塞超時保護 (0.1s)、防重複刷卡去抖動、ST7789 小螢幕 PIL (Pillow) 動態 TrueType 中文點陣渲染。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('PI4_NFC.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('PI4_NFC.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 5. STT 呼叫與 VAD -->
+                    <div class="md-card">
+                        <span class="md-badge">語音辨識 · VAD與架構</span>
+                        <div class="md-title">STT_呼叫.md</div>
+                        <div class="md-desc">5 大開發困境剖析、Gemini 多模態 Base64 直傳、動態能量 VAD 靜音超時截止與獨立 Event Loop 隔離。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('STT_呼叫.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('STT_呼叫.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 6. 相機標定 -->
+                    <div class="md-card">
+                        <span class="md-badge">電腦視覺 · OpenCV</span>
+                        <div class="md-title">相機棋盤格標定教學流程.md</div>
+                        <div class="md-desc">廣角鏡頭去畸變標定完整 SOP：9x6 棋盤格拍照規範、OpenCV 內參矩陣標定腳本與 camera_calib.npz 即時整合。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('相機棋盤格標定教學流程.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('相機棋盤格標定教學流程.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+
+                    <!-- 7. 戰略標準書 -->
+                    <div class="md-card">
+                        <span class="md-badge">文檔工程 · 標準規範</span>
+                        <div class="md-title">戰略手冊撰寫規格標準書.md</div>
+                        <div class="md-desc">公司戰略手冊撰寫最高準則：5 大撰寫原則、8 大標準模組架構、BLUF 結論先行、數據口徑與單位經濟驗證規則。</div>
+                        <div class="md-actions">
+                            <button onclick="downloadMd('戰略手冊撰寫規格標準書.md')" class="md-btn primary">📥 下載 .md</button>
+                            <button onclick="previewMd('戰略手冊撰寫規格標準書.md')" class="md-btn">👁️ 在線預覽</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 02 硬體邊界 -->
+            <section id="sec-boundary" class="content-section" data-cat="motor">
+                <h2><span class="tag">02</span> 1. 硬體限制與系統環境邊界說明</h2>
+                <div class="grid-3">
+                    <div class="card">
+                        <h3>🔥 CPU 與熱散熱邊界</h3>
+                        <p>BCM2711 4 核心 Cortex-A72，長時間高負載易觸發 80°C 降頻保護 (Thermal Throttling)，必須配置主動式散熱風扇。</p>
+                    </div>
+                    <div class="card">
+                        <h3>💾 記憶體瓶頸 (1GB RAM)</h3>
+                        <p>系統可用 RAM 僅約 650MB，<strong>禁止在本地載入超過 300MB 的深度學習大模型</strong>（如本地 LLM 必引發 OOM 崩潰）。</p>
+                    </div>
+                    <div class="card">
+                        <h3>⏱️ Linux 非即時時脈誤差</h3>
+                        <p>標準 Linux 非即時作業系統 (Non-RT OS)，軟體計時器會有 10μs ~ 100μs 的抖動，禁止使用軟體產生 PWM。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 03 馬達與舵機控制 -->
+            <section id="sec-servo" class="content-section" data-cat="motor">
+                <h2><span class="tag">03</span> 2. 伺服馬達與舵機控制 (servo_module.py)</h2>
+                <div class="grid-2">
+                    <div class="card" style="border-top: 4px solid var(--vermilion);">
+                        <h3>❌ 已解決之 4 大痛點與根因</h3>
+                        <ul>
+                            <li><strong>軟體 PWM 抽搐異音</strong>：Linux 排程誤差 ➔ <strong>切換至 pigpio DMA 硬體 PWM (&lt;1μs)</strong>。</li>
+                            <li><strong>靜止高頻哼聲發燙</strong>：持續通電 ➔ <strong>導入 0μs 斷電放鬆機制 (`set_pw(0)`)</strong>。</li>
+                            <li><strong>順時針轉、逆時針卡死</strong>：阻力不對稱 ➔ <strong>設計獨立啟動脈衝 (CW=40μs / CCW=55μs)</strong>。</li>
+                            <li><strong>中心臨界點急啟急煞</strong>：邊界震盪 ➔ <strong>引進雙門檻死區遲滯 (Enter=0.14 / Exit=0.18)</strong>。</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--emerald);">
+                        <h3>🛡️ 未來開發防踩坑預警</h3>
+                        <ul>
+                            <li><strong>⚠️ pigpiod 前置依賴</strong>：初始化檢查 `pi.connected`，systemd 加入 `Requires=pigpiod.service`。</li>
+                            <li><strong>⚠️ 嚴禁用樹莓派 5V 供舵機電</strong>：瞬間電流可達 2A，必用獨立 5V/3A 變壓器供電並共地 (GND)。</li>
+                            <li><strong>⚠️ 避免 GPIO 18 與音訊衝突</strong>：音訊模式下 PWM 必須改用 GPIO 12 或 GPIO 13。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 04 電腦視覺與手勢追蹤 -->
+            <section id="sec-vision" class="content-section" data-cat="vision">
+                <h2><span class="tag">04</span> 3. 電腦視覺與手勢動態追蹤 (hand_tracking_module.py)</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>現象與痛點</th>
+                                <th>底層技術根因</th>
+                                <th>技術修復方案與代碼實作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>FPS 低於 8 幀，嚴重 Delay</strong></td>
+                                <td>誤用預設 `model_complexity=1` 且輸入解析度高達 1080P。</td>
+                                <td>強制指定 <code>model_complexity=0</code>（Lite 模型），OpenCV 解析度設為 <code>320x240</code>，速度飆升至 25+ FPS。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>手腕旋轉導致相機劇烈晃動</strong></td>
+                                <td>只追蹤 Node 0 (Wrist)，手掌翻轉即產生極大座標位移。</td>
+                                <td>採用 <strong>5 點算術平均手掌質心</strong>（手腕 0 + 四指指根 MCP 5, 9, 13, 17）。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>手部靜止時相機微幅震盪</strong></td>
+                                <td>相機感光元件噪聲導致座標小數點後三位隨機跳動。</td>
+                                <td>導入<strong>一歐元低通濾波器 `OneEuroFilter`</strong> (min_cutoff=0.8, beta=0.4)，兼顧低速防抖與高速零延遲。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 05 離線語音喚醒 -->
+            <section id="sec-wake" class="content-section" data-cat="voice">
+                <h2><span class="tag">05</span> 4. 離線 KWS 語音喚醒與音訊驅動</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>ALSA 硬體獨占衝突與修復</h3>
+                        <p>Linux ALSA 的 `plughw:1,0` 為硬體獨佔模式。喚醒後前台錄音搶佔聲卡會引發 `Device or resource busy` 並拋出 Exit Code 255 死循環。</p>
+                        <ul>
+                            <li><strong>強制釋放與冷卻等待（0.3s）</strong>：確保切換前裝置控制權完全釋放。</li>
+                            <li><strong>配置 `/etc/asound.conf` 軟體混音器</strong>：使用 `dmix` 與 `dsnoop` 模式允許多進程共享聲卡。</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>聲學迴音防自激機制</h3>
+                        <p>防止喇叭播報語音時自己喚醒自己（自言自語死循環）：</p>
+                        <ul>
+                            <li><strong>TTS 播報前掛起 KWS</strong>：呼叫 <code>pause_kws()</code> 暫停監聽。</li>
+                            <li><strong>播報結束 300ms 冷卻恢復</strong>：延遲 0.3 秒後呼叫 <code>resume_kws()</code>。</li>
+                            <li><strong>USB 麥克風增益</strong>：自動以 <code>amixer</code> 設定 Capture 音量至 90%。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 06 雲端 AI 語音 -->
+            <section id="sec-cloud" class="content-section" data-cat="cloud">
+                <h2><span class="tag">06</span> 5. 雲端 AI 語音 (Gemini 3.5) 與 TTS 快取</h2>
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Gemini 3.5 Flash-Lite 極速串接</h3>
+                        <p>全線切換至 <code>gemini-3.5-flash-lite</code> 雲端 API，記憶體佔用 &lt; 20MB，首字回應時間縮短至 0.5 秒內，徹底避免本地大模型 OOM 崩潰。</p>
+                    </div>
+                    <div class="card">
+                        <h3>文字 MD5 哈希語音快取</h3>
+                        <p>計算語音文字之 MD5 值，若 <code>/tmp/tts_cache/{hash}.mp3</code> 已存在則直接回傳本地路徑（0 秒延遲播報）；並設定 100MB 容量上限自動清理最舊音訊，保護 SD 卡壽命。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 07 NFC 與螢幕 -->
+            <section id="sec-nfc" class="content-section" data-cat="nfc">
+                <h2><span class="tag">07</span> 6. NFC 身份感應與 ST7789 螢幕中文</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>硬體模組</th>
+                                <th>常見致命錯誤</th>
+                                <th>黃金標準避坑實作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>PN532 NFC 讀卡</strong></td>
+                                <td>使用無限阻塞讀取 (`read_passive_target`)，卡片長置時鎖死 I2C 匯流排導致程式崩潰。</td>
+                                <td><strong>設定 `timeout=0.1s` 非阻塞保護</strong>，未感應到立即釋放 I2C 控制權，並加入 0.5s 防重複刷卡去抖動。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ST7789 小螢幕</strong></td>
+                                <td>直接向 LCD 驅動發送原始 ASCII 中文字串，導致螢幕顯示方塊 □□□ 或問號。</td>
+                                <td><strong>使用 PIL (Pillow) 動態 TrueType 圖片繪製</strong>：引入 <code>.ttf</code> 字型在記憶體繪製 240x240 RGB 圖片再送入驅動。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 08 STT 辨識 -->
+            <section id="sec-stt" class="content-section" data-cat="cloud">
+                <h2><span class="tag">08</span> 7. STT 語音辨識與 VAD 動態收音</h2>
+                <div class="card">
+                    <h3>Gemini 多模態 Base64 直傳 + 動態能量 VAD</h3>
+                    <p>將錄音音訊轉換為 Base64 直接送給 Gemini 3.0+ 模型，同時以 <code>pyaudio</code> + <code>audioop.rms</code> 即時監測說話能量（閾值 350），開口自動錄、靜音超過 1.5 秒自動截止，徹底告別傳統固定秒數錄音的尷尬延遲與截斷！</p>
+                </div>
+            </section>
+
+            <!-- 09 相機去畸變標定 -->
+            <section id="sec-calib" class="content-section" data-cat="calib">
+                <h2><span class="tag">09</span> 8. 相機鏡頭棋盤格去畸變標定 SOP</h2>
+                <p>廣角/魚眼鏡頭在邊緣會產生桶狀畸變，使用前必須進行一次性標定：</p>
+                <div class="grid-2">
+                    <div class="card">
+                        <strong>1. 拍攝 15~25 張 9×6 棋盤格照片</strong>
+                        <p>棋盤格貼在硬板上保持平整，出現在畫面左上、右上、左下、右下與中央，包含正拍與傾斜。</p>
+                    </div>
+                    <div class="card">
+                        <strong>2. 執行標定腳本並儲存參數</strong>
+                        <p>使用 <code>cv2.calibrateCamera</code> 計算內參矩陣與畸變係數，儲存為 <code>camera_calib.npz</code> 供主程式 <code>cv2.undistort</code> 即時呼叫。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10 防踩坑黃金法則 -->
+            <section id="sec-rules" class="content-section" data-cat="motor">
+                <h2><span class="tag">10</span> 9. 未來開發防踩坑黃金法則</h2>
+                <div class="grid-2">
+                    <div class="card" style="border-top: 4px solid var(--vermilion);">
+                        <h3>⚡ 硬體與電源檢核法則</h3>
+                        <ul>
+                            <li><strong>法則 1</strong>：舵機瞬間電流達 2A，嚴禁用樹莓派 5V 引腳供電，必用獨立 5V/3A 變壓器並共地。</li>
+                            <li><strong>法則 2</strong>：GPIO 18 與 3.5mm 音訊衝突，使用音訊時 PWM 必改用 GPIO 12/13。</li>
+                            <li><strong>法則 3</strong>：I2C 匯流排讀取（NFC/感測器）必須設定 <code>timeout=0.1s</code> 非阻塞保護。</li>
+                            <li><strong>法則 4</strong>：通電靜止時必須傳送 <code>0μs</code> 方波切斷信號，防止馬達發燙。</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--teal);">
+                        <h3>💻 軟體與系統排程法則</h3>
+                        <ul>
+                            <li><strong>法則 5</strong>：Pi4 1GB 嚴禁本地跑大模型，STT 與 LLM 採雲端 Base64 直傳。</li>
+                            <li><strong>法則 6</strong>：MediaPipe 必選 <code>model_complexity=0</code>，搭配一歐元低通濾波器。</li>
+                            <li><strong>法則 7</strong>：ALSA 聲卡切換加 0.3s 冷卻，並配置 <code>dsnoop</code> 共享混音模式。</li>
+                            <li><strong>法則 8</strong>：背景 Thread 呼叫非同步時，必用 <code>asyncio.new_event_loop()</code> 隔離。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- 在線 Markdown 即時預覽 Modal -->
+    <div id="mdModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-head">
+                <span id="modalFileName" class="modal-title">檔案名稱.md</span>
+                <button onclick="closeModal()" class="modal-close">&times;</button>
+            </div>
+            <div id="modalContent" class="modal-body">
+                載入中...
+            </div>
+            <div class="modal-foot">
+                <button onclick="copyModalContent()" class="md-btn">📋 複製內容</button>
+                <button id="modalDownloadBtn" onclick="downloadCurrentModalMd()" class="md-btn primary">📥 下載此檔案</button>
+                <button onclick="closeModal()" class="md-btn">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 互動腳本 -->
+    <script>
+        const MD_CONTENTS = {"PI4_手部追蹤與舵機控制.md":"# Raspberry Pi 4 手部辨識、手勢追蹤與 pigpio 舵機控制：全功能終極總整理指南\n\n硬體電源規畫、pigpio DMA PWM 驅動、零微動切斷保護、CW/CCW 獨立阻力補償、雙門檻遲滯、One Euro Filter 視覺防抖、MediaPipe 21點手勢判斷以及定點雙手 1~99 數字辨識的所有黃金代碼與硬體防踩坑指南。\n\n---\n\n## 🤖 一、 給 AI 下達的超級 Prompt 範本（帶全功能黃金參考代碼，直接複製）\n\n> 💡 **使用方式**：將以下框內的文字完全複製並貼給 AI（如 ChatGPT、Claude、Cursor、Antigravity 等）作為 Prompt。框內包含完整硬體避坑規範與黃金範例代碼，能確保 AI 100% 寫出完全一致且無瑕疵的高品質程式碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4)、電腦視覺 (OpenCV + MediaPipe Hands) 與嵌入式硬體控制 (pigpio) 的高級系統架構師。\n\n請協助我開發一個「MediaPipe 手辨識追蹤與 pigpio 零抽搐舵機控制系統」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. 硬體 PWM 與零通電微震規範\n- **嚴禁使用 RPi.GPIO 的軟體 PWM**：Linux 排程會產生 ±100μs 誤差導致馬達劇烈抽搐。\n- **必須使用 pigpio 硬體 DMA PWM**：時脈誤差 < 1μs。靜止脈衝為 STOP_PW (1470μs)，控制脈衝範圍 1000μs ~ 2000μs。\n- **支援 0μs 訊號切斷保護 (Pulse Cutoff)**：在 set_pw(pw) 中，傳入 0 或未開啟追蹤時執行 pi.set_servo_pulsewidth(pin, 0) 切斷方波，馬達 100% 放鬆，徹底消除高頻哼聲與發熱。\n\n### 2. CW/CCW 獨立起步阻力與雙門檻遲滯\n- **獨立起步脈衝門檻**：針對連續旋轉馬達兩側物理阻力不對稱，必須設定 CW 40μs 與 CCW 55μs 獨立啟動脈衝（MIN_MOVE_PW_CW=40, MIN_MOVE_PW_CCW=55），避免單邊卡死。\n- **雙門檻死區遲滯 (Hysteresis Deadband)**：設定進入死區 ENTER=0.14 與離開死區 EXIT=0.18。當目標位於中心邊界時，防止馬達在「動與不動」之間劇烈顫抖急啟急煞。\n\n### 3. 視覺推論、OneEuroFilter 防抖與模式切換\n- **Lite 模型優化 (Pi4)**：設定 model_complexity=0、max_num_hands=2、static_image_mode=False。\n- **手掌質心算術平均**：使用手腕(0) + 四指指根 MCP(5, 9, 13, 17) 共 5 個節點算術平均作為手掌質心 PALM_INDEXES。\n- **One Euro Filter 動態低通濾波**：對質心 hand_x 套用 OneEuroFilter (min_cutoff=0.8, beta=0.4)，靜止防抖、甩手無延遲。\n- **移動時單手對齊 vs 定點煞停雙手辨識**：\n  - 馬達旋轉追蹤時：僅取主要手 (Hand 0) 計算質心與 offset 對齊。\n  - 馬達煞停靜止時 (target_pw == STOP_PW)：開啟雙手 1~99 數字與 OK 手勢 (99) 辨識。雙手按 X 座標由左至右排序（左邊十位數、右邊個位數）。\n- **單執行緒 PWM 直出**：禁止使用背景馬達執行緒（避免 GIL / Lock 爭奪導致微跳），將 PWM 輸出放於視覺迴圈 process_frame 尾端直出。\n\n---\n\n### 🏆【黃金標準參考代碼框架 (Golden Reference Implementation)】\n\n```python\nimport time, math, threading\nimport numpy as np, cv2, mediapipe as mp, pigpio\nfrom loguru import logger\n\n# --- 硬體與演算法參數定義 ---\nSERVO_PIN       = 18\nSTOP_PW         = 1470\nMIN_MOVE_PW_CW  = 40\nMIN_MOVE_PW_CCW = 55\nMAX_MOVE_PW     = 120\nTRACK_SIGN      = -1\n\nCENTER_TOLERANCE_ENTER = 0.14\nCENTER_TOLERANCE_EXIT  = 0.18\nPALM_INDEXES           = [0, 5, 9, 13, 17]\n\n# --- ServoModule 馬達驅動類別 ---\nclass ServoModule:\n    def __init__(self, pin: int = SERVO_PIN, stop_pw: int = STOP_PW):\n        self.pin = pin\n        self.stop_pw = stop_pw\n        self._lock = threading.Lock()\n        self._last_pw = stop_pw\n        self._is_motor_stopped = True\n\n        self.pi = pigpio.pi()\n        if not self.pi.connected:\n            raise RuntimeError(\"pigpiod 未啟動，請執行: sudo systemctl start pigpiod\")\n        \n        # 初始化切斷脈衝，馬達完全放鬆\n        self.pi.set_servo_pulsewidth(self.pin, 0)\n        self._last_pw = 0\n\n    def set_pw(self, pw: int):\n        with self._lock:\n            if pw == 0:\n                if self._last_pw != 0:\n                    self.pi.set_servo_pulsewidth(self.pin, 0)\n                    self._last_pw = 0\n                return\n            pw_clamped = max(1000, min(2000, pw))\n            if abs(pw_clamped - self._last_pw) >= 2:\n                self.pi.set_servo_pulsewidth(self.pin, pw_clamped)\n                self._last_pw = pw_clamped\n\n    def compute_target_pw(self, offset: float) -> int:\n        abs_off = abs(offset)\n        if self._is_motor_stopped:\n            if abs_off <= CENTER_TOLERANCE_EXIT:\n                return self.stop_pw\n            self._is_motor_stopped = False\n        else:\n            if abs_off <= CENTER_TOLERANCE_ENTER:\n                self._is_motor_stopped = True\n                return self.stop_pw\n\n        eff_offset = abs_off - CENTER_TOLERANCE_ENTER\n        ratio = min(1.0, eff_offset / (0.5 - CENTER_TOLERANCE_ENTER))\n        direction = TRACK_SIGN * (1 if offset > 0 else -1)\n        min_pw = MIN_MOVE_PW_CW if direction > 0 else MIN_MOVE_PW_CCW\n        add_pw = min_pw + ratio * (MAX_MOVE_PW - min_pw)\n        return int(self.stop_pw + direction * add_pw)\n\n    def cleanup(self):\n        self.set_pw(0)\n        self.pi.stop()\n\n# --- OneEuroFilter 低通濾波器 ---\nclass OneEuroFilter:\n    def __init__(self, freq=30.0, min_cutoff=0.8, beta=0.4, d_cutoff=1.0):\n        self.freq, self.min_cutoff, self.beta, self.d_cutoff = freq, min_cutoff, beta, d_cutoff\n        self._x_prev, self._dx_prev, self._t_prev = None, 0.0, None\n\n    def filter(self, x, t):\n        if self._t_prev is None:\n            self._x_prev, self._dx_prev, self._t_prev = x, 0.0, t\n            return x\n        dt = max(t - self._t_prev, 1e-3)\n        self._t_prev = t\n        dx = (x - self._x_prev) / dt\n        alpha_d = 1.0 - math.exp(-2 * math.pi * self.d_cutoff * dt)\n        self._dx_prev = alpha_d * dx + (1 - alpha_d) * self._dx_prev\n        cutoff = self.min_cutoff + self.beta * abs(self._dx_prev)\n        alpha = 1.0 - math.exp(-2 * math.pi * cutoff * dt)\n        self._x_prev = alpha * x + (1 - alpha) * self._x_prev\n        return self._x_prev\n\n    def reset(self):\n        self._x_prev, self._dx_prev, self._t_prev = None, 0.0, None\n\n# --- 手勢辨識 logic (單手 1~10/OK + 雙手 1~99) ---\ndef detect_single_hand_number(lm):\n    pts = [(p.x, p.y) for p in lm.landmark]\n    wrist = pts[0]\n    def dist(p1, p2): return math.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)\n    fingers = [False] * 5\n    fingers[0] = (dist(pts[4], pts[17]) > dist(pts[3], pts[17])*1.05) and (dist(pts[4], pts[5]) > dist(pts[3], pts[5])*1.05)\n    for i, (tip_i, pip_i) in enumerate([(8, 7), (12, 11), (16, 15), (20, 19)]):\n        fingers[i + 1] = dist(pts[tip_i], wrist) > dist(pts[pip_i], wrist) * 1.02\n    \n    if dist(pts[4], pts[8]) < dist(pts[0], pts[9]) * 0.5 and fingers[2] and fingers[3] and fingers[4]:\n        return 99, \"OK 手勢 (99)\"\n    g_map = {\n        (False, True, False, False, False): (1, \"數字 1\"),\n        (False, True, True, False, False): (2, \"數字 2\"),\n        (False, True, True, True, False): (3, \"數字 3\"),\n        (False, True, True, True, True): (4, \"數字 4\"),\n        (True, True, True, True, True): (5, \"數字 5\"),\n        (True, False, False, False, False): (6, \"數字 6\"),\n        (True, True, False, False, False): (7, \"數字 7\"),\n        (True, True, True, False, False): (8, \"數字 8\"),\n        (True, True, True, True, False): (9, \"數字 9\"),\n        (False, False, False, False, False): (10, \"數字 10 / 石頭\"),\n    }\n    return g_map.get(tuple(fingers), (0, f\"手勢 ({sum(fingers)}指)\"))\n\ndef combine_multi_hand_gestures(multi_hand_landmarks):\n    if not multi_hand_landmarks: return \"None\"\n    detected_hands = []\n    for lm in multi_hand_landmarks:\n        hx = sum(lm.landmark[i].x for i in PALM_INDEXES) / len(PALM_INDEXES)\n        num, label = detect_single_hand_number(lm)\n        detected_hands.append({\"x\": hx, \"num\": num, \"label\": label})\n    if any(h[\"num\"] == 99 for h in detected_hands): return \"OK 手勢 (99)\"\n    if len(detected_hands) == 1: return detected_hands[0][\"label\"]\n    \n    detected_hands.sort(key=lambda h: h[\"x\"])\n    tens = detected_hands[0][\"num\"] if detected_hands[0][\"num\"] <= 9 else 1\n    ones = detected_hands[1][\"num\"] if detected_hands[1][\"num\"] <= 9 else 0\n    return f\"雙手數字: {tens * 10 + ones} (左{detected_hands[0]['num']}/右{detected_hands[1]['num']})\"\n\n# --- 主視覺與馬達控制迴圈 ---\nservo = ServoModule()\nhand_x_filter = OneEuroFilter(freq=30, min_cutoff=0.8, beta=0.4)\nmp_hands = mp.solutions.hands\nhands = mp_hands.Hands(static_image_mode=False, max_num_hands=2, model_complexity=0, min_detection_confidence=0.5)\n\n_smooth_pw = float(STOP_PW)\n\ndef process_frame(frame, tracking_enabled=True):\n    global _smooth_pw\n    now = time.time()\n    frame = cv2.flip(frame, 1)\n    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)\n    results = hands.process(rgb)\n\n    target_pw = STOP_PW\n    gesture_result = \"None\"\n\n    if results.multi_hand_landmarks:\n        # 取第 0 隻手做中心對齊追蹤\n        lm0 = results.multi_hand_landmarks[0]\n        hand_x_raw = sum(lm0.landmark[i].x for i in PALM_INDEXES) / 5.0\n        hand_x = hand_x_filter.filter(hand_x_raw, now)\n        offset = hand_x - 0.5\n        \n        if tracking_enabled:\n            target_pw = servo.compute_target_pw(offset)\n\n        # 煞停後才進行完整雙手數字手勢辨識\n        if target_pw == STOP_PW:\n            gesture_result = combine_multi_hand_gestures(results.multi_hand_landmarks)\n        else:\n            gesture_result = \"鏡頭對齊移動中...\"\n    else:\n        hand_x_filter.reset()\n        target_pw = STOP_PW\n\n    # PWM 直出控制\n    if tracking_enabled:\n        if target_pw != STOP_PW:\n            _smooth_pw = 0.15 * float(target_pw) + 0.85 * _smooth_pw\n            servo.set_pw(int(round(_smooth_pw)))\n        else:\n            _smooth_pw = float(STOP_PW)\n            servo.set_pw(STOP_PW)\n    else:\n        _smooth_pw = float(STOP_PW)\n        servo.set_pw(0) # 未開啟追蹤時 0us 切斷訊號\n\n    return frame, gesture_result\n```\n```\n\n---\n\n## ⚡ 二、 硬體架構與防踩坑規範 (Pi4 Hardware Standards)\n\n1. **獨立 5V/3A 變壓器供電（必須與樹莓派共地 GND）**：\n   - 舵機馬達啟動瞬間峰值電流可達 2A。**嚴禁直接連接樹莓派 5V 引腳**供電，否則將導致樹莓派瞬間電壓下降重啟或燒毀板載電源 IC。\n   - 馬達電源 Gnd 必須與樹莓派 Gnd 相連（共地），否則 PWM 訊號無法形成參考迴路。\n2. **避開 GPIO 18 (PWM0) 與 3.5mm 音訊衝突**：\n   - 樹莓派 3.5mm 音訊孔也是使用 PWM0/PWM1 時脈。若專案中需要播放聲音，PWM 控制腳位必須切換至 **GPIO 12** 或 **GPIO 13**，防止硬體 DMA 時脈搶佔衝突。\n3. ** pigpio 服務啟動說明**：\n   - 執行本程式前，必須在樹莓派系統啟動 pigpio daemon：`sudo systemctl start pigpiod`。\n\n---\n\n## 🖐️ 三、 MediaPipe 21 個手部關鍵點與手勢辨識邏輯\n\n```text\n       [12] 中指尖          [16] 無名指尖\n        |                    |\n       [11]                 [15]          [20] 小指尖\n        |                    |             |\n  [8] 食指尖 [10]           [14]          [19]\n   |     |                   |             |\n  [7]   [9]                 [13]          [18]\n   |     |                   |             |\n  [6]───[5] (食指根)────────[17] (小指根)───[17]\n   |     │                    │\n  [4] 拇指尖                  │\n   │                          │\n  [3]                        [0] 手腕 (Wrist)\n```\n\n### 基礎手勢伸直/彎曲判斷函式 (`get_finger_states`)\n```python\ndef get_finger_states(landmarks, handedness=\"Right\"):\n    fingers = []\n    # 拇指 X 軸判定\n    if handedness == \"Right\":\n        fingers.append(landmarks[4].x < landmarks[3].x)\n    else:\n        fingers.append(landmarks[4].x > landmarks[3].x)\n    # 四指 Y 軸與 PIP 關節高度判定\n    for tip, pip in zip([8, 12, 16, 20], [6, 10, 14, 18]):\n        fingers.append(landmarks[tip].y < landmarks[pip].y)\n    return fingers  # [Thumb, Index, Middle, Ring, Pinky]\n```\n\n---\n\n## 🛠️ 四、 終極實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. Pi4 上 MediaPipe 辨識 FPS 極低 (< 10 FPS)** | 使用了預設的 `model_complexity=1` 或 `2` 重型模型。 | 設定 `model_complexity=0` (Lite 模型)，相機擷取解析度設為 320x240。 |\n| **2. 馬達持續劇烈抽搐與喀喀聲** | 使用了 `RPi.GPIO` 的軟體 PWM (受 CPU 負載排程影響產生 ±100μs 脈衝誤差)。 | 改用 `pigpio.pi().set_servo_pulsewidth()` 硬體 DMA 控制。 |\n| **3. 馬達順時針旋轉正常，逆時針卡死推不動** | 連續旋轉馬達內部齒輪組左右物理摩擦阻力不對稱。 | 設定 CW/CCW 獨立起步脈衝門檻：`MIN_MOVE_PW_CW = 40`, `MIN_MOVE_PW_CCW = 55`。 |\n| **4. 手停在鏡頭中央附近時，馬達急踩油門再急煞** | 死區 (Deadband) 只有單一硬性邊界 (如 ±15%)。 | 導入<b>雙門檻死區遲滯 (Hysteresis)</b>：進入死區 `ENTER = 0.14` / 離開死區 `EXIT = 0.18`。 |\n| **5. 未啟用追蹤時馬達發出高頻哼聲與發燙** | 1470μs 與馬達實體零點有 ±1~2μs 微小偏差，馬達持續施力維持位移。 | 未啟用追蹤或傳入 0 時，呼叫 `set_pw(0)` <b>徹底切斷 0μs PWM 脈衝訊號</b>讓馬達完全放鬆。 |\n| **6. LOG 顯示正常，但馬達每隔幾秒偶發微跳一下** | 背景 50Hz 馬達 Thread 與 OpenCV/Web API 爭奪 Python GIL 鎖與資源。 | 移除背景馬達 Thread，將 `set_pw()` 放在視覺 `process_frame()` <b>單執行緒尾端直出</b>。 |\n| **7. 雙手數字辨識時十位數與個位數顛倒** | 未對多手 Landmark 進行畫面實體 X 座標排序。 | 將識別出的手部按 `landmark X` 座標由小到大 (左至右) 排序，最左邊為十位數，右邊為個位數。 |\n","PI4_語音喚醒.md":"# 離線 KWS 喚醒詞 (「阿萬」) 與 ALSA 音訊驅動：AI 指令範本、黃金代碼與避坑指南\n\n本文件包含 Raspberry Pi 4 (Pi4) 上 **Sherpa-onnx Zipformer 離線喚醒詞引擎 (「阿萬」)、ALSA 聲卡軟體混音器 (dmix/dsnoop)、麥克風音量增益與迴音防自激機制** 的完整技術細節與黃金標準參考代碼 (Golden Reference Code)。可以直接複製給任何 AI (如 ChatGPT, Claude, Cursor, Antigravity 等) 作為 Prompt 範本。\n\n---\n\n## 一、 給 AI 下達的超級 Prompt 範本（帶黃金參考代碼，直接複製）\n\n> 使用方式：將以下框內的文字完全複製並貼給 AI 作為 Prompt。框內包含音訊獨佔與聲學迴音防踩坑規則與完整黃金範例代碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4) 離線語音喚醒 (KWS)、PyAudio 與 ALSA 音訊驅動的高級嵌入式工程師。\n\n請協助我開發一個「Pi4 離線 KWS 喚醒詞監聽與 ALSA 音訊防死鎖模組 (WakeWordModule)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考下方提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. ALSA 聲卡進程獨佔避坑 (Device or resource busy)\n- **必須配置 /etc/asound.conf 軟體混音器**：Linux ALSA 預設會被第一個開啟聲卡的進程獨佔。必須配置 dmix (喇叭輸出混音) 與 dsnoop (麥克風輸入混音)，允許多進程/線程同時共享麥克風與喇叭。\n\n### 2. 聲學迴音防自激機制 (防止「自言自語」自激迴圈)\n- **TTS 播報期間鎖定/掛起 KWS 監聽**：當系統播報 TTS 語音或播放 BGM 時，必須呼叫 pause_kws() 暫停喚醒詞監聽，待 TTS 播放完畢並延遲 300ms 後再呼叫 resume_kws()，徹底防止喇叭發出的「阿萬」觸發自我喚醒。\n\n### 3. USB 麥克風音量增益與診斷\n- **自動化音量增益**：使用 amixer 命令行自動將 USB 麥克風的 Capture 音量設定至 90%，並設置動態降噪門檻，確保遠距離語音喚醒率 > 95%。\n\n---\n\n### 黃金標準參考代碼框架 (Golden Reference Implementation)\n\n請嚴格參考並採用以下架構編寫核心 WakeWordModule 類別：\n\n```python\nimport os, time, threading\nfrom pathlib import Path\nfrom loguru import logger\n\nclass WakeWordModule:\n    def __init__(self, model_dir: str, keywords_file: str):\n        self.model_dir = Path(model_dir)\n        self.keywords_file = Path(keywords_file)\n        self._is_paused = False\n        self._is_running = False\n        self._lock = threading.Lock()\n\n    def pause_kws(self):\n        \"\"\"TTS 播報前掛起喚醒監聽，防止迴音觸發\"\"\"\n        with self._lock:\n            self._is_paused = True\n            logger.info(\"[KWS] ⏸️ 系統播報中，KWS 喚醒詞監聽已暫停\")\n\n    def resume_kws(self, delay_sec: float = 0.3):\n        \"\"\"TTS 播報結束後延遲恢復喚醒監聽\"\"\"\n        def _resume():\n            time.sleep(delay_sec)\n            with self._lock:\n                self._is_paused = False\n                logger.info(\"[KWS] ▶️ 播報結束，KWS 喚醒詞監聽已恢復\")\n        threading.Thread(target=_resume, daemon=True).start()\n\n    def set_mic_gain(self, card_index: int = 1, volume_percent: int = 90):\n        \"\"\"使用 amixer 設定 USB 麥克風音量增益\"\"\"\n        try:\n            os.system(f\"amixer -c {card_index} sset 'Mic' {volume_percent}% > /dev/null 2>&1\")\n            os.system(f\"amixer -c {card_index} sset 'Capture' {volume_percent}% > /dev/null 2>&1\")\n            logger.info(f\"[KWS] 🎤 麥克風 Capture 增益已自動設定至 {volume_percent}%\")\n        except Exception as e:\n            logger.warning(f\"[KWS] 設定麥克風增益失敗: {e}\")\n```\n```\n\n---\n\n## 二、 實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. 提示 Device or resource busy** | ALSA 聲卡被另一個語音進程獨佔。 | 配置 `/etc/asound.conf` 使用 `dmix` 與 `dsnoop` 軟體混音。 |\n| **2. 系統播報語音時自己喚醒自己** | 喇叭出來的 TTS 聲音被麥克風收走。 | TTS 播報前呼叫 `pause_kws()`，播報完延遲 300ms 呼叫 `resume_kws()`。 |\n| **3. 喚醒成功率極低，需對著喊** | USB 麥克風 ALSA Capture 預設音量僅 30%。 | 執行 `amixer` 自動設定麥克風 Capture 音量至 90%。 |\n\n---\n\n## 三、 未來開發防踩坑預警 (Future Avoidance Checklist)\n\n1. **⚠️ 配置 `/etc/asound.conf` 多進程混音模板**：\n   * *防範機制*：在樹莓派環境安裝腳本中加入以下混音配置，確保 PyAudio / Sherpa / aplay 不衝突：\n     ```text\n     pcm.!default { type asym playback.pcm \"dmixer\" capture.pcm \"dsnooper\" }\n     ```\n","PI4_雲端.md":"# 雲端 AI 語音 (Gemini 3.5) 與 TTS MD5 快取：AI 指令範本、黃金代碼與避坑指南\n\n本文件包含 Raspberry Pi 4 (Pi4) 上 **Gemini 3.5 Flash-Lite 極速 API 串接、TTS MD5 語音快取、SD 卡容量保護與斷網 Fallback 防護** 的完整技術細節與黃金標準參考代碼 (Golden Reference Code)。可以直接複製給任何 AI (如 ChatGPT, Claude, Cursor, Antigravity 等) 作為 Prompt 範本。\n\n---\n\n## 一、 給 AI 下達的超級 Prompt 範本（帶黃金參考代碼，直接複製）\n\n> 使用方式：將以下框內的文字完全複製並貼給 AI 作為 Prompt。框內包含記憶體防 OOM 與 API 快取防踩坑規則與完整黃金範例代碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4 1GB) 雲端 AI 串接、多模態大模型 API 與語音系統優化的高級工程師。\n\n請協助我開發一個「Pi4 高效能雲端 AI 語音對話與 TTS MD5 快取模組 (CloudAIClient)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考下方提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. 本地大模型禁忌與 Gemini 3.5 Flash-Lite 切換\n- **嚴禁在 Pi4 1GB 上執行本地 Ollama/Qwen7B 模型**：會直接觸發 Linux OOM Killer 導致系統崩潰。\n- **全線切換至 gemini-3.5-flash-lite 雲端 API**：記憶體佔用 < 20MB，回應時間縮短至 0.5 秒內。\n\n### 2. TTS MD5 語音快取機制 (0 秒延遲播報)\n- **文字 MD5 哈希快取**：在向雲端請求 TTS 語音前，先計算語音文字的 MD5 Hash 值。若快取目錄下已存在 `{hash}.mp3`，直接傳回本地路徑，達到 0 延遲零網路請求播報。\n\n### 3. SD 卡容量防護與自動清理\n- **設定快取上限 (例如 100MB)**：每次寫入新快取前，檢查快取資料夾總容量。若超過上限，自動依檔案最後修改時間 (mtime) 刪除最舊的快取音訊，防止 SD 卡爆滿。\n\n### 4. 斷網 Fallback 防護與非阻塞規範\n- **非阻塞背景 Thread 請求**：所有雲端 HTTP 請求必須設定 `timeout=5.0` 秒，並於獨立背景執行緒中執行，禁止阻塞主 UI 與相機視覺迴圈。\n- **例外降級防護**：網路瞬斷時自動捕獲例外，切換至預設提示音效，確保主程式連續運作。\n\n---\n\n### 黃金標準參考代碼框架 (Golden Reference Implementation)\n\n請嚴格參考並採用以下架構編寫核心 CloudAIClient 類別：\n\n```python\nimport os, hashlib, json, time, requests\nfrom pathlib import Path\nfrom loguru import logger\n\nclass CloudAIClient:\n    def __init__(self, cache_dir: str = \"/tmp/tts_cache\", max_cache_mb: int = 100):\n        self.cache_dir = Path(cache_dir)\n        self.cache_dir.mkdir(parents=True, exist_ok=True)\n        self.max_cache_bytes = max_cache_mb * 1024 * 1024\n        self.api_key = os.getenv(\"GOOGLE_API_KEY\", \"\")\n        self.model = \"gemini-3.5-flash-lite\"\n\n    def _cleanup_cache_if_needed(self):\n        \"\"\"自動清理過期快取，保護容量上限\"\"\"\n        try:\n            files = list(self.cache_dir.glob(\"*.mp3\"))\n            total_size = sum(f.stat().st_size for f in files)\n            if total_size > self.max_cache_bytes:\n                files.sort(key=lambda f: f.stat().st_mtime)\n                for f in files[:len(files)//2]:\n                    f.unlink(missing_ok=True)\n                logger.info(\"[CloudAI] 快取超越上限，已清理最舊之語音快取檔案\")\n        except Exception as e:\n            logger.warning(f\"[CloudAI] 快取清理失敗: {e}\")\n\n    def text_to_speech_cached(self, text: str) -> str:\n        \"\"\"帶 MD5 快取之 TTS 播報路徑獲取\"\"\"\n        text_hash = hashlib.md5(text.encode(\"utf-8\")).hexdigest()\n        cache_path = self.cache_dir / f\"{text_hash}.mp3\"\n\n        if cache_path.exists():\n            return str(cache_path) # 直接讀取快取\n\n        self._cleanup_cache_if_needed()\n        # 雲端 TTS 請求邏輯 (簡示)\n        try:\n            url = f\"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}\"\n            # ... 發起請求並寫入 cache_path ...\n            return str(cache_path)\n        except Exception as e:\n            logger.error(f\"[CloudAI] TTS 請求失敗: {e}\")\n            return \"\"\n```\n```\n\n---\n\n## 二、 實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. Pi4 突然卡死，SSH 斷開** | 本地執行大模型導致記憶體 OOM 崩潰。 | 移除本地大模型，切換至 `gemini-3.5-flash-lite` 雲端 API。 |\n| **2. TTS 語音播報有 1.5 秒延遲** | 每次固定語音都重新請求 API。 | 開啟 `text_to_speech_cached()` MD5 語音快取。 |\n| **3. 樹莓派跳出 No space left** | TTS 音訊快取無限寫入爆滿。 | 限制快取 100MB 並自動清理最舊音訊，或掛載至 `/tmp`。 |\n| **4. 網路斷線時視覺串流卡死** | API 請求在主迴圈中同步等待超時。 | 設定 `timeout=5.0`，並放入背景 Thread / Asyncio 執行。 |\n\n---\n\n## 三、 未來開發防踩坑預警 (Future Avoidance Checklist)\n\n1. **⚠️ 快取目錄掛載至 `/tmp` (tmpfs 記憶體磁碟)**：\n   * *防範機制*：將快取資料夾設為 `/tmp/tts_cache`，利用樹莓派 RAM 模擬磁碟，**避免頻繁寫入實體 SD 卡縮短卡片壽命**。\n2. **⚠️ 嚴禁將 API Key 硬編碼提交至 Git**：\n   * *防範機制*：所有 Key 統一由外部 `.env` 讀取，並確保 `.env` 已列入 `.gitignore`。\n","PI4_NFC.md":"# NFC 身份感應與 ST7789 中文繪製螢幕：AI 指令範本、黃金代碼與避坑指南\n\n本文件包含 Raspberry Pi 4 (Pi4) 上 **PN532 NFC 晶片感應非阻塞讀取、I2C 超時保護、ST7789 邊緣螢幕 PIL (Pillow) 動態 TrueType 中文字型渲染** 的完整技術細節與黃金標準參考代碼 (Golden Reference Code)。可以直接複製給任何 AI (如 ChatGPT, Claude, Cursor, Antigravity 等) 作為 Prompt 範本。\n\n---\n\n## 一、 給 AI 下達的超級 Prompt 範本（帶黃金參考代碼，直接複製）\n\n> 使用方式：將以下框內的文字完全複製並貼給 AI 作為 Prompt。框內包含 I2C 鎖死與 SPI 中文字型繪製防踩坑規則與完整黃金範例代碼。\n\n```markdown\n你是一位專精於 Raspberry Pi (Pi4) 邊緣硬體介面 (I2C/SPI)、PN532 NFC 感應與 LCD 螢幕顯示驅動的高級嵌入式工程師。\n\n請協助我開發一個「Pi4 PN532 NFC 讀卡與 ST7789 中文繪製顯示模組 (NFCDisplayModule)」。在撰寫程式碼時，你必須嚴格遵守以下防踩坑規範，並參考下方提供的【黃金標準參考代碼框架】進行實作：\n\n### 1. PN532 I2C 匯流排非阻塞讀取與超時保護\n- **嚴禁使用無限阻塞讀取 (read_passive_target)**：當玩家卡片長置於感應區時，PN532 會鎖死 I2C 匯流排，導致主程式卡死崩潰。\n- **必須設定 timeout=0.1 秒超時保護**：每次讀取若未在 100ms 內響應，自動拋出或回傳 None，釋放 I2C 控制權。\n\n### 2. ST7789 小螢幕 PIL 中文繪製驅動\n- **禁止直接向 LCD 驅動發送原始 ASCII 中文字串**：邊緣 LCD 原生驅動缺字，會顯示為方塊 □□□ 或問號。\n- **使用 PIL (Pillow) 動態 TrueType 圖片繪製**：引入 `.ttf` 中文字型檔，先在記憶體中繪製 240x240 RGB 圖片，再將 Complete Image 陣列傳送給 ST7789 驅動繪製，徹底解決中文字型缺字問題。\n\n---\n\n### 黃金標準參考代碼框架 (Golden Reference Implementation)\n\n請嚴格參考並採用以下架構編寫核心 DisplayModule 類別：\n\n```python\nimport os\nfrom PIL import Image, ImageDraw, ImageFont\nfrom loguru import logger\n\nclass DisplayModule:\n    def __init__(self, font_path: str = \"NotoSansTC-Regular.ttf\", width: int = 240, height: int = 240):\n        self.width = width\n        self.height = height\n        self.font_path = font_path\n\n        # 載入 TrueType 中文字型\n        try:\n            self.font_title = ImageFont.truetype(font_path, 20)\n            self.font_text  = ImageFont.truetype(font_path, 16)\n        except Exception:\n            self.font_title = ImageFont.load_default()\n            self.font_text  = ImageFont.load_default()\n            logger.warning(\"[Display] 未找到中文字型檔，退回預設字型\")\n\n    def render_player_ui(self, player_name: str, status_text: str) -> Image.Image:\n        \"\"\"在記憶體中繪製包含中文字型之 RGBA Bitmap\"\"\"\n        img = Image.new(\"RGB\", (self.width, self.height), color=(15, 23, 42)) # 暗藍色背景\n        draw = ImageDraw.Draw(img)\n\n        # 繪製 UI 框架與中文\n        draw.rectangle([10, 10, self.width - 10, 50], outline=(59, 130, 246), width=2)\n        draw.text((20, 20), f\"玩家: {player_name}\", font=self.font_title, fill=(255, 255, 255))\n        draw.text((20, 70), f\"狀態: {status_text}\", font=self.font_text, fill=(6, 182, 212))\n\n        return img # 直接傳送給 st7789.display(img)\n```\n```\n\n---\n\n## 二、 實戰故障排除手冊 (Troubleshooting Guide)\n\n| 故障現象 | 根本原因 | 快速排查與標準修復方式 |\n|---|---|---|\n| **1. NFC 讀卡時主程式突然卡死** | PN532 底層 I2C 進行無限超時等待。 | 呼叫 `read_passive_target(timeout=0.1)` 設定非阻塞。 |\n| **2. 螢幕顯示中文字顯示為 □□□** | 液晶螢幕原生驅動缺少中文字庫。 | 使用 PIL `ImageDraw` 搭配中文字型檔案 (.ttf) 先繪圖再輸出。 |\n| **3. 螢幕畫面出現雜訊斜線或閃爍** | SPI 傳輸頻率設定過高 (超出杜邦線承載)。 | 將 SPI 頻率限制在 `24MHz` 以內。 |\n\n---\n\n## 三、 未來開發防踩坑預警 (Future Avoidance Checklist)\n\n1. **⚠️ SPI 頻率穩定控制 (24MHz)**：\n   * *防範機制*：樹莓派外接杜邦線訊號易受干擾，SPI 頻率設定超過 32MHz 易產生畫面線條雜訊，設定為 `24MHz` 能確保 100% 穩定輸出。\n","STT_呼叫.md":"# 樹莓派語音互動系統 (KWS / STT / LLM / TTS) 開發歷程與技術總結\n\n本文件記錄了在 **Raspberry Pi 4 (1GB RAM)** 邊緣硬體環境下，建構「阿萬語音助理」從**離線喚醒 (KWS)**、**動態語音辨識 (STT)**、**大語言模型思考 (LLM)** 到 **語音合成 (TTS)** 過程中遇到的核心困境與最終解決方案。\n\n---\n\n## 📌 一、 核心架構目標\n\n1. **邊緣低延遲喚醒**：在樹莓派 1GB RAM 資源受限環境下，使用極輕量離線引擎常駐監聽關鍵字「嘿 阿萬」。\n2. **動態智慧收音 (VAD)**：告別固定秒數錄音，實現開口自動錄、說完自動停（靜音超時截止）。\n3. **雲端高精準度辨識與對話**：對接 Google Gemini 3.0+ Flash 系列模型，完成多模態語音轉文字與語音助理角色扮演。\n4. **高容錯降級保護**：避免網路或音訊裝置異常時產生無窮報錯或誤觸動硬體（如相機/舵機）。\n\n---\n\n## 🚨 二、 開發過程中遇到的 5 大核心困境\n\n### 1. 本地離線模型缺失與雲端虛擬端點斷線\n* **現象**：\n  * 原程式碼嘗試呼叫預設虛擬端點 `http://your-cloud-ai-server.com/api/v1/stt/transcribe`，拋出 `[Errno -2] Name or service not known`。\n  * 降級嘗試本地離線 `sherpa-onnx` Paraformer STT 時，發現樹莓派端僅安裝了 KWS 模型，**缺少 STT 模型檔案**（`model.int8.onnx`、`silero_vad.onnx`），導致辨識報錯。\n  * STT 失敗時，系統誤將 `（雲端 STT 連線中斷）` 當成使用者自訂指令，引發瘋狂播放音效並誤開啟相機辨識。\n\n### 2. ALSA 硬體獨占衝突 (`Device or resource busy`)\n* **現象**：\n  * Linux ALSA 的 `plughw:1,0` 為硬體獨佔模式。\n  * 喚醒成功後啟動前台錄音，背景的 KWS 進程若未即時徹底釋放裝置，或錄音結束後 KWS 搶著重啟，會導致聲卡被鎖死，拋出 `Unable to open: plughw:1,0. Device or resource busy` 並產生 Exit Code 255 的無窮死循環。\n\n### 3. 固定秒數錄音導致體驗不佳與語音截斷\n* **現象**：\n  * 早期採用 `arecord -d 3.5` 固定錄製 3.5 秒。使用者講話短時需被迫等待；講話稍長或思考停頓時語音後半段直接被截斷。\n  * 喚醒問候音長達 2.5 秒，造成喚醒與開口說話之間的時間差嚴重脫節。\n\n### 4. 背景 Thread 與 Asyncio Event Loop 衝突\n* **現象**：\n  * KWS 離線喚醒是在獨立背景執行緒中運行，當觸發 `on_wake_callback` 時直接呼叫 `asyncio.run()`，導致與 FastAPI/Uvicorn 主執行緒的 Event Loop 發生衝突，丟出 `asyncio is not defined` 或參數不匹配等異常。\n\n### 5. Gemini API 版本演進與 403 / 404 報錯\n* **現象**：\n  * 舊版模型名稱（如 1.5 系列）在部分新端點中引發 `404 Not Found`。\n  * 舊的預設金鑰配額被封鎖，拋出 `403 Forbidden: Your project has been denied access`。\n\n---\n\n## 💡 三、 最終架構與技術解決方案\n\n| 核心維度 | 解決方案與實作細節 | 關鍵檔案 |\n| :--- | :--- | :--- |\n| **STT 架構選型** | **放棄本地笨重模型，改採 Gemini 多模態 Base64 直傳**<br>直接將錄音音訊轉換為 Base64 透過 REST API 送給 Gemini 3.0+ 模型辨識，大幅節省 Pi4 記憶體開銷與維護成本。 | [`modules/cloud_ai_client.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/cloud_ai_client.py) |\n| **ALSA 衝突修復** | **1. 強制釋放與冷卻等待（0.3s）**：確保切換前裝置控制權完全釋放。<br>**2. 裝置自動備援**：支援自動輪詢 `default` 與 `dsnoop:1,0`（共享混音模式），避免死鎖。 | [`modules/wake_word_module.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/wake_word_module.py) |\n| **動態 VAD 收音** | **實作動態能量感測錄音（`record_with_vad`）**：<br>• 使用 `pyaudio` + `audioop.rms` 即時監測說話能量（閾值 350）。<br>• 偵測到說話開始寫入，靜音超過 1.5 秒自動截止（上限 12 秒）。<br>• 換用極短提示音 `Call.mp3`（0.3s），隨點隨錄。 | [`modules/audio_module.py`](file:///d:/Desktop/Company%20Project/pi4_1g/modules/audio_module.py)<br>[`main.py`](file:///d:/Desktop/Company%20Project/pi4_1g/main.py) |\n| **執行緒與事件安全** | **專屬 Event Loop 隔離**：<br>在喚醒回調中透過 `asyncio.new_event_loop()` 建立獨立 loop 執行非同步對話流程，徹底解決與 Uvicorn 的事件衝突。 | [`main.py`](file:///d:/Desktop/Company%20Project/pi4_1g/main.py) |\n| **金鑰與模型管理** | **1. 支援最新 Gemini 3.0+ 模型清單**（`gemini-3.7-flash`, `gemini-3.5-flash-lite`）。<br>**2. 建立 `.env` 檔案管理**，透過 `python-dotenv` 模組安全載入獨立金鑰。 | [`.env`](file:///d:/Desktop/Company%20Project/pi4_1g/.env)<br>[`.gitignore`](file:///d:/Desktop/Company%20Project/pi4_1g/.gitignore) |\n\n---\n\n## 🔄 四、 最終穩定運作流程圖\n\n```mermaid\nflowchart TD\n    A[使用者口述: 嘿 阿萬] --> B[本地離線 KWS 喚醒]\n    B --> C[暫停 KWS 並釋放 ALSA 聲卡 0.3s]\n    C --> D[播放短促提示音 Call.mp3]\n    D --> E[VAD 動態能量錄音]\n    E -- 說完靜音 1.5s / 最長 12s -- --> F[音訊 Base64 編碼]\n    F --> G[Gemini 3.0+ 語音轉文字 STT]\n    G --> H[Gemini 3.0+ 阿萬大腦思考 LLM]\n    H --> I[TTS 雲端語音合成與本地快取]\n    I --> J[喇叭播放阿萬語音回答]\n    J --> K[無縫恢復常駐 KWS 離線監聽]\n```\n\n---\n\n## 🛠️ 五、 維護與部署指令指引\n\n### 1. 核心檔案同步至樹莓派\n```powershell\nscp \"main.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/\nscp \"modules/audio_module.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \"modules/cloud_ai_client.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \"modules/wake_word_module.py\" rf@<Pi_IP>:~/RF_project/pi4_1g/modules/\nscp \".env\" rf@<Pi_IP>:~/RF_project/pi4_1g/\n```\n\n### 2. 樹莓派端依賴安裝與啟動\n```bash\n# 確保系統庫與 Python 套件完整\nsudo apt-get update && sudo apt-get install -y portaudio19-dev\ncd ~/RF_project/pi4_1g\n./venv/bin/pip install pyaudio python-dotenv\n\n# 啟動邊緣控制系統服務\n./venv/bin/python main.py\n```\n","相機棋盤格標定教學流程.md":"# 相機鏡頭去畸變標定教學流程\n\n適用於：手部追蹤鏡頭在真實環境使用前的一次性標定（解決廣角/魚眼鏡頭邊緣壓縮變形問題）。\n\n---\n\n## 前置準備\n\n1. **下載棋盤格圖案**：從 OpenCV 官方文件下載標準棋盤格（黑白格）圖案，例如 9×6 內角點的版本。\n2. **列印並固定**：用 A4 紙印出來，貼在硬紙板或木板上,確保完全平整、格線是直線，不能有翹曲或摺痕。\n3. **記錄內角點數**：注意是「內角點」數量，不是格子數（例如 10×7 格的棋盤格，內角點是 9×6）。之後程式要對應輸入這個數字。\n\n---\n\n## 拍攝規則\n\n| 項目 | 要求 |\n|---|---|\n| 拍攝環境 | 任意平坦、光線充足的地方即可，不用是正式部署的桌遊桌 |\n| 使用鏡頭 | 必須用實際要部署的那顆攝影機，換鏡頭要重新標定 |\n| 解析度設定 | 跟正式程式的 `frame_width` / `frame_height` 完全一致 |\n| 拍攝張數 | 15~25 張 |\n| 位置分佈 | 棋盤格要出現在畫面**各個角落**（左上、右上、左下、右下、中央都要有），只拍中央沒用 |\n| 角度變化 | 正拍、左右傾斜、上下傾斜、拉近拉遠都要各拍幾張，不能每張角度都一樣 |\n| 對焦 | 確保每張棋盤格都清晰對焦，模糊的照片會讓標定結果失準 |\n\n拍攝方式兩種都可以：棋盤格固定不動、拿鏡頭移動拍；或鏡頭固定、拿棋盤格移動拍。效果相同。\n\n---\n\n## 執行標定程式\n\n```python\nimport cv2\nimport numpy as np\nimport glob\n\n# ── 設定：填你的棋盤格內角點數 ─────────────────────\nCHECKERBOARD = (9, 6)  # (列, 欄) 內角點數，依實際棋盤格調整\nSQUARE_SIZE = 2.5       # 每格實際邊長（公分），影響外參尺度，不影響去畸變本身\n\n# 準備世界座標系的角點座標 (z=0 平面)\nobjp = np.zeros((CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)\nobjp[:, :2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)\nobjp *= SQUARE_SIZE\n\nobjpoints = []  # 世界座標點\nimgpoints = []  # 對應的影像座標點\n\nimages = glob.glob(\"calib_images/*.jpg\")  # 拍好的照片放這個資料夾\n\nfor fname in images:\n    img = cv2.imread(fname)\n    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)\n    ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, None)\n\n    if ret:\n        objpoints.append(objp)\n        corners_refined = cv2.cornerSubPix(\n            gray, corners, (11, 11), (-1, -1),\n            criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)\n        )\n        imgpoints.append(corners_refined)\n        print(f\"[OK] {fname} 偵測到棋盤格\")\n    else:\n        print(f\"[跳過] {fname} 未偵測到棋盤格，檢查是否模糊或角度太斜\")\n\n# 執行標定\nret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.calibrateCamera(\n    objpoints, imgpoints, gray.shape[::-1], None, None\n)\n\nprint(\"標定完成，重投影誤差（越接近 0 越好）:\", ret)\nprint(\"Camera Matrix:\\n\", camera_matrix)\nprint(\"Distortion Coefficients:\\n\", dist_coeffs)\n\n# 存檔，正式運行時直接載入，不用每次重新標定\nnp.savez(\"camera_calib.npz\", camera_matrix=camera_matrix, dist_coeffs=dist_coeffs)\n```\n\n**檢查標定品質**：`ret` 是重投影誤差（reprojection error），數值越接近 0 代表標定越準，一般建議在 0.5 以內算合格。如果誤差偏高，通常是某幾張照片模糊或棋盤格沒對齊，可以刪掉誤差大的那幾張重跑。\n\n---\n\n## 正式運行時套用\n\n```python\nimport numpy as np\nimport cv2\n\ncalib = np.load(\"camera_calib.npz\")\ncamera_matrix = calib[\"camera_matrix\"]\ndist_coeffs = calib[\"dist_coeffs\"]\n\n# 每一幀做去畸變（在原本 process_frame 最前面加這行）\ndef undistort_frame(frame):\n    return cv2.undistort(frame, camera_matrix, dist_coeffs, None, camera_matrix)\n```\n\n放在 `process_frame()` 一開始、`cv2.flip()` 之前執行，之後所有的手部偵測、offset 計算都會基於已經校正過的畫面，不再受廣角邊緣壓縮影響。\n\n---\n\n## 什麼時候需要重新標定\n\n- 換了不同的攝影機/鏡頭\n- 改變了程式裡設定的解析度（`frame_width`/`frame_height`）\n- 手動調整過鏡頭的變焦/對焦環（如果鏡頭可調焦距）\n\n只要上述三項都沒變，這組 `camera_calib.npz` 可以一直沿用，不用每次開機重跑。\n\n---\n\n## 與後續步驟的關係\n\n此教學只處理**鏡頭本身的光學畸變**。下一步的「桌面透視校正（homography 攤平）」是另一個獨立階段，需要在正式安裝好的環境量測桌子四個角的像素座標，跟這次的鏡頭標定不是同一件事，也不需要同時做。建議順序：先完成這份鏡頭標定 → 確認去畸變效果 → 再進行桌面透視校正。\n","戰略手冊撰寫規格標準書.md":"# 戰略手冊撰寫規範標準書 (Strategic Document Standard Specification, SDSS v1.0)\n\n本規範書為未來所有「公司戰略手冊」、「專案商業計劃」、「產品發展路徑」之最高準則。所有後續產出文件必須嚴格依循本規格之架構、資料深度與驗證邏輯。\n\n---\n\n## 壹、核心撰寫原則 (Core Principles)\n\n1. **結論先行 (BLUF - Bottom Line Up Front)**：\n   每個章節的第一段必須在 3 句話內給出核心結論、決策方向或量化數據，禁止鋪墊冗長背景。\n2. **數據背書與口徑拆解 (Data-Backed & Scoped)**：\n   禁止使用「市場潛力巨大」、「成本極低」等模糊語句。所有市場規模、財務預估必須明確標記「數據來源」、「統計口徑」與「悲觀/基準/樂觀」區間。\n3. **主動防禦反對論點 (Devil's Advocate Integration)**：\n   文檔必須主動包含「專家質疑」、「競品威脅」與「替代方案（如手機/開源替代）」，並給出硬性邏輯反駁，不迴避致命弱點。\n4. **財務與單位經濟閉環 (Unit Economics Viability)**：\n   任何產品策略必須拆解至單點（單店/單機/單用戶）的 LTV、CAC、BOM 成本、月運維成本與回收期（Payback Period）。\n5. **模組化與可執行性 (Actionable Phasing)**：\n   戰略必須拆解為具體時限（如 30/60/90 天里程碑）、交付物（Deliverables）與負責角色，且具備明確的「終止/轉向停損指標（Kill Switch）」。\n\n---\n\n## 貳、標準架構與模組規範 (Standard Module Schema)\n\n所有戰略文檔一律由以下 **8 大核心模組** 組成，順序不得任意調換：\n\n```\n[Module 01] 執行摘要與核心定位 (Executive Summary & Positioning)\n    ├── 1.1 一句話定位 (One-Sentence Value Proposition)\n    ├── 1.2 核心矛盾與戰略破局點 (Core Conflict & Breakthrough)\n    └── 1.3 核心決策結論表 (Key Decisions Summary Table)\n\n[Module 02] 產品與技術能力矩陣 (Product & Tech Matrix)\n    ├── 2.1 現有能力清單 (Current Assets & Tech Stack)\n    ├── 2.2 核心壁壘與非對稱優勢 (Moats & Asymmetric Advantage)\n    └── 2.3 技術邊界與不做清單 (Technical Boundaries & \"What We DON'T Do\")\n\n[Module 03] 市場實態與真實 TAM/SAM/SOM (Market Reality)\n    ├── 3.1 目標場域真實痛點 (Field Pains: 營運/人力/成本)\n    ├── 3.2 市場規模多口徑對比 (Market Sizing: 悲觀/中立/樂觀)\n    └── 3.3 POC 場域 vs 終極市場 (Beachhead vs End Game)\n\n[Module 04] 致命質疑與防禦論證 (Critical Counter-Arguments)\n    ├── 4.1 「市場過小/小眾」質疑之拆解與破局\n    ├── 4.2 「通用替代品 (如手機/平板/軟體)」之差異化壁壘\n    └── 4.3 商業轉換摩擦力 (採購意願、安裝門檻、維護負擔)\n\n[Module 05] 商業模式與單位經濟模型 (Unit Economics & Monetization)\n    ├── 5.1 營收來源組合 (Hardware / Subscriptions / Services / Data)\n    ├── 5.2 單點成本拆解 (BOM + Logistics + On-site Support + Cloud API)\n    ├── 5.3 客戶投資回報 (Customer ROI & Payback Calculation)\n    └── 5.4 定價策略與階梯方案 (Tiered Pricing Strategy)\n\n[Module 06] 階段執行藍圖 (Phased Execution Roadmap)\n    ├── 6.1 Phase 1 (0-90天)：POC 驗證與關鍵指標\n    ├── 6.2 Phase 2 (90-180天)：產品標準化與種子客戶擴張\n    └── 6.3 Phase 3 (180-360天)：規模化、異業合作或技術授權\n\n[Module 07] 風險矩陣與應變預案 (Risk Management & Kill Triggers)\n    ├── 7.1 風險等級評估表 (機率 x 衝擊程度 x 緩解方案)\n    └── 7.2 停損/轉向指標 (Project Pivot / Kill Criteria)\n\n[Module 08] 決策清單與即刻行動項 (Immediate Action Items)\n    ├── 8.1 關鍵決策核決 (Go/No-Go Checkpoints)\n    └── 8.2 責任人分工與 14 天衝刺清單 (Sprint Backlog)\n```\n\n---\n\n## 參、各模組詳細填寫規格與驗證規則 (Field Rules)\n\n### Module 01: 執行摘要 (Executive Summary)\n* **必備元素**：\n  * **一句話價值主張**：`為 [目標客群] 解決 [核心痛點]，透過 [關鍵技術/方法]，達成 [量化商業價值]`。\n  * **戰略定位演進**：清楚標明「當前破局點（Beachhead）」與「遠期延伸市場（Expand Market）」。\n* **驗證規則**：若未能在單一表格內呈現全案核心結論，退回重寫。\n\n### Module 02: 產品與技術能力矩陣 (Product & Tech Matrix)\n* **必備元素**：\n  * 技術狀態標籤：明確標註各功能為 `[已實裝] / [開發中] / [評估中] / [明確不做]`。\n  * **「明確不做清單（Not-to-do List）」**：防止專案範圍蔓延（Scope Creep）。例如：「不做自由對話聊天機器人」、「不使用需要繁瑣認證之射頻模組」。\n* **驗證規則**：嚴禁僅列出技術名詞（如 AI, LLM），必須說明在特定場景下之輸入、處理與輸出成果。\n\n### Module 03: 市場實態 (Market Reality)\n* **必備元素**：\n  * 將痛點拆分為「經濟層面（租金/人事）」、「運營層面（排班/尖離峰）」與「體驗層面（教學/上手）」。\n  * 數據表格必須採用多維度對照，明列統計來源與口徑限制。\n* **驗證規則**：嚴禁將總體大市場（如全球桌遊百億市場）直接當作公司第一年可獲得市場。必須以實體店鋪數/設備台數做底層由下而上（Bottom-Up）推估。\n\n### Module 04: 致命質疑與防禦論證 (Critical Counter-Arguments)\n* **必備元素**：\n  * **手機/既有方案對決表**：必須逐項列出「使用手機的代價」vs「使用專用硬體/一體機的價值」。\n  * **小眾市場破局邏輯**：說明為何小眾場域能作為最快產生現金流與技術數據沉澱的 POC 沙盒。\n* **驗證規則**：若未列出至少 2 個最嚴厲的外部質疑（如投資人、導師、競爭者視角），視為無效文檔。\n\n### Module 05: 商業模式與單位經濟 (Unit Economics)\n* **必備元素**：\n  * **單店/單台硬體損益模型**：\n    $$\\text{淨回本週期 (月)} = \\frac{\\text{單機硬體成本 (BOM) + 獲客成本 (CAC)}}{\\text{每月訂閱收入} - \\text{每月雲端與運維成本}}$$\n  * 必須包含客戶端 ROI 計算（例如：為店家每月節省多少工時/增加多少翻桌率）。\n* **驗證規則**：所有金額必須具備明確幣別（如 TWD / USD），毛利率低於 40% 或回本期超過 18 個月需額外提出風險補償策略。\n\n### Module 06 & 07: 執行藍圖與風險矩陣 (Roadmap & Risk)\n* **必備元素**：\n  * POC 驗證必須給出「可量化指標」（例如：單週穩定開機時數 > 20 小時、故障率 < 2%）。\n  * 停損指標（Kill Switch）：例如「若 90 天內無法取得 3 家付費意向書，即終止硬體生產並轉向軟體授權」。\n* **驗證規則**：沒有停損觸發條件的路線圖視為無效路線圖。\n\n---\n\n## 肆、格式規範與排版標準 (Formatting & Presentation Standard)\n\n1. **視覺層次與標籤化**：\n   * 採用階層式標題（H1 篇章 -> H2 模組 -> H3 核心議題 -> H4 實施細則）。\n   * 善用高亮標籤：`[現狀]`、`[決策]`、`[警告]`、`[量化指標]`。\n2. **比較表格化**：\n   * 凡涉及方案評估、競品分析、財務預測，一律使用 Markdown 或 HTML 表格呈現，禁止大段純文字描述。\n3. **程式碼與交付格式**：\n   * 文檔主檔：標準 Markdown (`.md`)。\n   * 呈現與匯報版：自適應、自包含單一 HTML 檔案（含夜間/日間模式、列印 CSS 優化、目錄側邊欄跳轉）。\n\n---\n\n## 伍、戰略手冊優化檢核清單 (Strategy Audit Checklist)\n\n在文檔定稿發布前，必須通過以下 6 項審查：\n\n- [ ] **1. 去除廢話**：是否刪除「顯而易見」、「眾所周知」、「具有重大意義」等無資訊增益之修飾詞？\n- [ ] **2. 責任明確**：每個執行項目是否均指定了交付物與時程？\n- [ ] **3. 數字校驗**：財務模型與市場規模數字是否前後一致、可被反推？\n- [ ] **4. 防禦充分**：是否正面回答了「為什麼不能用手機做」與「市場小怎麼辦」？\n- [ ] **5. 邊界清晰**：是否明確定義了「現階段堅決不做什麼」？\n- [ ] **6. 停損健全**：是否設定了客觀的專案終止/轉向機制？\n"};
+        let currentActiveMd = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('sectionSearch');
+            const filterChips = document.querySelectorAll('.filter-chip');
+            const sections = document.querySelectorAll('.content-section');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    sections.forEach(sec => {
+                        const text = sec.innerText.toLowerCase();
+                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        if (text.includes(query) || query === '') {
+                            sec.style.display = 'block';
+                            if (navMatch) navMatch.parentElement.style.display = 'block';
+                        } else {
+                            sec.style.display = 'none';
+                            if (navMatch) navMatch.parentElement.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            filterChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    filterChips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    const filter = chip.getAttribute('data-filter');
+
+                    sections.forEach(sec => {
+                        const cat = sec.getAttribute('data-cat');
+                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        if (filter === 'all' || cat === filter) {
+                            sec.style.display = 'block';
+                            if (navMatch) navMatch.parentElement.style.display = 'block';
+                        } else {
+                            sec.style.display = 'none';
+                            if (navMatch) navMatch.parentElement.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        document.querySelectorAll('.nav-item a').forEach(a => {
+                            a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: '-15% 0px -70% 0px' });
+
+            sections.forEach(sec => observer.observe(sec));
+        });
+
+        function downloadMd(fileName) {
+            const text = MD_CONTENTS[fileName];
+            if (!text) {
+                alert('找不到此檔案內容：' + fileName);
+                return;
+            }
+            const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 200);
+        }
+
+        function previewMd(fileName) {
+            const modal = document.getElementById('mdModal');
+            const title = document.getElementById('modalFileName');
+            const content = document.getElementById('modalContent');
+
+            title.innerText = fileName;
+            currentActiveMd = fileName;
+            modal.classList.add('active');
+
+            const text = MD_CONTENTS[fileName];
+            if (text) {
+                content.innerText = text;
+            } else {
+                content.innerText = '無法載入此 Markdown 內容。';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('mdModal').classList.remove('active');
+        }
+
+        function copyModalContent() {
+            const content = document.getElementById('modalContent').innerText;
+            navigator.clipboard.writeText(content).then(() => alert('已成功複製 Markdown 內容至剪貼簿！'));
+        }
+
+        function downloadCurrentModalMd() {
+            if (currentActiveMd) {
+                downloadMd(currentActiveMd);
+            }
+        }
+
+        function downloadAllZip() {
+            if (typeof JSZip === 'undefined') {
+                Object.keys(MD_CONTENTS).forEach(name => downloadMd(name));
+                return;
+            }
+
+            const zip = new JSZip();
+            const folder = zip.folder('RF_Pi4_MD技術資源庫');
+            Object.entries(MD_CONTENTS).forEach(([name, content]) => {
+                folder.file(name, content);
+            });
+
+            zip.generateAsync({ type: 'blob' }).then(content => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = 'RF_Pi4_MD技術資源庫_全套打包.zip';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(a.href);
+                }, 200);
+            }).catch(err => {
+                console.error('打包錯誤:', err);
+                Object.keys(MD_CONTENTS).forEach(name => downloadMd(name));
+            });
+        }
+    </script>
+</body>
+</html>
