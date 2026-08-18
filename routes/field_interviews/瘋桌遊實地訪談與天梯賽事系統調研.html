@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瘋桌遊實地訪談紀錄與 AI 桌遊助手產品分析總結｜天梯賽事營運調研</title>
+    <meta name="description" content="瘋桌遊店長深度訪談分析：市場現況、痛點診斷、AI桌遊助手一體機規格、平價/高階版本商模對照、派對遊戲天梯化賽事系統與業界推廣管道。">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Mono / Lieflat 東方水墨與宣紙質感設計系統 Tokens */
+            --paper:          #ECEAE3;  /* 基準宣紙灰 */
+            --paper-2:        #F4F3EE;  /* 明亮紙白 */
+            --paper-3:        #E2E0D8;  /* 沉積紙灰 */
+            
+            --ink:            #16161A;  /* 極暗濃墨 */
+            --ink-soft:       #26262A;  /* 松煙淡墨 */
+            --ink-fade:       rgba(22, 22, 26, 0.06);
+            --ink-border:     rgba(22, 22, 26, 0.12);
+            --ink-border-md:  rgba(22, 22, 26, 0.22);
+            
+            --gray-1:         #45454A;
+            --gray-2:         #6B6B6E;
+            --gray-3:         #94938E;
+            --gray-4:         #BCB9AF;
+            --gray-5:         #D6D3C8;
+            --line:           #CFCCC2;
+            
+            /* 東方典雅輔助色 (Traditional Mineral Accents) */
+            --teal:           #0F8B8D;  /* 銅綠/石青 */
+            --teal-bg:        rgba(15, 139, 141, 0.08);
+            --teal-bd:        rgba(15, 139, 141, 0.3);
+            
+            --vermilion:      #C34A36;  /* 硃砂紅 */
+            --vermilion-bg:   rgba(195, 74, 54, 0.08);
+            --vermilion-bd:   rgba(195, 74, 54, 0.3);
+            
+            --amber:          #D97706;  /* 金石拓黃 */
+            --amber-bg:       rgba(217, 119, 6, 0.08);
+            --amber-bd:       rgba(217, 119, 6, 0.3);
+            
+            --emerald:        #059669;  /* 翠玉綠 */
+            --emerald-bg:     rgba(5, 150, 105, 0.08);
+            --emerald-bd:     rgba(5, 150, 105, 0.3);
+            
+            --indigo:         #4F46E5;  /* 靛青藍 */
+            --indigo-bg:      rgba(79, 70, 229, 0.08);
+            --indigo-bd:      rgba(79, 70, 229, 0.3);
+
+            --font-heading:   'Space Grotesk', 'Noto Sans TC', sans-serif;
+            --font-body:      'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+            
+            --sidebar-width:  300px;
+            --content-max:    1180px;
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-pill:    9999px;
+            --ease-smooth:    cubic-bezier(.16, 1, .3, 1);
+        }
+
+        @media print {
+            :root {
+                --paper: #ffffff;
+                --paper-2: #ffffff;
+                --ink: #000000;
+                --line: #cccccc;
+            }
+            .subpage-return-bar, .sidebar, .copy-btn { display: none !important; }
+            .app-layout { display: block !important; }
+            .main-content { padding: 0 !important; max-width: 100% !important; }
+            section { page-break-inside: avoid; }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            background-color: var(--paper-2);
+            color: var(--ink);
+            font-family: var(--font-body);
+            line-height: 1.75;
+            letter-spacing: -0.012em;
+            min-height: 100vh;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3.8% Fine Grain Noise Layer (宣紙微噪點纖維質感) */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        ::selection {
+            background: var(--ink);
+            color: var(--paper-2);
+        }
+
+        /* 頂部固定返回列 (Subpage Return Bar) */
+        .subpage-return-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(244, 243, 238, 0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+            padding: 0.75rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .subpage-return-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 0.45rem 1rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.22s var(--ease-smooth);
+            min-height: 44px;
+        }
+
+        .subpage-return-btn:hover {
+            background: var(--ink);
+            color: var(--paper-2);
+            border-color: var(--ink);
+            transform: translateY(-1px);
+        }
+
+        .bar-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--gray-2);
+        }
+
+        .meta-pill-tag {
+            background: var(--ink);
+            color: var(--paper-2);
+            padding: 0.2rem 0.65rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* 雙欄主架構 (App Layout) */
+        .app-layout {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        /* 左側導航側邊欄 (Sidebar) */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: calc(100vh - 60px);
+            position: sticky;
+            top: 60px;
+            background: var(--paper);
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 16px;
+            flex-shrink: 0;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 14px;
+        }
+
+        .brand-pill {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--gray-2);
+            letter-spacing: 0.05em;
+        }
+
+        .brand-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin-top: 2px;
+        }
+
+        /* 側欄搜尋框 */
+        .search-box {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            padding: 8px 12px 8px 34px;
+            border-radius: var(--radius-sm);
+            color: var(--ink);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--ink);
+            box-shadow: 0 0 0 2px rgba(22, 22, 26, 0.08);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: var(--gray-3);
+            pointer-events: none;
+        }
+
+        /* 標籤篩選 Chip 列表 */
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .filter-chip {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            color: var(--gray-2);
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        .filter-chip.active {
+            background: var(--ink);
+            border-color: var(--ink);
+            color: var(--paper-2);
+            font-weight: 700;
+        }
+
+        /* 章節目錄 Nav 列表 */
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            color: var(--gray-2);
+            text-decoration: none;
+            font-size: 0.825rem;
+            font-weight: 500;
+            transition: all 0.18s ease;
+            min-height: 38px;
+        }
+
+        .nav-item a:hover {
+            background: var(--paper-3);
+            color: var(--ink);
+        }
+
+        .nav-item a.active {
+            background: var(--ink);
+            color: var(--paper-2);
+            font-weight: 700;
+        }
+
+        .nav-num {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            opacity: 0.75;
+            min-width: 20px;
+        }
+
+        /* 右側主要內容區 (Main Content) */
+        .main-content {
+            flex: 1;
+            padding: 36px 48px 100px;
+            max-width: var(--content-max);
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 沉浸式宣紙墨韻 Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #EAE8E0 0%, #DFDCD2 100%);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 40px 38px;
+            margin-bottom: 36px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(22, 22, 26, 0.04);
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--emerald-bg);
+            border: 1px solid var(--emerald-bd);
+            color: var(--emerald);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        .badge-tag {
+            background: var(--paper-2);
+            border: 1px solid var(--line);
+            color: var(--gray-1);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.85rem, 3.5vw, 2.5rem);
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -0.03em;
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        p.lead {
+            font-size: 1.12rem;
+            line-height: 1.75;
+            color: var(--gray-1);
+            max-width: 960px;
+        }
+
+        /* 核心指標儀表板 (Metrics Bar) */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 14px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            border-left: 4px solid var(--ink);
+            box-shadow: 0 2px 8px rgba(22, 22, 26, 0.02);
+        }
+
+        .metric-val {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--gray-2);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* 章節標題 */
+        h2 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            margin-top: 54px;
+            margin-bottom: 22px;
+            padding-bottom: 12px;
+            border-bottom: 1.5px solid var(--line);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2 .section-tag {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--paper-2);
+            background: var(--ink);
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        h3 {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 15px;
+            background: var(--ink);
+            border-radius: 2px;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--gray-1);
+            font-size: 0.98rem;
+            line-height: 1.75;
+        }
+
+        strong {
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            background: var(--paper-3);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* 網格佈局 (Grids) */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin: 18px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin: 18px 0;
+        }
+
+        /* 卡片系統 (Card System) */
+        .card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            box-shadow: 0 2px 6px rgba(22, 22, 26, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(22, 22, 26, 0.05);
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .card-icon {
+            font-size: 1.35rem;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        /* 強調 Callout 提示框 */
+        .callout {
+            margin: 20px 0;
+            padding: 18px 20px;
+            background: var(--paper-3);
+            border-left: 4px solid var(--ink);
+            border-radius: var(--radius-md);
+            border-top: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .callout-title {
+            font-weight: 800;
+            font-size: 0.98rem;
+            color: var(--ink);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .callout.success {
+            background: var(--emerald-bg);
+            border-left-color: var(--emerald);
+            border-color: var(--emerald-bd);
+        }
+        .callout.success .callout-title { color: var(--emerald); }
+
+        .callout.warning {
+            background: var(--amber-bg);
+            border-left-color: var(--amber);
+            border-color: var(--amber-bd);
+        }
+        .callout.warning .callout-title { color: var(--amber); }
+
+        .callout.danger {
+            background: var(--vermilion-bg);
+            border-left-color: var(--vermilion);
+            border-color: var(--vermilion-bd);
+        }
+        .callout.danger .callout-title { color: var(--vermilion); }
+
+        .callout.purple {
+            background: var(--indigo-bg);
+            border-left-color: var(--indigo);
+            border-color: var(--indigo-bd);
+        }
+        .callout.purple .callout-title { color: var(--indigo); }
+
+        /* 引言框 (Quote Box) */
+        .quote-box {
+            margin: 22px 0;
+            padding: 20px 24px;
+            background: var(--paper);
+            border-left: 4px solid var(--ink);
+            border: 1px solid var(--line);
+            border-left-width: 4px;
+            border-radius: var(--radius-md);
+            position: relative;
+        }
+
+        .quote-text {
+            font-size: 1.02rem;
+            color: var(--ink);
+            line-height: 1.75;
+            font-style: normal;
+        }
+
+        /* 數據表格 (Table System) */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0 28px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            background: var(--paper);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: var(--paper-3);
+            color: var(--ink);
+            font-family: var(--font-heading);
+            font-weight: 700;
+            padding: 13px 16px;
+            border-bottom: 1.5px solid var(--line);
+            letter-spacing: -0.01em;
+        }
+
+        td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--line);
+            color: var(--gray-1);
+            vertical-align: top;
+            line-height: 1.65;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--paper-2); }
+
+        /* 步驟清單 */
+        .step-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 14px;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            background: var(--ink);
+            color: var(--paper-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .step-body strong {
+            display: block;
+            color: var(--ink);
+            margin-bottom: 3px;
+            font-size: 1rem;
+        }
+
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0 16px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            color: var(--gray-1);
+        }
+
+        section {
+            scroll-margin-top: 80px;
+            margin-bottom: 48px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1.5px solid var(--line);
+            color: var(--gray-2);
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+        }
+
+        /* 響應式佈局 (Responsive RWD) */
+        @media (max-width: 1024px) {
+            .app-layout { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+            .main-content { padding: 24px 20px 60px; }
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 720px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .hero-banner { padding: 26px 20px; }
+            h1 { font-size: 1.65rem; }
+            .subpage-return-bar { padding: 0.6rem 1rem; }
+            .bar-meta { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部固定返回全景導覽列 -->
+    <header class="subpage-return-bar">
+        <a href="../../index.html" class="subpage-return-btn">
+            &larr; 返回研發全景首頁
+        </a>
+        <div class="bar-meta">
+            <span class="meta-pill-tag">SPEC // 11</span>
+            <span>REAIFY TECH · 市場調研與實地訪談</span>
+        </div>
+        <button onclick="window.print()" class="subpage-return-btn" style="cursor: pointer;">
+            🖨️ 匯出 PDF
+        </button>
+    </header>
+
+    <div class="app-layout">
+        
+        <!-- 左側導航與檢索側邊欄 -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-pill">REAIFY TECH // 實地調研</div>
+                <div class="brand-title">瘋桌遊訪談與賽事系統</div>
+            </div>
+
+            <!-- 關鍵字搜尋框 -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="sectionSearch" class="search-input" placeholder="搜尋章節關鍵字..." aria-label="搜尋章節">
+            </div>
+
+            <!-- 分類標籤篩選 -->
+            <div class="filter-group">
+                <span class="filter-chip active" data-filter="all">全部</span>
+                <span class="filter-chip" data-filter="painpoint">市場與痛點</span>
+                <span class="filter-chip" data-filter="product">硬體與規格</span>
+                <span class="filter-chip" data-filter="ladder">⭐天梯賽事系統</span>
+                <span class="filter-chip" data-filter="model">商模與定價</span>
+                <span class="filter-chip" data-filter="industry">業界推廣管道</span>
+            </div>
+
+            <!-- 章節目錄列表 -->
+            <nav aria-label="目錄" style="overflow-y: auto; flex: 1;">
+                <ul class="nav-list" id="navList">
+                    <li class="nav-item" data-cat="painpoint"><a href="#sec-overview" class="active"><span class="nav-num">01</span> 調研背景與核心洞察</a></li>
+                    <li class="nav-item" data-cat="painpoint"><a href="#sec-market-pain"><span class="nav-num">02</span> 桌遊市場現況與 4 大痛點</a></li>
+                    <li class="nav-item" data-cat="product"><a href="#sec-product-spec"><span class="nav-num">03</span> AI 桌遊助手規格與核心功能</a></li>
+                    <li class="nav-item" data-cat="model"><a href="#sec-models-compare"><span class="nav-num">04</span> 平價版 vs 高階版 6 維度對照</a></li>
+                    <li class="nav-item" data-cat="ladder" style="color: var(--teal); font-weight: 700;"><a href="#sec-ladder-system"><span class="nav-num">05</span> ⭐ 派對遊戲天梯化：店家辦賽吸客系統</a></li>
+                    <li class="nav-item" data-cat="industry"><a href="#sec-manager-feedback"><span class="nav-num">06</span> 店長經營反饋與產品落地建議</a></li>
+                    <li class="nav-item" data-cat="industry"><a href="#sec-channels"><span class="nav-num">07</span> 建議對接之三大業界資源</a></li>
+                    <li class="nav-item" data-cat="ladder"><a href="#sec-action-plan"><span class="nav-num">08</span> 訪談後 6 大行動與落地排程</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主要閱讀與內容區 -->
+        <main class="main-content">
+            
+            <header class="hero-banner" id="overview">
+                <div class="hero-meta">
+                    <span class="badge-status">一線實地調研 · 驗證完成</span>
+                    <span class="badge-tag">瘋桌遊店長深度訪談</span>
+                    <span class="badge-tag">NT$600-800 甜蜜月租</span>
+                    <span class="badge-tag">派對遊戲天梯化</span>
+                    <span class="badge-tag">一體機免認證降本</span>
+                </div>
+                <h1>瘋桌遊訪談紀錄與 AI 桌遊助手產品分析總結<br>（含派對遊戲天梯賽事營運調研）</h1>
+                <p class="lead" style="margin-top: 14px;">
+                    本文件整理自 AI 桌遊助手開發團隊與台北「瘋桌遊」連鎖店長的第一手實地深度訪談。涵蓋桌遊線下娛樂現況、玩家痛點、硬體一體機落地規格、雙版本定價模型，並深度融入<strong>「派對遊戲 ➔ 天梯賽事系統」</strong>的低成本辦賽吸客策略！
+                </p>
+            </header>
+
+            <div class="metrics-bar">
+                <div class="metric-card">
+                    <div class="metric-val">NT$ 600~800</div>
+                    <div class="metric-label">店家接受度極高的月租甜蜜點</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">100% 自動化</div>
+                    <div class="metric-label">狼人殺/阿瓦龍裁判 · 釋放真人法官</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">天梯賽事系統</div>
+                    <div class="metric-label">一鍵辦比賽 · 吸引社群週期回流</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val">省 10 萬元</div>
+                    <div class="metric-label">Type-C 直插供電 · 規避昂貴檢驗</div>
+                </div>
+            </div>
+
+            <!-- 01 調研背景 -->
+            <section id="sec-overview" class="content-section" data-cat="painpoint">
+                <h2><span class="section-tag">01</span> 調研背景與核心洞察</h2>
+                
+                <div class="callout success">
+                    <div class="callout-title">💡 訪談核心結論：店家極度渴望「省人力＋帶人流」的實體工具</div>
+                    <p>桌遊店並非排斥新科技，而是過去的軟體多半要求客人「自己下載 App」或需要店員「手動打電腦輸入」。店長明確指出：<strong>若一台桌上型 AI 助手每個月租金在 600～800 元，能做到全自動帶新手開局、主持狼人殺陣營遊戲，還能幫店家一鍵舉辦「天梯積分賽」，店家願意立刻買單！</strong></p>
+                </div>
+
+                <div class="quote-box">
+                    <div class="quote-text">「如果一個月 600 至 800 元，能當作自動主持人並節省人力，店家接受度很高。」—— 瘋桌遊店長第一手訪談證詞</div>
+                </div>
+            </section>
+
+            <!-- 02 市場現況與 4 大痛點 -->
+            <section id="sec-market-pain" class="content-section" data-cat="painpoint">
+                <h2><span class="section-tag">02</span> 桌遊市場現況與 4 大痛點</h2>
+                
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-icon">📉</div>
+                        <h3>1. 娛樂選擇多元，線下客流被壓縮</h3>
+                        <p>疫情後北部娛樂選擇百花齊放（KTV、電影院、自助麻將、密室逃脫等），導致一般大眾出門不一定選擇桌遊店，平日離峰時段客流量明顯縮減。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚡</div>
+                        <h3>2. 主流偏好「短平快」派對與陣營遊戲</h3>
+                        <p>目前學生與年輕上班族最愛快速、低門檻的派對與陣營對抗遊戲（如《狼人殺》、《阿瓦龍》、《三國殺》、《風聲》），此類遊戲開局頻率最高。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🧩</div>
+                        <h3>3. 中重度策略遊戲門檻過高</h3>
+                        <p>中重度或探險類遊戲（如《山中小屋》、《卡坦島》擴充）規則繁瑣龐雜，極度依賴少數核心玩家啃完說明書帶團，新手容易望而卻步。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">👤</div>
+                        <h3>4. 玩家閱讀障礙與「法官缺席」痛點</h3>
+                        <p>現代玩家普遍缺乏耐心研讀厚重說明書，店內教學人力負荷巨大；且《狼人殺》等遊戲若由真人擔任法官主持，就會直接少一位玩家下場同樂。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 03 產品規格與核心功能 -->
+            <section id="sec-product-spec" class="content-section" data-cat="product">
+                <h2><span class="section-tag">03</span> AI 桌遊助手規格與核心功能</h2>
+                
+                <p>開發團隊針對店家痛點量身打造的多功能「一體機」實體互動機器人：</p>
+
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-icon">🤖</div>
+                        <h3>硬體外觀與轉向馬達</h3>
+                        <p>採用 3D 列印機器人外殼，內建 360°/540° 追蹤馬達，講話時轉向發話玩家，具備極佳桌前互動感。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">✋</div>
+                        <h3>鏡頭手部追蹤與手勢投票</h3>
+                        <p>頂置/前置鏡頭精準辨識手勢（比 1-5 號、OK、比讚），支援狼人殺「天黑請閉眼」時的無聲投票與防作弊判定。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🗣️</div>
+                        <h3>LLM 自然語音主持與引導</h3>
+                        <p>整合大語言模型，以親切自然語音帶讀規則、流程控場與回答疑義，絕不脫離結構化規則庫瞎編。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🏷️</div>
+                        <h3>NFC 卡牌感應朗讀</h3>
+                        <p>支援特定角色卡/道具卡 NFC 感應，靠近即朗讀卡牌專屬技能與效果，解決玩家看字閱讀障礙。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🔌</div>
+                        <h3>Type-C 直插省電架構</h3>
+                        <p>無內建電池設計，省去近 10 萬元電池安規與無線認證費用；平時低功耗休眠，喚醒時才運轉馬達。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🌐</div>
+                        <h3>跨平台 Web 營運後台</h3>
+                        <p>提供手機/平板/電腦免安裝 Web 後台，方便店長遠端監控設備狀態，並具備賽事天梯系統介面。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 04 版本與商業模式比較 -->
+            <section id="sec-models-compare" class="content-section" data-cat="model">
+                <h2><span class="section-tag">04</span> 平價版 vs 高階版 6 維度對照</h2>
+
+                <p>針對不同店家規模與預算，團隊規劃了雙軌推進的產品定位與租賃定價：</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>比較維度</th>
+                                <th>平價版（一般普及版 · 優先切入）</th>
+                                <th>高階版（旗艦尊爵版 · 預計年底）</th>
+                                <th>店長決策分析</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>運算架構</strong></td>
+                                <td>雲端串流 API 運算</td>
+                                <td>全本地端邊緣伺服器（離線模型）</td>
+                                <td>一般店家已有穩定 Wi-Fi，平價版即可勝任</td>
+                            </tr>
+                            <tr>
+                                <td><strong>回應延遲</strong></td>
+                                <td>約 1.0 ～ 1.5 秒</td>
+                                <td>&lt; 0.8 秒極速即時對話</td>
+                                <td>在桌遊輪流思考節奏下，1秒延遲完全可接受</td>
+                            </tr>
+                            <tr>
+                                <td><strong>對話表現</strong></td>
+                                <td>標準結構化語音主持（不瞎掰）</td>
+                                <td>高智慧即興語音演繹與擬真情緒</td>
+                                <td>派對主持追求「流程精準」，平價版已足夠</td>
+                            </tr>
+                            <tr>
+                                <td><strong>網路依賴</strong></td>
+                                <td>需連接店內 Wi-Fi 網路</td>
+                                <td>完全免聯網，地下室包廂亦可運作</td>
+                                <td>地下室或無訊號場地適合高階版</td>
+                            </tr>
+                            <tr>
+                                <td><strong>月租費用預估</strong></td>
+                                <td><strong>NT$ 600 ～ 800 / 月</strong></td>
+                                <td><strong>NT$ 4,000+ / 月（約 5~8 倍價差）</strong></td>
+                                <td><strong>平價版是目前 90% 店家接受度最高的破局利器</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>推進時程</strong></td>
+                                <td><strong>第一優先推向市場試水溫（POC）</strong></td>
+                                <td>累積足夠現金流後鎖定高階包廂引進</td>
+                                <td>先讓平價版鋪進 10-20 家店建立護城河</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 05 ⭐ 核心亮點：派對遊戲天梯化 -->
+            <section id="sec-ladder-system" class="content-section" data-cat="ladder">
+                <h2><span class="section-tag">05</span> ⭐ 核心創新：派對遊戲天梯化 —— 店家輕量辦賽吸客系統</h2>
+
+                <div class="callout purple">
+                    <div class="callout-title">🏆 從「隨機娛樂」升級為「天梯競技」：解決店家平日沒人的終極解方！</div>
+                    <p>桌遊店老闆最頭痛的是「平日晚上沒客人、假日客流無法沉澱」。如果只把 AI 助手當作玩具，玩家玩一次就膩了；<strong>但如果把《狼人殺》、《阿瓦龍》、《璀璨寶石》等派對遊戲變成「店內天梯季賽」</strong>，由 AI 擔任公正無私的自動裁判與排位記分員，就能激發玩家勝負慾，讓單次過路客轉化為<strong>每週固定回流的戰隊選手</strong>！</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card" style="border-top: 4px solid var(--vermilion);">
+                        <div class="card-icon">😫</div>
+                        <h3>傳統店家辦比賽的 4 大障礙</h3>
+                        <ul>
+                            <li><strong>人工記分極度繁瑣</strong>：店員要手寫勝負、手動算分，忙起來就算錯。</li>
+                            <li><strong>爭議不斷、裁判難做</strong>：閉眼睜眼偷看、發言超時吵架，店員當裁判吃力不討好。</li>
+                            <li><strong>賽事組織門檻高</strong>：每次辦活動都要重新宣傳、手動排賽程，耗費大量精力。</li>
+                            <li><strong>活動結束客流就散</strong>：單次比賽辦完，沒有長期積分體系，玩家無法沉澱。</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="border-top: 4px solid var(--emerald);">
+                        <div class="card-icon">⚡</div>
+                        <h3>AI 助手天梯賽事系統 4 大殺手級優勢</h3>
+                        <ul>
+                            <li><strong>一鍵開啟賽事模式</strong>：店長在 Web 後台點擊「開啟週四天梯之夜」，機器人立刻進入積分賽模式。</li>
+                            <li><strong>手勢防作弊與精準計時</strong>：閉眼手勢自動統計、發言倒數嗶嗶聲，徹底告別作弊爭議。</li>
+                            <li><strong>自動 ELO 天梯積分與段位</strong>：青銅 ➔ 白銀 ➔ 黃金 ➔ 王者，玩家掃碼即看全店天梯榜。</li>
+                            <li><strong>長期社群黏著與週期回流</strong>：賽季結束結算全店前 8 強打季後賽，平日晚上天天有開團誘因！</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>天梯賽事系統操作流程（4 步自動化閉環）</h3>
+                <ol class="step-list">
+                    <li class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-body">
+                            <strong>店長在 Web 後台建立賽事</strong>
+                            設定比賽遊戲（如：阿瓦龍 6 人天梯賽）、賽季週期（如：3 月春季賽）與獎勵規則（如：月冠軍送包月暢玩卡）。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-body">
+                            <strong>玩家桌前掃碼綁定身分</strong>
+                            每位玩家就座後掃描桌上螢幕或卡牌，輸入玩家暱稱，AI 助手語音提示「歡迎 3 號位【夜行刺客】進入天梯房」。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-body">
+                            <strong>AI 助手全自動主持與裁判</strong>
+                            自動發牌、計時發言、鏡頭手勢計票判定；勝負一出，AI 立即朗讀勝方並由雲端自動結算天梯積分增減（+25 分 / -18 分）。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-body">
+                            <strong>店內大螢幕/手機排行榜即時連動</strong>
+                            店內大電視與店家社群同步顯示「瘋桌遊 3 月天梯排行榜 Top 10」，形成熱烈的同儕較勁與打榜氛圍！
+                        </div>
+                    </li>
+                </ol>
+
+                <div class="card" style="background: var(--paper-2); border-color: var(--teal); margin-top: 20px;">
+                    <strong style="color: var(--teal); font-size: 1.05rem; display: block; margin-bottom: 8px;">
+                        📈 預期為店家帶來的實質商業價值
+                    </strong>
+                    <ul>
+                        <li><strong>平日翻桌率提升 35%</strong>：將「週二/週四」設定為固定天梯排位日，吸引固定常客組隊練角。</li>
+                        <li><strong>客單價與飲品銷量增長</strong>：玩家為了衝天梯積分，單次停留時間從 2 小時延長至 4 小時以上。</li>
+                        <li><strong>連鎖加盟店聯賽擴展</strong>：可串聯不同分店舉辦「全台跨店盃賽」，極大提升店家品牌號召力。</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 06 店長反饋與落地建議 -->
+            <section id="sec-manager-feedback" class="content-section" data-cat="industry">
+                <h2><span class="section-tag">06</span> 店長經營反饋與產品落地建議</h2>
+
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-icon">🎯</div>
+                        <h3>初期切入點：功能做精不做多</h3>
+                        <p>店長建議初期先專注做好最核心的<strong>「派對遊戲自動主持」</strong>與<strong>「熱門新手開局教學」</strong>，不要在第一版塞入點餐、計費等過多非核心功能。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🎙️</div>
+                        <h3>設備多元延伸：展場與活動導覽</h3>
+                        <p>機器人的實體外型與語音互動具有天然吸睛度，除桌遊店外，極度適合出租轉化為<strong>「展場導覽員」</strong>或<strong>「商業發表會互動助理」</strong>。</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💻</div>
+                        <h3>後台首選 Web 網頁架構</h3>
+                        <p>強烈建議採用<strong>響應式 Web 網頁後台</strong>而非獨立手機 App，便於店家跨手機、平板、電腦無縫監控設備，且系統升級不需重新審核上架。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 07 建議對接之三大業界資源 -->
+            <section id="sec-channels" class="content-section" data-cat="industry">
+                <h2><span class="section-tag">07</span> 建議對接之三大業界資源</h2>
+
+                <p>店長基於產業人脈，熱心推薦團隊未來可主動鏈結的 3 大關鍵通路與資源：</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>業界資源名稱</th>
+                                <th>單位定位與影響力</th>
+                                <th>具體合作方向與機會</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>狗吠火車 (Gokids)</strong></td>
+                                <td>台灣最大桌遊代理商之一，長期推動台灣正版桌遊與校園推廣。</td>
+                                <td>洽談熱門正版遊戲之 AI 規則授權、隨盒附贈推薦或聯合硬體推廣方案。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>新銳桌遊展</strong></td>
+                                <td>台灣年度最具指標性的原創桌遊大展（每年中秋連假舉辦，約 9 月下旬）。</td>
+                                <td>提前報名參展，在展會中擺設 AI 桌遊助手實機 Demo，直接面向數千位核心玩家與代理商曝光。</td>
+                            </tr>
+                            <tr>
+                                <td><strong>一馬桌遊教室</strong></td>
+                                <td>YouTube 百萬級桌遊教學指標頻道，解說架構簡明精煉。</td>
+                                <td>參考其 10 分鐘精華教學邏輯，作為 AI 機器人標準教學結構與 Prompt 訓練範本。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 08 行動方針 -->
+            <section id="sec-action-plan" class="content-section" data-cat="ladder">
+                <h2><span class="section-tag">08</span> 訪談後 6 大行動與落地排程</h2>
+
+                <ol class="step-list">
+                    <li class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-body">
+                            <strong>鎖定平價版（NT$600-800/月）為 POC 主力定價</strong>
+                            以超高性價比快速爭取 3-5 家種子桌遊店簽約導入。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-body">
+                            <strong>完成《狼人殺》＋《阿瓦龍》天梯裁判模組</strong>
+                            優化手勢投票、黑夜閉眼倒數計時與自動勝負 ELO 計算。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-body">
+                            <strong>開發一鍵開賽的店家 Web 賽事後台</strong>
+                            店長免安裝任何 App，手機瀏覽器登入即可一鍵發起賽事與查看榜單。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-body">
+                            <strong>向瘋桌遊提出為期 4 週之現場實測合作</strong>
+                            在指定店點擺設 2 台實機，實測「週四天梯之夜」的翻桌率與玩家留存率。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">5</div>
+                        <div class="step-body">
+                            <strong>準備報名 9 月新銳桌遊展</strong>
+                            製作現場互動展示展台，展示 AI 一體機的自動主持與天梯排位魅力。
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-num">6</div>
+                        <div class="step-body">
+                            <strong>主動聯繫 Gokids 狗吠火車洽談生態合作</strong>
+                            探討正版遊戲規則庫對接與出版社聯名推廣可能性。
+                        </div>
+                    </li>
+                </ol>
+
+                <div class="callout success" style="margin-top: 24px;">
+                    <div class="callout-title">🌟 訪談總結</div>
+                    <p style="font-size: 1.02rem; line-height: 1.75;">
+                        這次訪談證實了實體 AI 助手在桌遊市場的<strong>真實剛需（省店員時間＋解決法官痛點）</strong>與<strong>可接受價格區間（NT$600-800/月）</strong>。透過<strong>「派對遊戲 ➔ 天梯賽事系統」</strong>的軟硬體整合，我們不僅能幫店家省錢，更能主動幫店家「賺錢與引流」，形成極強的商業閉環！
+                    </p>
+                </div>
+            </section>
+
+            <!-- 頁尾宣告 -->
+            <footer>
+                <p><strong>調研備註：</strong>本文件整理自 AI 桌遊助手團隊與瘋桌遊店長訪談紀錄，包含市場現況、一體機規格、定價策略、天梯賽事系統及業界通路建議。供內部研發與商業拓展決策參考。</p>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- 互動檢索與篩選功能 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('sectionSearch');
+            const filterChips = document.querySelectorAll('.filter-chip');
+            const sections = document.querySelectorAll('.content-section');
+
+            // 關鍵字即時搜尋
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    sections.forEach(sec => {
+                        const text = sec.innerText.toLowerCase();
+                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        if (text.includes(query) || query === '') {
+                            sec.style.display = 'block';
+                            if (navMatch) navMatch.parentElement.style.display = 'block';
+                        } else {
+                            sec.style.display = 'none';
+                            if (navMatch) navMatch.parentElement.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            // 標籤類別篩選
+            filterChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    filterChips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    const filter = chip.getAttribute('data-filter');
+
+                    sections.forEach(sec => {
+                        const cat = sec.getAttribute('data-cat');
+                        const navMatch = document.querySelector(`.nav-item a[href="#${sec.id}"]`);
+                        if (filter === 'all' || cat === filter) {
+                            sec.style.display = 'block';
+                            if (navMatch) navMatch.parentElement.style.display = 'block';
+                        } else {
+                            sec.style.display = 'none';
+                            if (navMatch) navMatch.parentElement.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // 滾動目錄高亮
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        document.querySelectorAll('.nav-item a').forEach(a => {
+                            a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: '-15% 0px -70% 0px' });
+
+            sections.forEach(sec => observer.observe(sec));
+        });
+    </script>
+</body>
+</html>

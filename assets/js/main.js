@@ -9,6 +9,8 @@ const svgEl = (tag, attrs={}) => {
 
 const CATEGORIES = [
     { id: "All", name: "全部專案 (ALL)" },
+    { id: "StrategyHandbook", name: "公司戰略 (STRATEGY)" },
+    { id: "FieldInterview", name: "市場調研與訪談 (INTERVIEW)" },
     { id: "FutureRoute", name: "未來發想 (FUTURE)" },
     { id: "Troubleshooting", name: "疑難排解 (TROUBLESHOOTING)" },
     { id: "LegacyRoute", name: "舊方案規格 (LEGACY)" },
@@ -16,6 +18,22 @@ const CATEGORIES = [
 ];
 
 const TREE_BRANCHES = [
+    {
+        id: "StrategyHandbook",
+        name: "公司戰略手冊",
+        code: "STRATEGY",
+        children: [
+            { name: "R1 決策與多領域指南", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html", routeId: "r1-strategy-guide" }
+        ]
+    },
+    {
+        id: "FieldInterview",
+        name: "市場調研與店家訪談",
+        code: "INTERVIEW",
+        children: [
+            { name: "瘋桌遊實地訪談與天梯調研", path: "routes/field_interviews/瘋桌遊實地訪談與天梯賽事系統調研.html", routeId: "crazy-boardgame-interview" }
+        ]
+    },
     {
         id: "FutureRoute",
         name: "未來發想路線",
@@ -56,6 +74,8 @@ const TREE_BRANCHES = [
 ];
 
 const ALL_PROJECTS_MAP = {
+    "r1-strategy-guide": { id: "r1-strategy-guide", category: "StrategyHandbook", typeLabel: "STRATEGY", code: "10", title: "R1 AI 實體互動助手｜公司決策與多領域拓展指南", subtitle: "桌遊、劇本殺、密室逃脫與 VR 落地商模與 90 天驗證計畫", description: "白話深度解析實體互動助手落地策略。涵蓋 4 大線下娛樂場景對比、手機 vs R1 本質差異、7 種盈利模式與 18 條決策方針。", path: "routes/strategy_handbooks/R1_AI實體互動助手_公司決策與多領域拓展指南.html" },
+    "crazy-boardgame-interview": { id: "crazy-boardgame-interview", category: "FieldInterview", typeLabel: "INTERVIEW", code: "11", title: "瘋桌遊實地訪談紀錄與產品分析總結", subtitle: "店長痛點剖析、NT$600-800月租定價與派對天梯賽事系統調研", description: "第一線訪談瘋桌遊連鎖店長。深度剖析法官缺席痛點、一體機規格、平價/高階版本商模對照、派對遊戲天梯化辦賽策略與三大業界通路建議。", path: "routes/field_interviews/瘋桌遊實地訪談與天梯賽事系統調研.html" },
     "trpg-vision": { id: "trpg-vision", category: "FutureRoute", typeLabel: "FUTURE", code: "01", title: "TRPG 主打影像輔助系統", subtitle: "電腦視覺 (CV) 戰術追蹤與工程落地指南", description: "將頂置 CV (ArUco / YOLOv11) 引入實體桌遊。自動算數、測距與戰略迷霧判定。", path: "routes/future_routes/TRPG_主打影像.html" },
     "trpg-voice-vision": { id: "trpg-voice-vision", category: "FutureRoute", typeLabel: "FUTURE", code: "02", title: "TRPG 主打語音輔助影像", subtitle: "AI 上帝版 Co-DM 語音演繹與 NFC 藍圖", description: "Voice-First 架構。AI 多角色變聲、動態 BGM 混合器與雙軌實體 NFC 角色卡。", path: "routes/future_routes/TRPG_主打語音輔助影像.html" },
     "pi4-pi5-spec": { id: "pi4-pi5-spec", category: "FutureRoute", typeLabel: "FUTURE", code: "03", title: "PI4 & PI5 開發路線對照", subtitle: "樹莓派 4B/5 雙平台硬體對照與雲端 AI 規格", description: "Pi 4 1GB 量產可行性、第二代 3D 模型展台與 Faster-Whisper + Qwen3.5 串流模型。", path: "routes/future_routes/PI4&PI5開發路線.html" },
@@ -248,6 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (trimmed.includes("PI4") && trimmed.includes("PI5")) return "PI4/5";
         if (trimmed.includes("Edge AI")) return "EdgeAI";
         if (trimmed.includes("DIGBLOCK")) return "SBIR";
+        if (trimmed.includes("R1") || trimmed.includes("戰略")) return "R1戰略";
+        if (trimmed.includes("訪談") || trimmed.includes("調研") || trimmed.includes("瘋桌遊")) return "瘋桌遊";
         if (trimmed.includes("TRPG") && (trimmed.includes("語音") || trimmed.includes("輔助"))) return "TRPG語";
         if (trimmed.includes("TRPG")) return "TRPG影";
         if (trimmed.includes("電腦視覺") || trimmed.includes("戰術")) return "CV戰術";
@@ -876,6 +898,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderAllRouteGrids() {
         const routes = getFilteredRoutes();
 
+        renderSingleGrid("grid-strategy", routes.filter(r => r.category === "StrategyHandbook"));
+        renderSingleGrid("grid-interview", routes.filter(r => r.category === "FieldInterview"));
         renderSingleGrid("grid-future", routes.filter(r => r.category === "FutureRoute"));
         renderSingleGrid("grid-trouble", routes.filter(r => r.category === "Troubleshooting"));
         renderSingleGrid("grid-legacy", routes.filter(r => r.category === "LegacyRoute"));
